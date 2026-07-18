@@ -201,7 +201,7 @@
         if (formReserva && btnConfirmar) {
             formReserva.addEventListener('submit', function() {
                 btnConfirmar.disabled = true;
-                btnConfirmar.innerText = 'Generando reserva...';
+                btnConfirmar.innerText = 'Procesando...';
             });
         }
     });

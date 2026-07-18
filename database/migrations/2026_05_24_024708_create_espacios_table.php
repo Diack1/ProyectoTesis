@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->string('codigo')->unique(); // Ejemplo: E01, E02, E03
             $table->string('descripcion')->nullable();
-            $table->enum('estado_actual', ['libre', 'ocupado'])->default('libre');
+            $table->enum('estado_actual', ['libre', 'ocupado', 'reservado', 'mantenimiento'])->default('libre');
             $table->boolean('activo')->default(true);
             $table->timestamps();
         });

@@ -79,10 +79,21 @@
             </div>
             @endif
 
+            @if(session('error'))
+            <div class="alert-box alert-error">
+                {{ session('error') }}
+            </div>
+            @endif
+
             <div class="reservation-selected">
                 <h2>Espacio seleccionado: {{ $espacio->codigo }}</h2>
                 <p>{{ $espacio->descripcion }}</p>
                 <p>Estado actual: <strong>{{ $espacio->estado_actual }}</strong></p>
+                <p>Sensor asociado: <strong>{{ $espacio->sensor->codigo_sensor ?? 'Sin sensor' }}</strong></p>
+                @if(isset($sensorActual) && $sensorActual)
+                <p>Lectura del sensor: <strong>{{ $sensorActual['estado_texto'] }}</strong></p>
+                <p>Ultima lectura: <strong>{{ $sensorActual['ultima_lectura_formateada'] ?? 'Sin lectura' }}</strong></p>
+                @endif
             </div>
 
             @php
@@ -93,7 +104,7 @@
             $horaMinimaHoy = now('America/Lima')->addMinutes(15)->format('H:i');
             @endphp
 
-            <form action="{{ route('reservas.confirmar', $espacio) }}" method="POST">
+            <form id="formNuevaReserva" action="{{ route('reservas.confirmar', $espacio) }}" method="POST">
                 @csrf
 
                 <div class="form-group">
@@ -146,6 +157,16 @@
                     </select>
                 </div>
 
+                <div class="reservation-summary" id="resumenTarifaReserva">
+                    <p><strong>Tarifa seleccionada:</strong> <span data-role="tarifa-nombre">Selecciona un tipo de vehiculo.</span></p>
+                    <p><strong>Duracion:</strong> <span data-role="tarifa-duracion">-</span></p>
+                    <p><strong>Monto estimado:</strong> <span data-role="tarifa-monto">-</span></p>
+                    <p><strong>Tolerancia:</strong> <span data-role="tarifa-tolerancia">-</span></p>
+                    <p style="font-size:13px; color:#64748B;">
+                        El monto final se recalcula en el servidor antes de registrar la reserva.
+                    </p>
+                </div>
+
                 <div class="reservation-summary">
                     <p>
                         <strong>Importante:</strong> el sistema trabaja con reservas inmediatas.
@@ -167,7 +188,7 @@
                 </div>
 
                 <div class="reservation-actions">
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" id="btnNuevaReserva" class="btn btn-primary">
                         Continuar a confirmación
                     </button>
 
@@ -186,6 +207,12 @@
     document.addEventListener('DOMContentLoaded', function() {
         const fechaInput = document.getElementById('fecha_reserva');
         const horaInput = document.getElementById('hora_inicio');
+        const formNuevaReserva = document.getElementById('formNuevaReserva');
+        const btnNuevaReserva = document.getElementById('btnNuevaReserva');
+        const vehiculoTipoInput = document.getElementById('vehiculo_tipo_id');
+        const duracionInput = document.getElementById('duracion_minutos');
+        const resumenTarifa = document.getElementById('resumenTarifaReserva');
+        const tarifasPorTipo = @json($tarifasFrontend ?? []);
 
         const fechaHoy = "{{ $fechaMinima }}";
         const horaMinimaHoy = "{{ $horaMinimaHoy }}";
@@ -204,6 +231,120 @@
 
         fechaInput.addEventListener('change', actualizarHoraMinima);
         actualizarHoraMinima();
+
+        function horaDentroDeRango(horaActual, horaInicio, horaFin) {
+            if (!horaInicio || !horaFin) {
+                return false;
+            }
+
+            if (horaInicio <= horaFin) {
+                return horaActual >= horaInicio && horaActual <= horaFin;
+            }
+
+            return horaActual >= horaInicio || horaActual <= horaFin;
+        }
+
+        function tarifaAplicable(tarifas, hora, duracion) {
+            const nocturna = tarifas.find(function(tarifa) {
+                return tarifa.tipo_tarifa === 'nocturna'
+                    && horaDentroDeRango(hora + ':00', tarifa.hora_inicio, tarifa.hora_fin);
+            });
+
+            if (nocturna) {
+                return nocturna;
+            }
+
+            if (duracion >= 1440) {
+                const diaria = tarifas.find(function(tarifa) {
+                    return tarifa.tipo_tarifa === 'diaria';
+                });
+
+                if (diaria) {
+                    return diaria;
+                }
+            }
+
+            return tarifas.find(function(tarifa) {
+                return tarifa.tipo_tarifa === 'por_hora';
+            }) || tarifas.find(function(tarifa) {
+                return tarifa.tipo_tarifa === 'fraccion';
+            }) || tarifas[0];
+        }
+
+        function calcularMonto(tarifa, duracion) {
+            const minutosCobro = Math.max(duracion, Number(tarifa.tiempo_minimo_minutos || 60));
+
+            if (tarifa.tipo_tarifa === 'diaria') {
+                return Number(tarifa.monto_base || 0) > 0
+                    ? Number(tarifa.monto_base)
+                    : Number(tarifa.monto_por_hora || 0) * 24;
+            }
+
+            if (tarifa.tipo_tarifa === 'nocturna' && Number(tarifa.monto_base || 0) > 0) {
+                return Number(tarifa.monto_base);
+            }
+
+            if (tarifa.tipo_tarifa === 'fraccion' && tarifa.monto_por_fraccion && tarifa.minutos_fraccion) {
+                return Math.ceil(minutosCobro / Number(tarifa.minutos_fraccion)) * Number(tarifa.monto_por_fraccion);
+            }
+
+            const horas = Math.floor(minutosCobro / 60) || 1;
+            const minutosRestantes = minutosCobro % 60;
+            let total = horas * Number(tarifa.monto_por_hora || 0);
+
+            if (minutosRestantes > 0) {
+                total += tarifa.monto_por_fraccion && tarifa.minutos_fraccion
+                    ? Math.ceil(minutosRestantes / Number(tarifa.minutos_fraccion)) * Number(tarifa.monto_por_fraccion)
+                    : Number(tarifa.monto_por_hora || 0);
+            }
+
+            return total;
+        }
+
+        function actualizarResumenTarifa() {
+            if (!resumenTarifa || !vehiculoTipoInput || !duracionInput) {
+                return;
+            }
+
+            const tipoId = vehiculoTipoInput.value;
+            const tarifas = tarifasPorTipo[tipoId] || [];
+            const duracion = Number(duracionInput.value || 0);
+            const tarifa = tarifaAplicable(tarifas, horaInput.value || '00:00', duracion);
+
+            const nombre = resumenTarifa.querySelector('[data-role="tarifa-nombre"]');
+            const duracionTexto = resumenTarifa.querySelector('[data-role="tarifa-duracion"]');
+            const monto = resumenTarifa.querySelector('[data-role="tarifa-monto"]');
+            const tolerancia = resumenTarifa.querySelector('[data-role="tarifa-tolerancia"]');
+
+            if (!tarifa) {
+                nombre.textContent = 'Selecciona un tipo de vehiculo.';
+                duracionTexto.textContent = '-';
+                monto.textContent = '-';
+                tolerancia.textContent = '-';
+                return;
+            }
+
+            nombre.textContent = tarifa.nombre;
+            duracionTexto.textContent = (duracion / 60) + ' hora(s)';
+            monto.textContent = 'S/ ' + calcularMonto(tarifa, duracion).toFixed(2);
+            tolerancia.textContent = Number(tarifa.tolerancia_minutos || 0) + ' minutos';
+        }
+
+        [vehiculoTipoInput, duracionInput, horaInput].forEach(function(input) {
+            if (input) {
+                input.addEventListener('change', actualizarResumenTarifa);
+                input.addEventListener('input', actualizarResumenTarifa);
+            }
+        });
+
+        actualizarResumenTarifa();
+
+        if (formNuevaReserva && btnNuevaReserva) {
+            formNuevaReserva.addEventListener('submit', function() {
+                btnNuevaReserva.disabled = true;
+                btnNuevaReserva.innerText = 'Procesando...';
+            });
+        }
     });
 </script>
 

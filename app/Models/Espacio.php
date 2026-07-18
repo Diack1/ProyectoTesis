@@ -34,7 +34,7 @@ class Espacio extends Model
     public function reservaActiva()
     {
         return $this->hasOne(Reserva::class, 'espacio_id')
-            ->whereIn('estado', ['pendiente', 'confirmada']);
+            ->whereIn('estado', ['pendiente_pago', 'confirmada']);
     }
 
     public function vehiculoTipos()

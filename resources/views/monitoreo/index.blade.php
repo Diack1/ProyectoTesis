@@ -61,6 +61,12 @@
         </div>
     </div>
 
+    <div style="margin-top:14px;">
+        <a href="{{ route('sensores.estado') }}" class="btn btn-secondary">
+            Ver sensores externos
+        </a>
+    </div>
+
     <div class="admin-space-grid" style="margin-top:18px;">
         @forelse($espacios as $espacio)
         <div class="admin-space-card {{ $espacio->estado_actual }}">

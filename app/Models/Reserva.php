@@ -8,6 +8,8 @@ class Reserva extends Model
 {
     protected $table = 'reservas';
 
+    public const ESTADOS_BLOQUEANTES = ['pendiente_pago', 'confirmada'];
+
     protected $fillable = [
         'user_id',
         'espacio_id',
@@ -112,5 +114,10 @@ class Reserva extends Model
             'reembolso_aprobado',
             'reembolso_rechazado',
         ]);
+    }
+
+    public function esBloqueante(): bool
+    {
+        return in_array($this->estado, self::ESTADOS_BLOQUEANTES, true);
     }
 }

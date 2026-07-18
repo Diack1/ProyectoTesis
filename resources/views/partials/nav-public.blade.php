@@ -19,6 +19,11 @@
                 Disponibilidad
             </a>
 
+            <a href="{{ route('sensores.estado') }}"
+                class="{{ request()->routeIs('sensores.estado') ? 'active' : '' }}">
+                Sensores
+            </a>
+
             <a href="{{ route('public.tarifas') }}"
                 class="{{ request()->routeIs('public.tarifas') ? 'active' : '' }}">
                 Tarifas

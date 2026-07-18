@@ -2,19 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Reserva;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Pago;
-use Illuminate\Support\Facades\DB;
+use App\Http\Requests\StoreReservaRequest;
 use App\Models\Espacio;
-use App\Models\Tarifa;
-use Carbon\Carbon;
-use App\Services\ReservaService;
+use App\Models\Pago;
 use App\Models\Reembolso;
-use App\Models\VehiculoTipo;
+use App\Models\Reserva;
+use App\Services\ReservaDisponibilidadService;
+use App\Services\ReservaService;
+use App\Services\SensoresApiService;
 use App\Services\TarifaService;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use RuntimeException;
+use Throwable;
 
 class ReservaController extends Controller
 {
@@ -31,105 +33,98 @@ class ReservaController extends Controller
         return view('reservas.index', compact('reservas'));
     }
 
-    //SOLICITUD CREAR
+    public function create(
+        Espacio $espacio,
+        ReservaService $reservaService,
+        SensoresApiService $sensoresApiService,
+        ReservaDisponibilidadService $disponibilidadService
+    ) {
+        $reservaService->procesarReservasAutomaticas();
 
-    public function create(Espacio $espacio)
-    {
-        if (!$espacio->activo || $espacio->estado_actual !== 'libre') {
+        $espacio->load(['sensor', 'vehiculoTipos.tarifas']);
+        $disponibilidad = $disponibilidadService->verificarEspacioParaInicio($espacio, $sensoresApiService);
+
+        if (!$disponibilidad['disponible']) {
             return redirect()
                 ->route('public.disponibilidad')
-                ->with('error', 'El espacio seleccionado ya no está disponible para reserva.');
+                ->with('error', $disponibilidad['message']);
         }
 
-        $vehiculoTipos = $espacio->vehiculoTipos()
-            ->where('vehiculo_tipos.activo', true)
-            ->orderBy('nombre')
-            ->get();
+        $tiposActivos = $disponibilidadService->tiposPermitidosActivos($espacio);
+
+        if ($tiposActivos->isEmpty()) {
+            return redirect()
+                ->route('public.disponibilidad')
+                ->with('error', 'No existen tipos de vehiculo activos para este espacio.');
+        }
+
+        $vehiculoTipos = $disponibilidadService->tiposPermitidosConTarifa($espacio)
+            ->sortBy('nombre')
+            ->values();
 
         if ($vehiculoTipos->isEmpty()) {
             return redirect()
                 ->route('public.disponibilidad')
-                ->with('error', 'No existen tipos de vehículo activos.');
+                ->with('error', 'No existe una tarifa activa para los tipos de vehiculo de este espacio.');
         }
-
 
         $fechaActual = now('America/Lima')->format('Y-m-d');
         $horaActual = now('America/Lima')->addMinutes(15)->format('H:i');
+        $sensorActual = $disponibilidad['sensor'] ?? null;
+        $tarifasFrontend = $this->tarifasParaFormulario($vehiculoTipos);
 
         return view('reservas.create', compact(
             'espacio',
             'vehiculoTipos',
             'fechaActual',
-            'horaActual'
+            'horaActual',
+            'sensorActual',
+            'tarifasFrontend'
         ));
     }
 
+    public function confirmar(
+        StoreReservaRequest $request,
+        Espacio $espacio,
+        TarifaService $tarifaService,
+        SensoresApiService $sensoresApiService,
+        ReservaDisponibilidadService $disponibilidadService,
+        ReservaService $reservaService
+    ) {
+        $reservaService->procesarReservasAutomaticas();
 
-    //SOLICITUD CONFIRMAR
+        $espacio->load(['sensor', 'vehiculoTipos.tarifas']);
+        $fechaHoraInicio = $request->fechaHoraInicio();
+        $fechaHoraFin = $request->fechaHoraFin();
+        $duracionMinutos = $request->duracionMinutos();
 
-    public function confirmar(Request $request, Espacio $espacio, TarifaService $tarifaService)
-    {
-        if (!$espacio->activo || $espacio->estado_actual !== 'libre') {
+        $disponibilidad = $disponibilidadService->verificarEspacioParaHorario(
+            $espacio,
+            $fechaHoraInicio,
+            $fechaHoraFin,
+            $sensoresApiService
+        );
+
+        if (!$disponibilidad['disponible']) {
             return redirect()
-                ->route('public.disponibilidad')
-                ->with('error', 'El espacio seleccionado ya no está disponible para reserva.');
+                ->route('reservas.create', $espacio)
+                ->withInput()
+                ->with('error', $disponibilidad['message']);
         }
-
-        $hoy = now('America/Lima')->format('Y-m-d');
-        $manana = now('America/Lima')->addDay()->format('Y-m-d');
-
-        $request->validate([
-            'vehiculo_tipo_id' => 'required|exists:vehiculo_tipos,id',
-            'fecha_reserva' => [
-                'required',
-                'date',
-                'after_or_equal:' . $hoy,
-                'before_or_equal:' . $manana,
-            ],
-            'hora_inicio' => 'required|date_format:H:i',
-            'duracion_minutos' => 'required|integer|in:60,120,180,240',
-        ], [
-            'fecha_reserva.after_or_equal' => 'No puedes reservar en fechas pasadas.',
-            'fecha_reserva.before_or_equal' => 'Solo puedes reservar para hoy o como máximo mañana.',
-            'hora_inicio.date_format' => 'La hora de ingreso debe tener un formato válido.',
-        ]);
 
         $vehiculoTipo = $espacio->vehiculoTipos()
             ->where('vehiculo_tipos.activo', true)
-            ->where('vehiculo_tipos.id', $request->vehiculo_tipo_id)
+            ->where('vehiculo_tipos.id', $request->integer('vehiculo_tipo_id'))
             ->first();
 
         if (!$vehiculoTipo) {
             return redirect()
                 ->route('reservas.create', $espacio)
                 ->withErrors([
-                    'vehiculo_tipo_id' => 'El tipo de vehículo seleccionado no está permitido para este espacio.',
+                    'vehiculo_tipo_id' => 'El tipo de vehiculo no esta permitido para este espacio.',
                 ])
                 ->withInput();
         }
-
-        $fechaReserva = $request->fecha_reserva;
-        $horaInicio = $request->hora_inicio;
-        $duracionMinutos = (int) $request->duracion_minutos;
-
-        $fechaHoraInicio = Carbon::createFromFormat(
-            'Y-m-d H:i',
-            $fechaReserva . ' ' . $horaInicio,
-            'America/Lima'
-        );
-
-        $minimoPermitido = now('America/Lima')->addMinutes(15)->startOfMinute();
-
-        if ($fechaHoraInicio->lt($minimoPermitido)) {
-            return redirect()
-                ->route('reservas.create', $espacio)
-                ->withErrors([
-                    'hora_inicio' => 'La reserva debe realizarse con al menos 15 minutos de anticipación.',
-                ])
-                ->withInput();
-        }
-
-        $fechaHoraFin = $fechaHoraInicio->copy()->addMinutes($duracionMinutos);
 
         try {
             $calculo = $tarifaService->calcularMonto(
@@ -137,14 +132,17 @@ class ReservaController extends Controller
                 $fechaHoraInicio,
                 $duracionMinutos
             );
-        } catch (RuntimeException $e) {
+        } catch (RuntimeException $exception) {
             return redirect()
                 ->route('reservas.create', $espacio)
                 ->withErrors([
-                    'tarifa' => $e->getMessage(),
+                    'tarifa' => $exception->getMessage(),
                 ])
                 ->withInput();
         }
+
+        $fechaReserva = $request->input('fecha_reserva');
+        $horaInicio = $request->input('hora_inicio');
 
         return response()
             ->view('reservas.confirmacion', compact(
@@ -162,154 +160,123 @@ class ReservaController extends Controller
             ->header('Expires', '0');
     }
 
-
-    //SOLICITUD STORE
-
-    public function store(Request $request, Espacio $espacio, TarifaService $tarifaService)
-    {
-        if (!$espacio->activo || $espacio->estado_actual !== 'libre') {
-            return redirect()
-                ->route('public.disponibilidad')
-                ->with('error', 'El espacio seleccionado ya no está disponible para reserva.');
-        }
-
-        $hoy = now('America/Lima')->format('Y-m-d');
-        $manana = now('America/Lima')->addDay()->format('Y-m-d');
-
-        $request->validate([
-            'vehiculo_tipo_id' => 'required|exists:vehiculo_tipos,id',
-            'fecha_reserva' => [
-                'required',
-                'date',
-                'after_or_equal:' . $hoy,
-                'before_or_equal:' . $manana,
-            ],
-            'hora_inicio' => 'required|date_format:H:i',
-            'duracion_minutos' => 'required|integer|in:60,120,180,240',
-        ], [
-            'fecha_reserva.after_or_equal' => 'No puedes reservar en fechas pasadas.',
-            'fecha_reserva.before_or_equal' => 'Solo puedes reservar para hoy o como máximo mañana.',
-            'hora_inicio.date_format' => 'La hora de ingreso debe tener un formato válido.',
-        ]);
-
-        $vehiculoTipo = $espacio->vehiculoTipos()
-            ->where('vehiculo_tipos.activo', true)
-            ->where('vehiculo_tipos.id', $request->vehiculo_tipo_id)
-            ->first();
-
-        if (!$vehiculoTipo) {
-            return redirect()
-                ->route('reservas.create', $espacio)
-                ->withErrors([
-                    'vehiculo_tipo_id' => 'El tipo de vehículo seleccionado no está permitido para este espacio.',
-                ])
-                ->withInput();
-        }
-
-        $fechaReserva = $request->fecha_reserva;
-        $horaInicio = $request->hora_inicio;
-        $duracionMinutos = (int) $request->duracion_minutos;
-
-        $fechaHoraInicio = Carbon::createFromFormat(
-            'Y-m-d H:i',
-            $fechaReserva . ' ' . $horaInicio,
-            'America/Lima'
-        );
-
-        $minimoPermitido = now('America/Lima')->addMinutes(15)->startOfMinute();
-
-        if ($fechaHoraInicio->lt($minimoPermitido)) {
-            return redirect()
-                ->route('reservas.create', $espacio)
-                ->withErrors([
-                    'hora_inicio' => 'La reserva debe realizarse con al menos 15 minutos de anticipación.',
-                ])
-                ->withInput();
-        }
-
-        $fechaHoraFin = $fechaHoraInicio->copy()->addMinutes($duracionMinutos);
-
+    public function store(
+        StoreReservaRequest $request,
+        Espacio $espacio,
+        TarifaService $tarifaService,
+        SensoresApiService $sensoresApiService,
+        ReservaDisponibilidadService $disponibilidadService
+    ) {
         try {
-            $calculo = $tarifaService->calcularMonto(
-                $vehiculoTipo,
-                $fechaHoraInicio,
-                $duracionMinutos
-            );
-        } catch (RuntimeException $e) {
+            $reserva = DB::transaction(function () use (
+                $request,
+                $espacio,
+                $tarifaService,
+                $sensoresApiService,
+                $disponibilidadService
+            ) {
+                $espacioBloqueado = Espacio::with(['sensor', 'vehiculoTipos'])
+                    ->whereKey($espacio->id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                $fechaHoraInicio = $request->fechaHoraInicio();
+                $fechaHoraFin = $request->fechaHoraFin();
+                $duracionMinutos = $request->duracionMinutos();
+
+                $disponibilidad = $disponibilidadService->verificarEspacioParaHorario(
+                    $espacioBloqueado,
+                    $fechaHoraInicio,
+                    $fechaHoraFin,
+                    $sensoresApiService,
+                    true
+                );
+
+                if (!$disponibilidad['disponible']) {
+                    throw new RuntimeException($disponibilidad['message']);
+                }
+
+                $vehiculoTipo = $espacioBloqueado->vehiculoTipos()
+                    ->where('vehiculo_tipos.activo', true)
+                    ->where('vehiculo_tipos.id', $request->integer('vehiculo_tipo_id'))
+                    ->first();
+
+                if (!$vehiculoTipo) {
+                    throw new RuntimeException('El tipo de vehiculo no esta permitido para este espacio.');
+                }
+
+                $calculo = $tarifaService->calcularMonto(
+                    $vehiculoTipo,
+                    $fechaHoraInicio,
+                    $duracionMinutos
+                );
+
+                $tarifa = $calculo['tarifa'];
+                $montoTotal = $calculo['monto_total'];
+                $codigoSufijo = Auth::id() . '-' . Str::upper(Str::random(6));
+                $codigoReserva = 'RES-' . now('America/Lima')->format('YmdHis') . '-' . $codigoSufijo;
+
+                $reserva = Reserva::create([
+                    'user_id' => Auth::id(),
+                    'espacio_id' => $espacioBloqueado->id,
+                    'vehiculo_tipo_id' => $vehiculoTipo->id,
+                    'tarifa_id' => $tarifa->id,
+                    'tipo_vehiculo_nombre' => $vehiculoTipo->nombre,
+                    'tarifa_nombre' => $tarifa->nombre,
+                    'tipo_tarifa' => $tarifa->tipo_tarifa,
+                    'codigo_reserva' => $codigoReserva,
+                    'fecha_reserva' => $request->input('fecha_reserva'),
+                    'hora_inicio' => $fechaHoraInicio->format('H:i:s'),
+                    'hora_fin' => $fechaHoraFin->format('H:i:s'),
+                    'duracion_minutos' => $duracionMinutos,
+                    'tarifa_hora' => $calculo['tarifa_hora'],
+                    'monto_total' => $montoTotal,
+                    'tolerancia_minutos' => $calculo['tolerancia_minutos'],
+                    'penalidad_por_fraccion' => $calculo['penalidad_por_fraccion'],
+                    'monto_penalidad' => 0,
+                    'estado' => 'pendiente_pago',
+                    'expires_at' => now('America/Lima')->addMinutes(10),
+                    'observacion' => 'Reserva generada desde la plataforma publica.',
+                ]);
+
+                Pago::create([
+                    'reserva_id' => $reserva->id,
+                    'user_id' => Auth::id(),
+                    'codigo_pago' => 'PAG-' . now('America/Lima')->format('YmdHis') . '-' . $codigoSufijo,
+                    'metodo_pago' => 'simulado',
+                    'monto' => $montoTotal,
+                    'estado' => 'pendiente',
+                ]);
+
+                $espacioBloqueado->update([
+                    'estado_actual' => 'reservado',
+                ]);
+
+                return $reserva;
+            });
+        } catch (RuntimeException $exception) {
             return redirect()
                 ->route('reservas.create', $espacio)
-                ->withErrors([
-                    'tarifa' => $e->getMessage(),
-                ])
-                ->withInput();
-        }
-
-        $tarifa = $calculo['tarifa'];
-        $montoTotal = $calculo['monto_total'];
-
-        $reserva = DB::transaction(function () use (
-            $espacio,
-            $vehiculoTipo,
-            $tarifa,
-            $calculo,
-            $fechaReserva,
-            $fechaHoraInicio,
-            $fechaHoraFin,
-            $duracionMinutos,
-            $montoTotal
-        ) {
-            $codigoReserva = 'RES-' . now('America/Lima')->format('YmdHis') . '-' . Auth::id();
-
-            $reserva = Reserva::create([
-                'user_id' => Auth::id(),
+                ->withInput()
+                ->with('error', $exception->getMessage());
+        } catch (Throwable $exception) {
+            Log::error('Error al registrar reserva.', [
+                'message' => $exception->getMessage(),
                 'espacio_id' => $espacio->id,
-                'vehiculo_tipo_id' => $vehiculoTipo->id,
-                'tarifa_id' => $tarifa->id,
-
-                'tipo_vehiculo_nombre' => $vehiculoTipo->nombre,
-                'tarifa_nombre' => $tarifa->nombre,
-                'tipo_tarifa' => $tarifa->tipo_tarifa,
-
-                'codigo_reserva' => $codigoReserva,
-                'fecha_reserva' => $fechaReserva,
-                'hora_inicio' => $fechaHoraInicio->format('H:i:s'),
-                'hora_fin' => $fechaHoraFin->format('H:i:s'),
-                'duracion_minutos' => $duracionMinutos,
-
-                'tarifa_hora' => $calculo['tarifa_hora'],
-                'monto_total' => $montoTotal,
-                'tolerancia_minutos' => $calculo['tolerancia_minutos'],
-                'penalidad_por_fraccion' => $calculo['penalidad_por_fraccion'],
-                'monto_penalidad' => 0,
-
-                'estado' => 'pendiente_pago',
-                'expires_at' => now('America/Lima')->addMinutes(10),
-                'observacion' => 'Reserva generada desde la plataforma pública.',
-            ]);
-
-            Pago::create([
-                'reserva_id' => $reserva->id,
                 'user_id' => Auth::id(),
-                'codigo_pago' => 'PAG-' . now('America/Lima')->format('YmdHis') . '-' . Auth::id(),
-                'metodo_pago' => 'simulado',
-                'monto' => $montoTotal,
-                'estado' => 'pendiente',
             ]);
 
-            $espacio->update([
-                'estado_actual' => 'reservado',
-            ]);
-
-            return $reserva;
-        });
+            return redirect()
+                ->route('reservas.create', $espacio)
+                ->withInput()
+                ->with('error', 'No se pudo registrar la reserva. Intentalo nuevamente.');
+        }
 
         return redirect()
             ->route('pagos.show', $reserva)
-            ->with('success', 'Reserva generada correctamente. Tienes 10 minutos para realizar el pago.');
+            ->with('success', 'Reserva registrada correctamente. Tienes 10 minutos para realizar el pago.');
     }
 
-
-    //SOLICITUD CANCELAR
     public function cancelar(Reserva $reserva)
     {
         if ($reserva->user_id !== Auth::id()) {
@@ -323,9 +290,18 @@ class ReservaController extends Controller
         }
 
         DB::transaction(function () use ($reserva) {
+            $reserva = Reserva::with('espacio')
+                ->whereKey($reserva->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($reserva->estado !== 'pendiente_pago') {
+                return;
+            }
+
             $reserva->update([
                 'estado' => 'cancelada',
-                'cancelado_at' => now(),
+                'cancelado_at' => now('America/Lima'),
             ]);
 
             $reserva->pagos()
@@ -346,7 +322,6 @@ class ReservaController extends Controller
             ->with('success', 'Reserva cancelada correctamente. El espacio fue liberado.');
     }
 
-    //SOLICITUD REEMBOLSO
     public function solicitarReembolso(Reserva $reserva)
     {
         if ($reserva->user_id !== Auth::id()) {
@@ -367,7 +342,7 @@ class ReservaController extends Controller
         if (!$pago) {
             return redirect()
                 ->route('reservas.index')
-                ->with('error', 'No se encontró un pago aprobado para esta reserva.');
+                ->with('error', 'No se encontro un pago aprobado para esta reserva.');
         }
 
         $reembolsoExistente = Reembolso::where('reserva_id', $reserva->id)
@@ -386,14 +361,14 @@ class ReservaController extends Controller
                 'pago_id' => $pago->id,
                 'user_id' => Auth::id(),
                 'monto' => $pago->monto,
-                'motivo' => 'Solicitud de cancelación realizada por el usuario.',
+                'motivo' => 'Solicitud de cancelacion realizada por el usuario.',
                 'estado' => 'solicitado',
-                'solicitado_at' => now(),
+                'solicitado_at' => now('America/Lima'),
             ]);
 
             $reserva->update([
                 'estado' => 'reembolso_solicitado',
-                'cancelado_at' => now(),
+                'cancelado_at' => now('America/Lima'),
             ]);
 
             if ($reserva->espacio && $reserva->espacio->estado_actual === 'reservado') {
@@ -405,6 +380,35 @@ class ReservaController extends Controller
 
         return redirect()
             ->route('reservas.index')
-            ->with('success', 'Solicitud de reembolso registrada correctamente. La administración revisará tu caso.');
+            ->with('success', 'Solicitud de reembolso registrada correctamente. La administracion revisara tu caso.');
+    }
+
+    private function tarifasParaFormulario($vehiculoTipos): array
+    {
+        return $vehiculoTipos
+            ->mapWithKeys(function ($tipo) {
+                $tarifas = $tipo->tarifas
+                    ->where('activo', true)
+                    ->sortByDesc('prioridad')
+                    ->values()
+                    ->map(fn ($tarifa) => [
+                        'id' => $tarifa->id,
+                        'nombre' => $tarifa->nombre,
+                        'tipo_tarifa' => $tarifa->tipo_tarifa,
+                        'monto_base' => (float) $tarifa->monto_base,
+                        'monto_por_hora' => (float) $tarifa->monto_por_hora,
+                        'monto_por_fraccion' => $tarifa->monto_por_fraccion !== null ? (float) $tarifa->monto_por_fraccion : null,
+                        'minutos_fraccion' => $tarifa->minutos_fraccion !== null ? (int) $tarifa->minutos_fraccion : null,
+                        'tiempo_minimo_minutos' => (int) $tarifa->tiempo_minimo_minutos,
+                        'tolerancia_minutos' => (int) $tarifa->tolerancia_minutos,
+                        'penalidad_por_fraccion' => (float) $tarifa->penalidad_por_fraccion,
+                        'hora_inicio' => $tarifa->hora_inicio ? substr($tarifa->hora_inicio, 0, 8) : null,
+                        'hora_fin' => $tarifa->hora_fin ? substr($tarifa->hora_fin, 0, 8) : null,
+                        'prioridad' => (int) $tarifa->prioridad,
+                    ]);
+
+                return [$tipo->id => $tarifas->all()];
+            })
+            ->all();
     }
 }

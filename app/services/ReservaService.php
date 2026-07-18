@@ -13,7 +13,7 @@ class ReservaService
         $reservas = Reserva::with(['espacio', 'pagos'])
             ->where('estado', 'pendiente_pago')
             ->whereNotNull('expires_at')
-            ->where('expires_at', '<', now())
+            ->where('expires_at', '<', now('America/Lima'))
             ->get();
 
         $cantidadExpirada = 0;
@@ -22,7 +22,7 @@ class ReservaService
             DB::transaction(function () use ($reserva, &$cantidadExpirada) {
                 $reserva->update([
                     'estado' => 'expirada',
-                    'expirado_at' => now(),
+                    'expirado_at' => now('America/Lima'),
                 ]);
 
                 $reserva->pagos()
@@ -48,7 +48,7 @@ class ReservaService
     {
         $reservas = Reserva::with('espacio')
             ->where('estado', 'confirmada')
-            ->whereDate('fecha_reserva', '<=', now()->toDateString())
+            ->whereDate('fecha_reserva', '<=', now('America/Lima')->toDateString())
             ->get();
 
         $cantidadFinalizada = 0;
@@ -57,9 +57,9 @@ class ReservaService
             $fecha = $reserva->fecha_reserva->format('Y-m-d');
             $horaFin = $reserva->hora_fin;
 
-            $fechaHoraFin = Carbon::parse($fecha . ' ' . $horaFin);
+            $fechaHoraFin = Carbon::parse($fecha . ' ' . $horaFin, 'America/Lima');
 
-            if ($fechaHoraFin->lessThanOrEqualTo(now())) {
+            if ($fechaHoraFin->lessThanOrEqualTo(now('America/Lima'))) {
                 DB::transaction(function () use ($reserva, &$cantidadFinalizada) {
                     $reserva->update([
                         'estado' => 'finalizada',

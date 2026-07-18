@@ -20,7 +20,7 @@ return new class extends Migration
                 ->constrained('sensores')
                 ->nullOnDelete();
 
-            $table->enum('estado_detectado', ['libre', 'ocupado']);
+            $table->enum('estado_detectado', ['libre', 'ocupado', 'reservado', 'mantenimiento']);
             $table->decimal('distancia_cm', 8, 2)->nullable();
 
             $table->dateTime('fecha_hora');

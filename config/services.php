@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'sensores' => [
+        'url' => env('SENSORES_API_URL'),
+        'token' => env('SENSORES_API_TOKEN'),
+    ],
+
 ];

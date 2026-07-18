@@ -12,6 +12,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            return;
+        }
+
         DB::statement("ALTER TABLE espacios MODIFY estado_actual ENUM('libre', 'ocupado', 'reservado', 'mantenimiento') DEFAULT 'libre'");
 
         DB::statement("ALTER TABLE registros_ocupacion MODIFY estado_detectado ENUM('libre', 'ocupado', 'reservado', 'mantenimiento')");
@@ -22,6 +26,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            return;
+        }
+
         DB::statement("UPDATE espacios SET estado_actual = 'libre' WHERE estado_actual IN ('reservado', 'mantenimiento')");
 
         DB::statement("UPDATE registros_ocupacion SET estado_detectado = 'libre' WHERE estado_detectado IN ('reservado', 'mantenimiento')");

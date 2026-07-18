@@ -118,6 +118,15 @@ class PagoController extends Controller
     private function expirarReserva(Reserva $reserva): void
     {
         DB::transaction(function () use ($reserva) {
+            $reserva = Reserva::with('espacio')
+                ->whereKey($reserva->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($reserva->estado !== 'pendiente_pago') {
+                return;
+            }
+
             $reserva->update([
                 'estado' => 'expirada',
                 'expirado_at' => now('America/Lima'),

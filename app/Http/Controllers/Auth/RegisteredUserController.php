@@ -40,7 +40,7 @@ class RegisteredUserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'roles' => 'user',
+            'role' => 'user',
             'activo' => true,
         ]);
 
@@ -48,6 +48,6 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return redirect()->intended((route('reservas.index')));
+        return redirect()->intended(route('dashboard', absolute: false));
     }
 }

@@ -5,6 +5,8 @@ use App\Models\Espacio;
 use App\Services\ReservaService;
 use App\Models\Tarifa;
 use App\Models\VehiculoTipo;
+use App\Services\ReservaDisponibilidadService;
+use App\Services\SensoresApiService;
 
 class PublicController extends Controller
 {
@@ -33,20 +35,55 @@ class PublicController extends Controller
         ));
     }
 
-    public function disponibilidad(ReservaService $reservaService)
+    public function disponibilidad(
+        ReservaService $reservaService,
+        SensoresApiService $sensoresApiService,
+        ReservaDisponibilidadService $disponibilidadService
+    )
     {
         $reservaService->procesarReservasAutomaticas();
 
-        $espacios = Espacio::with('vehiculoTipos')
+        $espacios = Espacio::with(['vehiculoTipos.tarifas', 'sensor'])
             ->where('activo', true)
             ->orderBy('codigo')
             ->get();
 
+        $estadoSensores = $sensoresApiService->obtenerEstado();
+        $sensoresPorCodigo = collect($estadoSensores['sensores'] ?? [])
+            ->keyBy('codigo');
+        $disponibilidadPorEspacio = $espacios
+            ->mapWithKeys(function ($espacio) use ($sensoresPorCodigo, $disponibilidadService) {
+                $sensorLocal = $espacio->sensor;
+                $sensorExterno = $sensorLocal ? $sensoresPorCodigo->get($sensorLocal->codigo_sensor) : null;
+
+                return [
+                    $espacio->id => $disponibilidadService->estadoParaTarjeta($espacio, $sensorExterno),
+                ];
+            });
+
         $totalEspacios = $espacios->count();
-        $espaciosLibres = $espacios->where('estado_actual', 'libre')->count();
-        $espaciosOcupados = $espacios->where('estado_actual', 'ocupado')->count();
-        $espaciosReservados = $espacios->where('estado_actual', 'reservado')->count();
-        $espaciosMantenimiento = $espacios->where('estado_actual', 'mantenimiento')->count();
+        $espaciosLibres = $espacios
+            ->filter(fn ($espacio) => ($disponibilidadPorEspacio[$espacio->id]['estado_visual'] ?? null) === 'libre')
+            ->count();
+        $espaciosOcupados = $espacios
+            ->filter(fn ($espacio) => ($disponibilidadPorEspacio[$espacio->id]['estado_visual'] ?? null) === 'ocupado')
+            ->count();
+        $espaciosReservados = $espacios
+            ->filter(fn ($espacio) => ($disponibilidadPorEspacio[$espacio->id]['estado_visual'] ?? null) === 'reservado')
+            ->count();
+        $espaciosMantenimiento = $espacios
+            ->filter(fn ($espacio) => ($disponibilidadPorEspacio[$espacio->id]['estado_visual'] ?? null) === 'mantenimiento')
+            ->count();
+        $espaciosSinDatos = $espacios
+            ->filter(fn ($espacio) => ($disponibilidadPorEspacio[$espacio->id]['estado_visual'] ?? null) === 'sin_datos')
+            ->count();
+        $espaciosSinConfiguracion = $espacios
+            ->filter(fn ($espacio) => in_array(
+                $disponibilidadPorEspacio[$espacio->id]['estado_visual'] ?? null,
+                ['sin_tipos', 'sin_tarifa'],
+                true
+            ))
+            ->count();
 
         return view('public.disponibilidad', compact(
             'espacios',
@@ -54,7 +91,12 @@ class PublicController extends Controller
             'espaciosLibres',
             'espaciosOcupados',
             'espaciosReservados',
-            'espaciosMantenimiento'
+            'espaciosMantenimiento',
+            'espaciosSinDatos',
+            'espaciosSinConfiguracion',
+            'estadoSensores',
+            'sensoresPorCodigo',
+            'disponibilidadPorEspacio'
         ));
     }
 
@@ -71,4 +113,5 @@ class PublicController extends Controller
 
         return view('public.tarifas', compact('vehiculoTipos'));
     }
+
 }

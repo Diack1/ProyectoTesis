@@ -12,6 +12,7 @@ use App\Http\Controllers\PagoController;
 use App\Http\Controllers\Admin\ReservaAdminController;
 use App\Http\Controllers\SuperAdmin\AdminUserController;
 use App\Http\Controllers\Admin\TarifaAdminController;
+use App\Http\Controllers\SensorEstadoController;
 
 /*
 |--------------------------------------------------------------------------
@@ -28,6 +29,12 @@ Route::get('/disponibilidad', [PublicController::class, 'disponibilidad'])
 Route::get('/tarifas', [PublicController::class, 'tarifas'])
     ->name('public.tarifas');
 
+Route::get('/sensores/estado', [SensorEstadoController::class, 'index'])
+    ->name('sensores.estado');
+
+Route::get('/sensores/estado/json', [SensorEstadoController::class, 'json'])
+    ->name('sensores.estado.json');
+
 /*
 |--------------------------------------------------------------------------
 | Rutas de usuario autenticado
@@ -35,6 +42,18 @@ Route::get('/tarifas', [PublicController::class, 'tarifas'])
 */
 
 Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', function () {
+        if (auth()->user()->role === 'super_admin') {
+            return redirect()->route('superadmin.dashboard');
+        }
+
+        if (auth()->user()->role === 'admin') {
+            return redirect()->route('admin.dashboard');
+        }
+
+        return redirect()->route('reservas.index');
+    })->name('dashboard');
+
     Route::get('/profile', [ProfileController::class, 'edit'])
         ->name('profile.edit');
 
