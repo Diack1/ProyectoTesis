@@ -1,59 +1,41 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Parke’o · Gestión de cochera
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Proyecto de tesis con Laravel 12 / PHP 8.2+, MySQL, sensores ESP32 y reconocimiento de placas YOLO + OCR.
 
-## About Laravel
+## Funciones
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Plano 2D de referencia E01–E30 y vista en lista. Estados manuales o por sensor; consulta pública sin datos de clientes.
+- Reservas web con placa y prepago Yape/Plin mediante QR del negocio. Revisión manual del pago y reembolso.
+- Ingreso con ticket, inicio de tiempo manual o mediante sensor y cobro a la salida.
+- Cámara USB con consulta de clientes y reservas por matrícula. La detección avisa; el operador registra el ingreso.
+- Panel agrupado en Inicio, Operación, Reservas y pagos, Reportes y Configuración.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Preparar otra copia
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+1. Instalar dependencias: `composer install` y `npm ci`.
+2. Copiar `.env.example` a `.env`, configurar la base de datos y ejecutar `php artisan key:generate` para una instalación nueva.
+3. Ejecutar `php artisan migrate`. En una base nueva, revisar los seeders antes de cargarlos; no ejecutarlos indiscriminadamente sobre un respaldo con datos.
+4. Ejecutar `npm run build` y `php artisan serve`. Abrir `http://127.0.0.1:8000`.
+5. Configurar QR y tarifas desde el panel. Seguir `vision/README.md` para modelos y entorno de reconocimiento; `docs/camara-entrada.md` para pruebas de cámara.
+6. Configurar el planificador de Laravel para procesar los vencimientos (`php artisan schedule:work` en desarrollo).
 
-## Learning Laravel
+## Comprobaciones
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+```sh
+php artisan test --compact
+node --test tests/plate-tracker.test.mjs
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Las pruebas PHP utilizan SQLite en memoria. No ejecutar `migrate:fresh` en la base del negocio.
 
-## Laravel Sponsors
+## Respaldo con Git
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Git conserva el código y las migraciones, no los datos del negocio. Revisar `git status` y `git diff --check` antes de crear el commit. No publicar `.env`, credenciales de sensores, comprobantes, dumps SQL, imágenes de clientes ni el entorno virtual. Los modelos se preparan siguiendo `vision/README.md`.
 
-### Premium Partners
+Para recuperar una instalación existente, guardar además una copia privada de MySQL, `storage/app/private`, archivos públicos cargados y `.env` con su `APP_KEY` original. Conservar estos respaldos fuera del repositorio y en otra ubicación segura. Restaurar una copia existente no requiere regenerar su clave.
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## Plano de referencia
 
-## Contributing
+La distribución se basa en la imagen facilitada: nueve espacios al fondo, once a la derecha, siete a la izquierda y tres interiores. Los códigos sin habilitar aparecen grises y no se activan automáticamente. La geometría está en `resources/views/partials/plano.blade.php`; validar numeración y circulación en la cochera antes de instalar señalización.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+El panel administrativo muestra el estado al abrirlo y permite actualizarlo. El plano público consulta estados cada diez segundos. Si falla la consulta, deshabilita la reserva hasta recuperar comunicación. El servidor vuelve a validar al guardar.

@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Reservas - Cochera Tentación')
+@section('title', 'Reservas - Parke’o')
 @section('page-title', 'Administración de reservas')
 @section('page-subtitle', 'Consulta reservas, pagos y solicitudes de reembolso registradas en el sistema')
 
@@ -90,7 +90,7 @@
 
             <tr>
                 <td>
-                    <strong>{{ $reserva->codigo_reserva }}</strong>
+                    <strong>{{ $reserva->codigo_reserva }}</strong> <span>· Placa: {{ $reserva->placa ?? 'Sin placa registrada' }}</span>
                 </td>
 
                 <td>
@@ -171,14 +171,18 @@
                 </td>
 
                 <td>
-                    <div class="table-actions">
-                        @if($ultimoReembolso && $ultimoReembolso->estado === 'solicitado')
+                    @if($reserva->estadia)<p><a class="btn btn-primary btn-sm" href="{{ route('admin.estadias.show',$reserva->estadia) }}">Ver ticket</a></p>
+                        @elseif($reserva->estado === 'confirmada')<p><a class="btn btn-primary btn-sm" href="{{ route('admin.estadias.create',['reserva'=>$reserva->id]) }}">Registrar llegada</a></p>
+                        @endif
+                        @if($ultimoReembolso)<p>{{ $ultimoReembolso->motivo }}</p>@endif
+                        <div class="table-actions">
+                        @if($ultimoReembolso && $ultimoReembolso->estado === 'solicitado' && auth()->user()->tieneRol('admin','super_admin'))
                         <form action="{{ route('admin.reembolsos.aprobar', $ultimoReembolso) }}" method="POST"
-                            onsubmit="return confirm('¿Seguro que deseas aprobar este reembolso?');">
+                            onsubmit="return confirm('¿Confirmas que ya devolviste el dinero al cliente?');">
                             @csrf
 
                             <button type="submit" class="btn btn-success btn-sm">
-                                Aprobar
+                                Registrar devolución realizada
                             </button>
                         </form>
 

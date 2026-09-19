@@ -1,6 +1,8 @@
 @extends('layouts.public')
 
-@section('title', 'Nueva reserva - Cochera Tentación')
+@section('title', 'Nueva reserva - Parke’o')
+
+
 
 @push('styles')
 <style>
@@ -104,7 +106,8 @@
             $horaMinimaHoy = now('America/Lima')->addMinutes(15)->format('H:i');
             @endphp
 
-            <form id="formNuevaReserva" action="{{ route('reservas.confirmar', $espacio) }}" method="POST">
+            <div class="alert alert-info">La reserva web se paga por adelantado. El tiempo contratado comienza al detectar el sensor el vehículo estacionado o, en un espacio manual, al emitir el ticket de ingreso. Si no llegas dentro de la tolerancia, liberaremos el espacio y revisaremos tu pago para un posible reembolso manual.</div>
+<form id="formNuevaReserva" action="{{ route('reservas.confirmar', $espacio) }}" method="POST">
                 @csrf
 
                 <div class="form-group">
@@ -117,6 +120,13 @@
                         </option>
                         @endforeach
                     </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="placa">Placa del vehículo</label>
+                    <input id="placa" name="placa" value="{{ old('placa') }}" maxlength="20" placeholder="ABC-123" required autocomplete="off" aria-describedby="placa-ayuda">
+                    <small id="placa-ayuda">Ingresa la placa del vehículo con el que llegarás. Al reconocerla, avisaremos al operador que tienes una reserva confirmada.</small>
+                    @error('placa')<p class="text-danger">{{ $message }}</p>@enderror
                 </div>
 
                 <div class="form-group">

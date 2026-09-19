@@ -1,6 +1,6 @@
 @extends('layouts.public')
 
-@section('title', 'Cochera Tentación - Cochera inteligente')
+@section('title', 'Parke’o - Cochera inteligente')
 
 @section('content')
 

@@ -1,96 +1,25 @@
 <?php
-
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Espacio;
-use App\Models\Sensor;
-use App\Models\RegistroOcupacion;
-use App\Models\User;
-use App\Models\Reserva;
-use App\Models\Pago;
-use App\Models\Reembolso;
+use App\Models\{Espacio, Estadia, Pago, Reserva};
+use App\Services\{ReservaDisponibilidadService, ReservaService};
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(ReservaService $reservas, ReservaDisponibilidadService $disponibilidad)
     {
-        // Espacios
-        $totalEspacios = Espacio::count();
-        $espaciosLibres = Espacio::where('estado_actual', 'libre')->count();
-        $espaciosOcupados = Espacio::where('estado_actual', 'ocupado')->count();
-        $espaciosReservados = Espacio::where('estado_actual', 'reservado')->count();
-        $espaciosMantenimiento = Espacio::where('estado_actual', 'mantenimiento')->count();
-
-        // Sensores
-        $totalSensores = Sensor::count();
-        $sensoresActivos = Sensor::where('estado', 'activo')->count();
-        $sensoresInactivos = Sensor::where('estado', 'inactivo')->count();
-
-        // Registros
-        $totalRegistros = RegistroOcupacion::count();
-
-        // Usuarios
-        $totalUsuarios = User::where('role', 'user')->count();
-        $totalAdmins = User::where('role', 'admin')->count();
-
-        // Reservas
-        $totalReservas = Reserva::count();
-        $reservasPendientesPago = Reserva::where('estado', 'pendiente_pago')->count();
-        $reservasConfirmadas = Reserva::where('estado', 'confirmada')->count();
-        $reservasCanceladas = Reserva::where('estado', 'cancelada')->count();
-        $reservasExpiradas = Reserva::where('estado', 'expirada')->count();
-        $reservasFinalizadas = Reserva::where('estado', 'finalizada')->count();
-
-        // Pagos
-        $pagosPendientes = Pago::where('estado', 'pendiente')->count();
-        $pagosAprobados = Pago::where('estado', 'aprobado')->count();
-        $pagosCancelados = Pago::where('estado', 'cancelado')->count();
-        $pagosReembolsados = Pago::where('estado', 'reembolsado')->count();
-
-        // Reembolsos
-        $reembolsosSolicitados = Reembolso::where('estado', 'solicitado')->count();
-        $reembolsosAprobados = Reembolso::where('estado', 'aprobado')->count();
-        $reembolsosRechazados = Reembolso::where('estado', 'rechazado')->count();
-
-        $ultimasReservas = Reserva::with(['usuario', 'espacio', 'vehiculoTipo', 'tarifa'])
-            ->orderBy('created_at', 'desc')
-            ->take(5)
-            ->get();
-
-        return view('admin.dashboard', compact(
-            'totalEspacios',
-            'espaciosLibres',
-            'espaciosOcupados',
-            'espaciosReservados',
-            'espaciosMantenimiento',
-
-            'totalSensores',
-            'sensoresActivos',
-            'sensoresInactivos',
-
-            'totalRegistros',
-
-            'totalUsuarios',
-            'totalAdmins',
-
-            'totalReservas',
-            'reservasPendientesPago',
-            'reservasConfirmadas',
-            'reservasCanceladas',
-            'reservasExpiradas',
-            'reservasFinalizadas',
-
-            'pagosPendientes',
-            'pagosAprobados',
-            'pagosCancelados',
-            'pagosReembolsados',
-
-            'reembolsosSolicitados',
-            'reembolsosAprobados',
-            'reembolsosRechazados',
-
-            'ultimasReservas'
-        ));
+        $reservas->procesarReservasAutomaticas();
+        $espacios = Espacio::with(['sensor','vehiculoTipos.tarifas',
+            'estadias' => fn ($q) => $q->activas(),
+            'reservas' => fn ($q) => $q->with('usuario')->whereIn('estado',['pendiente_pago','confirmada'])->whereNull('inasistencia_at')->whereDoesntHave('estadia'),
+        ])->where('activo',true)->orderBy('codigo')->get();
+        $disponibilidadPorEspacio = $espacios->mapWithKeys(fn ($e) => [$e->id => $disponibilidad->estadoParaTarjeta($e)]);
+        $libres = $espacios->where('estado_actual','libre')->count();
+        $activas = Estadia::activas()->count();
+        $pendientes = Pago::where('estado','pendiente')->whereNotNull('enviado_at')->count();
+        $cobros = Pago::where('estado','aprobado')->whereDate('pagado_at',today())->sum('monto');
+        $llegadas = Reserva::with('usuario','espacio')->where('estado','confirmada')->whereDoesntHave('estadia')->whereNull('inasistencia_at')->orderBy('fecha_reserva')->orderBy('hora_inicio')->limit(5)->get();
+        return response()->view('admin.dashboard',compact('espacios','disponibilidadPorEspacio','libres','activas','pendientes','cobros','llegadas'))->header('Cache-Control','no-store');
     }
 }

@@ -1,6 +1,6 @@
 @extends('layouts.auth')
 
-@section('title', 'Iniciar sesión - Cochera Tentación')
+@section('title', 'Iniciar sesión - Parke’o')
 
 @section('content')
 

@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Espacios - Cochera Tentación')
+@section('title', 'Espacios - Parke’o')
 @section('page-title', 'Gestión de espacios')
 @section('page-subtitle', 'Administra los espacios de estacionamiento, estados y vehículos permitidos')
 
@@ -59,7 +59,7 @@
                 </td>
 
                 <td>
-                    {{ $espacio->descripcion }}
+                    {{ $espacio->descripcion }}<br><small>{{ $espacio->modo_monitoreo === 'sensor' ? 'Sensor instalado' : 'Control manual' }} · {{ $espacio->incluido_estudio ? 'Incluido en tesis' : 'Fuera del grupo de estudio' }}</small>
                 </td>
 
                 <td>
@@ -106,7 +106,7 @@
                             @method('DELETE')
 
                             <button type="submit" class="btn btn-danger btn-sm">
-                                Eliminar
+                                Desactivar
                             </button>
                         </form>
                     </div>

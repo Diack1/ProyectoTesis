@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Nueva tarifa - Cochera Tentación')
+@section('title', 'Nueva tarifa - Parke’o')
 @section('page-title', 'Nueva tarifa')
 @section('page-subtitle', 'Registra una tarifa para auto, moto, horario, duración y condiciones de cobro')
 

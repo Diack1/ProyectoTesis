@@ -11,7 +11,7 @@ use Illuminate\Notifications\Notifiable;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, \Laravel\Sanctum\HasApiTokens, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -51,7 +51,7 @@ class User extends Authenticatable
     }
 
     /* Comprueba si el usuario tiene el rol 'user'. */
-      public function esUsuario(): bool
+    public function esUsuario(): bool
     {
         return $this->role === 'user';
     }
@@ -79,7 +79,6 @@ class User extends Authenticatable
     /* Comprueba si el usuario tiene alguno de los roles proporcionados.
      * Ejemplo: $user->tieneRol('admin', 'super_admin') */
 
-
     public function tieneRol(...$roles): bool
     {
         return in_array($this->role, $roles);
@@ -105,4 +104,3 @@ class User extends Authenticatable
         return $this->hasMany(Reembolso::class, 'procesado_por');
     }
 }
-

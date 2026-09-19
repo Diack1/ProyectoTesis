@@ -1,10 +1,11 @@
 @extends('layouts.admin')
 
-@section('title', 'Monitoreo - Cochera Tentación')
+@section('title', 'Monitoreo - Parke’o')
 @section('page-title', 'Monitoreo de espacios')
 @section('page-subtitle', 'Supervisión del estado actual de los espacios de la cochera')
 
 @section('content')
+@include('admin.estadias.messages')
 
 @if(session('success'))
 <div class="alert-box alert-success">
@@ -94,6 +95,10 @@
             </p>
             @endif
 
+            <p class="text-muted">{{ $espacio->modo_monitoreo === 'sensor' ? 'Control con sensor' : 'Control manual' }}</p>
+            @if($espacio->estadias->first())
+            <a class="btn btn-primary" href="{{ route('admin.estadias.show',$espacio->estadias->first()) }}">Abrir ticket</a>
+            @else
             <div class="admin-space-actions">
                 <form action="{{ route('admin.espacios.estado', $espacio) }}" method="POST">
                     @csrf
@@ -113,20 +118,13 @@
 
                 <form action="{{ route('admin.espacios.estado', $espacio) }}" method="POST">
                     @csrf
-                    <input type="hidden" name="estado" value="reservado">
-                    <button type="submit" class="btn btn-warning btn-sm">
-                        Reservado
-                    </button>
-                </form>
-
-                <form action="{{ route('admin.espacios.estado', $espacio) }}" method="POST">
-                    @csrf
                     <input type="hidden" name="estado" value="mantenimiento">
                     <button type="submit" class="btn btn-maintenance btn-sm">
                         Mantenimiento
                     </button>
                 </form>
             </div>
+            @endif
         </div>
         @empty
         <div class="card">

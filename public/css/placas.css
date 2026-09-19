@@ -1,0 +1,13 @@
+.vision-preview { display: block; max-width: 100%; max-height: 540px; margin: 20px auto; border-radius: 8px; }
+.vision-candidates { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 24px; }
+.vision-candidate { padding: 20px; border: 1px solid var(--color-border); border-radius: var(--radius-md); min-width: 0; }
+.vision-crop { display: block; width: min(100%, 320px); height: auto; max-height: 180px; object-fit: contain; margin: 16px auto; }
+.vision-note { color: var(--color-muted); margin-top: 20px; }
+.vision-candidate input[name="placa"] { text-transform: uppercase; letter-spacing: 2px; font-weight: 700; }
+#estado-analisis { margin-top: 16px; }
+.camera-buttons { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0; }
+#camera-video { width: 100%; max-height: 500px; background: #111827; object-fit: contain; border-radius: 8px; }
+#camera-status { margin: 16px 0; font-weight: 600; }
+#camera-results .vision-candidate { margin: 16px 0; }
+#camera-results a { margin: 6px; }
+#camera-lookup { margin-top: 16px; }

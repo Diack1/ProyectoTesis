@@ -22,3 +22,19 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+/firmware/**/config.h
+/vision/.venv/
+/vision/models/
+/vision/data/
+/vision/runs/
+/vision/**/__pycache__/
+
+# Configuración privada y respaldos locales
+.env.*
+!.env.example
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+/storage/app/private/backups/
+/public/qa-*.html

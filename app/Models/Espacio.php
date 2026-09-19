@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\VehiculoTipo;
 
 class Espacio extends Model
 {
@@ -13,8 +12,28 @@ class Espacio extends Model
         'codigo',
         'descripcion',
         'estado_actual',
-        'activo',
+        'activo', 'incluido_estudio', 'modo_monitoreo',
     ];
+
+    public function estadias()
+    {
+        return $this->hasMany(Estadia::class);
+    }
+
+    public function getEstadoActualAttribute($value)
+    {
+        if ($value !== 'mantenimiento' && $this->estadias()->activas()->exists()) {
+            return 'ocupado';
+        }
+        if ($value === 'libre' && $this->modo_monitoreo === 'sensor' && $this->sensor?->integracion_iot && ! $this->sensor->lectura_vigente) {
+            return 'sin_senal';
+        }
+        if ($value === 'libre' && $this->reservas()->whereIn('estado', ['pendiente_pago', 'confirmada'])->whereNull('inasistencia_at')->exists()) {
+            return 'reservado';
+        }
+
+        return $value;
+    }
 
     public function sensor()
     {

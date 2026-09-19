@@ -3,15 +3,18 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Sensor;
 use App\Models\Espacio;
+use App\Models\Estadia;
 use App\Models\RegistroOcupacion;
+use App\Models\Sensor;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class SensorController extends Controller
 {
     public function registrarOcupacion(Request $request)
     {
+        abort_unless($request->user()?->activo && $request->user()->tieneRol('admin', 'super_admin', 'operador'), 403);
         $request->validate([
             'codigo_sensor' => 'required|string|exists:sensores,codigo_sensor',
             'estado' => 'required|in:libre,ocupado',
@@ -22,14 +25,16 @@ class SensorController extends Controller
             ->where('codigo_sensor', $request->codigo_sensor)
             ->first();
 
-        if (!$sensor || !$sensor->espacio) {
+        if (! $sensor || ! $sensor->espacio) {
             return response()->json([
                 'success' => false,
                 'message' => 'Sensor no asociado a ningún espacio.',
             ], 404);
         }
 
+        abort_if($sensor->integracion_iot, 409, 'Este sensor debe enviar distancias a su dirección de recepción IoT.');
         $espacio = $sensor->espacio;
+        abort_unless($espacio->modo_monitoreo === 'sensor' && $sensor->estado === 'activo', 409, 'Este espacio está bajo control manual o el sensor está inactivo.');
 
         if ($espacio->estado_actual === 'mantenimiento') {
             return response()->json([
@@ -42,18 +47,24 @@ class SensorController extends Controller
             ], 409);
         }
 
-        $espacio->update([
-            'estado_actual' => $request->estado,
-        ]);
+        $registro = DB::transaction(function () use ($request, $sensor) {
+            $espacio = Espacio::lockForUpdate()->findOrFail($sensor->espacio_id);
+            abort_unless($espacio->modo_monitoreo === 'sensor' && $espacio->getRawOriginal('estado_actual') !== 'mantenimiento', 409);
+            abort_if(Sensor::findOrFail($sensor->id)->integracion_iot, 409);
+            $espacio->update(['estado_actual' => $request->estado]);
+            if ($request->estado === 'ocupado') {
+                $estadia = Estadia::activas()->where('espacio_id', $espacio->id)->lockForUpdate()->first();
+                if ($estadia && ! $estadia->inicio_cobro) {
+                    $estadia->update(['inicio_cobro' => now(), 'fuente_inicio' => 'sensor']);
+                }
+            }
 
-        $registro = RegistroOcupacion::create([
-            'espacio_id' => $espacio->id,
-            'sensor_id' => $sensor->id,
-            'estado_detectado' => $request->estado,
-            'distancia_cm' => $request->distancia_cm,
-            'fecha_hora' => now(),
-            'origen' => 'api_simulada',
-        ]);
+            return RegistroOcupacion::create([
+                'espacio_id' => $espacio->id, 'sensor_id' => $sensor->id, 'estado_detectado' => $request->estado,
+                'distancia_cm' => $request->distancia_cm, 'fecha_hora' => now(),
+                'origen' => $sensor->tipo_sensor === 'simulado' ? 'api_simulada' : 'sensor_iot',
+            ]);
+        });
 
         return response()->json([
             'success' => true,

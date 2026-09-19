@@ -17,6 +17,11 @@ class RegistroOcupacion extends Model
         'origen',
     ];
 
+    protected function casts(): array
+    {
+        return ['fecha_hora' => 'datetime'];
+    }
+
     public function espacio()
     {
         return $this->belongsTo(Espacio::class, 'espacio_id');

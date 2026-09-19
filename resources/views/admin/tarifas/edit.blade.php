@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Editar tarifa - Cochera Tentación')
+@section('title', 'Editar tarifa - Parke’o')
 @section('page-title', 'Editar tarifa')
 @section('page-subtitle', 'Actualiza los datos de la tarifa y sus condiciones de aplicación')
 

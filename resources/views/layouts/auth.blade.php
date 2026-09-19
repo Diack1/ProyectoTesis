@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
 
-    <title>@yield('title', 'Acceso - Cochera Tentación')</title>
+    <title>@yield('title', 'Acceso - Parke’o')</title>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -19,9 +19,9 @@
     <div class="auth-shell">
         <section class="auth-panel">
             <a href="{{ route('public.home') }}" class="auth-brand">
-                <div class="auth-logo">CT</div>
+                <div class="auth-logo">P</div>
                 <div>
-                    <span class="auth-brand-title">Cochera Tentación</span>
+                    <span class="auth-brand-title">Parke’o</span>
                     <span class="auth-brand-subtitle">Cochera inteligente</span>
                 </div>
             </a>

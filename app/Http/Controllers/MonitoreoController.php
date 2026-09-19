@@ -4,13 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Models\Espacio;
 use App\Models\RegistroOcupacion;
+use App\Services\ReservaService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class MonitoreoController extends Controller
 {
     public function index()
     {
-        $espacios = Espacio::with('sensor')
+        app(ReservaService::class)->procesarReservasAutomaticas();
+        $espacios = Espacio::with(['sensor', 'estadias' => fn ($q) => $q->activas()])
             ->orderBy('codigo')
             ->get();
 
@@ -39,27 +43,18 @@ class MonitoreoController extends Controller
     public function cambiarEstado(Request $request, Espacio $espacio)
     {
         $request->validate([
-            'estado' => 'required|in:libre,ocupado,reservado,mantenimiento',
+            'estado' => 'required|in:libre,ocupado,mantenimiento',
         ]);
 
-        $sensor = $espacio->sensor;
-
-        $espacio->update([
-            'estado_actual' => $request->estado,
-        ]);
-
-        RegistroOcupacion::create([
-            'espacio_id' => $espacio->id,
-            'sensor_id' => $sensor ? $sensor->id : null,
-            'estado_detectado' => $request->estado,
-            'distancia_cm' => match ($request->estado) {
-                'ocupado' => 8,
-                'libre' => 30,
-                default => null,
-            },
-            'fecha_hora' => now(),
-            'origen' => 'manual_admin',
-        ]);
+        DB::transaction(function () use ($request, $espacio) {
+            $espacio = Espacio::lockForUpdate()->findOrFail($espacio->id);
+            if ($espacio->estadias()->activas()->exists()) {
+                throw ValidationException::withMessages(['estado' => 'Este espacio tiene un ticket activo. Registra la salida desde el ticket.']);
+            }
+            $espacio->update(['estado_actual' => $request->estado]);
+            RegistroOcupacion::create(['espacio_id' => $espacio->id, 'sensor_id' => $espacio->sensor?->id,
+                'estado_detectado' => $request->estado, 'fecha_hora' => now(), 'origen' => 'manual_admin']);
+        });
 
         return redirect()
             ->route('admin.monitoreo.index')

@@ -122,48 +122,24 @@ class ReservaDisponibilidadService
 
     public function estadoParaTarjeta(Espacio $espacio, ?array $sensorExterno = null): array
     {
-        $baseDisponible = $this->espacioBaseDisponible($espacio);
-        $tieneReserva = $this->tieneReservaBloqueante($espacio);
+        $estado = $espacio->estado_actual;
         $configuracion = $this->verificarConfiguracionReserva($espacio);
-        $configuracionDisponible = $configuracion['disponible'];
-        $logicamenteDisponible = $baseDisponible
-            && !$tieneReserva
-            && $configuracionDisponible;
-
-        $sensorDisponible = $sensorExterno
-            && ($sensorExterno['ocupado'] ?? null) === false
-            && ($sensorExterno['datos_disponibles'] ?? null) === true;
-
-        $sensorOcupado = $sensorExterno
-            && ($sensorExterno['ocupado'] ?? null) === true
-            && ($sensorExterno['datos_disponibles'] ?? null) === true;
-
-        $estadoVisual = match (true) {
-            $sensorOcupado => 'ocupado',
-            !$sensorExterno || !$sensorDisponible => 'sin_datos',
-            !$baseDisponible && $espacio->estado_actual === 'mantenimiento' => 'mantenimiento',
-            $tieneReserva => 'reservado',
-            !$configuracionDisponible => $configuracion['estado'],
-            default => 'libre',
-        };
-
-        return [
-            'estado_visual' => $estadoVisual,
-            'estado_texto' => match ($estadoVisual) {
-                'libre' => 'Libre',
-                'ocupado' => 'Ocupado',
-                'mantenimiento' => 'Mantenimiento',
-                'reservado' => 'Reservado',
-                'sin_tipos' => 'Sin tipos de vehiculo',
-                'sin_tarifa' => 'Sin tarifa configurada',
-                default => 'Sin conexion',
-            },
-            'sensor_disponible' => $sensorDisponible,
-            'logicamente_disponible' => $logicamenteDisponible,
-            'configuracion_disponible' => $configuracionDisponible,
-            'bloqueo_motivo' => $logicamenteDisponible ? null : $this->mensajeBloqueo($espacio, $tieneReserva, $configuracion),
-            'puede_reservar' => $sensorDisponible && $logicamenteDisponible,
-        ];
+        if ($espacio->modo_monitoreo === 'sensor' && $estado === 'libre'
+            && (!$espacio->sensor?->integracion_iot || !$espacio->sensor->lectura_vigente)) {
+            $estado = 'sin_senal';
+        }
+        if ($estado === 'libre' && !$configuracion['disponible']) {
+            $estado = $configuracion['estado'];
+        }
+        $puede = $espacio->activo && $estado === 'libre';
+        return ['estado_visual' => $estado, 'estado_texto' => match ($estado) {
+            'libre' => 'Libre', 'ocupado' => 'Ocupado', 'reservado' => 'Reservado',
+            'mantenimiento' => 'Mantenimiento', 'sin_tarifa', 'sin_tipos' => 'No habilitado',
+            default => 'Sin señal',
+        }, 'puede_reservar' => $puede, 'logicamente_disponible' => $puede,
+            'sensor_disponible' => (bool) $espacio->sensor?->lectura_vigente,
+            'configuracion_disponible' => $configuracion['disponible'],
+            'bloqueo_motivo' => $puede ? null : 'Este espacio no está disponible para reservar.'];
     }
 
     public function tiposPermitidosActivos(Espacio $espacio)

@@ -29,7 +29,7 @@
                     </h1>
 
                     <p class="section-subtitle">
-                        Consulta el historial de tus reservas, revisa el estado de pago,
+                        Primero verás las reservas pendientes y próximas. Revisa el estado de pago,
                         solicita reembolsos o genera una nueva reserva desde la disponibilidad pública.
                     </p>
                 </div>
@@ -41,81 +41,31 @@
         </div>
 
         @if($reservas->count() > 0)
-        <div class="table-wrapper">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Código</th>
-                        <th>Espacio</th>
-                        <th>Vehículo</th>
-                        <th>Tarifa aplicada</th>
-                        <th>Fecha</th>
-                        <th>Horario</th>
-                        <th>Estado</th>
-                        <th>Monto</th>
-                        <th>Límite de pago</th>
-                        <th>Acción</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    @foreach($reservas as $reserva)
-                    <tr>
-                        <td>
-                            <strong>{{ $reserva->codigo_reserva }}</strong>
-                        </td>
-
-                        <td>
-                            {{ $reserva->espacio->codigo ?? '-' }}
-                        </td>
-
-                        <td>
-                            {{ $reserva->tipo_vehiculo_nombre ?? '-' }}
-                        </td>
-
-                        <td>
-                            <strong>{{ $reserva->tarifa_nombre ?? '-' }}</strong><br>
-                            <small class="text-muted">
-                                {{ $reserva->tipo_tarifa ? str_replace('_', ' ', $reserva->tipo_tarifa) : '-' }}
-                            </small>
-                        </td>
-
-                        <td>
-                            {{ \Carbon\Carbon::parse($reserva->fecha_reserva)->format('d/m/Y') }}
-                        </td>
-
-                        <td>
-                            {{ substr($reserva->hora_inicio, 0, 5) }}
-                            -
-                            {{ substr($reserva->hora_fin, 0, 5) }}
-                        </td>
-
-                        <td>
-                            <span class="badge badge-{{ $reserva->estado }}">
-                                {{ str_replace('_', ' ', $reserva->estado) }}
-                            </span>
-                        </td>
-
-                        <td>
-                            <strong>S/ {{ number_format($reserva->monto_total, 2) }}</strong>
-                        </td>
-
-                        <td>
-                            @if($reserva->estado === 'pendiente_pago' && $reserva->expires_at)
-                            {{ \Carbon\Carbon::parse($reserva->expires_at)->format('d/m/Y H:i') }}
-                            @else
-                            -
-                            @endif
-                        </td>
-
-                        <td>
-                            <div class="table-actions">
+        <div class="reservation-cards">
+        @foreach($reservas as $reserva)
+        <article class="reservation-item">
+        <div><span class="badge badge-{{ $reserva->estado }}">{{ $reserva->estado === 'pendiente_pago' && !$reserva->expires_at ? 'Pago en revisión' : ucfirst(str_replace('_',' ',$reserva->estado)) }}</span>
+        <h2>{{ $reserva->placa ?? 'Sin placa registrada' }} · Espacio {{ $reserva->espacio->codigo ?? '-' }}</h2>
+        <p class="reservation-code">{{ $reserva->codigo_reserva }}</p>
+        <dl><div><dt>Fecha de llegada</dt><dd>{{ $reserva->fecha_reserva->format('d/m/Y') }}</dd></div>
+        <div><dt>Llegada prevista</dt><dd>{{ substr($reserva->hora_inicio,0,5) }}</dd></div>
+        <div><dt>Tiempo contratado</dt><dd>{{ $reserva->duracion_minutos }} min</dd></div>
+        <div><dt>Vehículo</dt><dd>{{ $reserva->tipo_vehiculo_nombre ?? '-' }}</dd></div>
+        <div><dt>Tarifa aplicada</dt><dd>{{ $reserva->tarifa_nombre ?? '-' }}</dd></div></dl>
+        </div><div class="reservation-payment"><div class="text-muted">Monto de la reserva</div><div class="amount">S/ {{ number_format($reserva->monto_total,2) }}</div>
+        @if($reserva->estado === 'pendiente_pago' && $reserva->expires_at)<p class="payment-deadline"><strong>Paga antes del</strong><br>{{ $reserva->expires_at->format('d/m/Y · H:i') }}</p>
+        @elseif($reserva->estado === 'pendiente_pago')<p class="payment-deadline">Recibimos tu comprobante. El personal está revisando el pago.</p>@endif
+                            @if($reserva->inasistencia_at)<p>La tolerancia venció y el espacio fue liberado. El pago quedó para revisión y posible reembolso manual.</p>
+                                @elseif($reserva->estadia)<p>{{ $reserva->estadia->estado_label }} · Inicio: {{ $reserva->estadia->inicio_cobro?->format('H:i') ?? 'Esperando sensor' }}</p>
+                                @elseif($reserva->estado === 'confirmada')<p>Te esperamos hasta {{ $reserva->limite_llegada->format('H:i') }}.</p>
+                                @endif
+                                <div class="reservation-buttons">
                                 @if($reserva->estado === 'pendiente_pago')
                                 <a href="{{ route('pagos.show', $reserva) }}" class="btn btn-primary btn-sm">
-                                    Pagar
+                                    Ver pago
                                 </a>
 
-                                <form action="{{ route('reservas.cancelar', $reserva) }}" method="POST"
+                                @if($reserva->expires_at)<form action="{{ route('reservas.cancelar', $reserva) }}" method="POST"
                                     onsubmit="return confirm('¿Seguro que deseas cancelar esta reserva?');">
                                     @csrf
                                     <button type="submit" class="btn btn-danger btn-sm">
@@ -123,7 +73,8 @@
                                     </button>
                                 </form>
 
-                                @elseif($reserva->estado === 'confirmada')
+                                @endif
+                                @elseif($reserva->estado === 'confirmada' && !$reserva->estadia)
                                 <form action="{{ route('reservas.solicitarReembolso', $reserva) }}" method="POST"
                                     onsubmit="return confirm('Esta reserva ya fue pagada. Se generará una solicitud de reembolso. ¿Deseas continuar?');">
                                     @csrf
@@ -132,14 +83,11 @@
                                     </button>
                                 </form>
                                 @else
-                                <span class="text-muted">-</span>
+                                <span class="text-muted">Sin acciones pendientes</span>
                                 @endif
                             </div>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
+        </div></article>
+        @endforeach
         </div>
 
         <div style="margin-top:18px;">

@@ -3,8 +3,6 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
-
 
 return new class extends Migration
 {
@@ -24,20 +22,7 @@ return new class extends Migration
             $table->dateTime('expirado_at')->nullable()->after('cancelado_at');
         });
 
-        if (DB::connection()->getDriverName() === 'sqlite') {
-            return;
-        }
-
-        DB::statement("ALTER TABLE reservas MODIFY estado ENUM(
-            'pendiente_pago',
-            'confirmada',
-            'cancelada',
-            'expirada',
-            'finalizada',
-            'reembolso_solicitado',
-            'reembolso_aprobado',
-            'reembolso_rechazado'
-        ) DEFAULT 'pendiente_pago'");
+        Schema::table('reservas', fn (Blueprint $t) => $t->string('estado')->default('pendiente_pago')->change());
     }
 
     /**
@@ -45,14 +30,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        if (DB::connection()->getDriverName() !== 'sqlite') {
-            DB::statement("ALTER TABLE reservas MODIFY estado ENUM(
-            'pendiente',
-            'confirmada',
-            'cancelada',
-            'finalizada'
-        ) DEFAULT 'pendiente'");
-        }
+        Schema::table('reservas', fn (Blueprint $t) => $t->string('estado')->default('pendiente')->change());
 
         Schema::table('reservas', function (Blueprint $table) {
             $table->dropColumn([

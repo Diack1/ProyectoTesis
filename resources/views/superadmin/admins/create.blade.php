@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
-@section('title', 'Nuevo administrador - Cochera Tentación')
-@section('page-title', 'Nuevo administrador')
+@section('title', 'Nuevo miembro del personal - Parke’o')
+@section('page-title', 'Nuevo miembro del personal')
 @section('page-subtitle', 'Registra una cuenta administrativa para el sistema')
 
 @section('content')
@@ -68,17 +68,14 @@
         <div class="form-group">
             <label for="role">Rol del usuario</label>
             <select name="role" id="role" class="form-control" required>
-                <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>
-                    Administrador
-                </option>
-
-                <option value="super_admin" {{ old('role') === 'super_admin' ? 'selected' : '' }}>
-                    Super administrador
-                </option>
+                <option value="operador">Operador</option>
+                @if(auth()->user()->role === 'super_admin')
+                <option value="admin" @selected(old('role') === 'admin')>Administrador</option>
+                @endif
             </select>
 
             <small class="form-help">
-                Usa “Administrador” para gestión operativa. Usa “Super administrador” solo para cuentas con control total.
+                El operador monitorea espacios y revisa pagos. El administrador también configura el negocio.
             </small>
         </div>
 
@@ -94,7 +91,7 @@
 
         <div class="form-actions">
             <button type="submit" class="btn btn-primary">
-                Guardar administrador
+                Guardar cuenta
             </button>
 
             <a href="{{ route('superadmin.dashboard') }}" class="btn btn-secondary">

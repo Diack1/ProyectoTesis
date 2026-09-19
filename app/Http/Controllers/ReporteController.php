@@ -86,7 +86,7 @@ class ReporteController extends Controller
             $query->where('espacio_id', $request->espacio_id);
         }
 
-        $fileName = 'reporte_ocupacion_cochera_tentacion.csv';
+        $fileName = 'reporte_ocupacion_parkeo.csv';
 
         $headers = [
             'Content-Type' => 'text/csv; charset=UTF-8',
@@ -106,7 +106,7 @@ class ReporteController extends Controller
                 'Estado detectado',
                 'Distancia cm',
                 'Origen',
-                'Fecha de registro'
+                'Fecha de registro',
             ], ';');
 
             $query->chunk(100, function ($registros) use ($handle) {

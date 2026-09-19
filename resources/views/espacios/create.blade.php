@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Nuevo espacio - Cochera Tentación')
+@section('title', 'Nuevo espacio - Parke’o')
 @section('page-title', 'Nuevo espacio')
 @section('page-subtitle', 'Registra un nuevo espacio de estacionamiento y sus vehículos permitidos')
 
@@ -38,7 +38,6 @@
                 <select name="estado_actual" id="estado_actual" class="form-control" required>
                     <option value="libre" {{ old('estado_actual') === 'libre' ? 'selected' : '' }}>Libre</option>
                     <option value="ocupado" {{ old('estado_actual') === 'ocupado' ? 'selected' : '' }}>Ocupado</option>
-                    <option value="reservado" {{ old('estado_actual') === 'reservado' ? 'selected' : '' }}>Reservado</option>
                     <option value="mantenimiento" {{ old('estado_actual') === 'mantenimiento' ? 'selected' : '' }}>Mantenimiento</option>
                 </select>
             </div>
@@ -51,35 +50,6 @@
                 class="form-control"
                 rows="4"
                 placeholder="Ejemplo: Espacio de estacionamiento E01">{{ old('descripcion') }}</textarea>
-        </div>
-
-        <div class="form-grid">
-            <div class="form-group">
-                <label for="codigo_sensor">Código del sensor</label>
-                <input type="text"
-                    name="codigo_sensor"
-                    id="codigo_sensor"
-                    class="form-control"
-                    value="{{ old('codigo_sensor') }}"
-                    placeholder="Ejemplo: SENSOR_08"
-                    required>
-            </div>
-
-            <div class="form-group">
-                <label for="tipo_sensor">Tipo de sensor</label>
-                <select name="tipo_sensor" id="tipo_sensor" class="form-control" required>
-                    <option value="">Seleccione tipo de sensor</option>
-                    <option value="ultrasonico" {{ old('tipo_sensor') === 'ultrasonico' ? 'selected' : '' }}>
-                        Ultrasónico
-                    </option>
-                    <option value="infrarrojo" {{ old('tipo_sensor') === 'infrarrojo' ? 'selected' : '' }}>
-                        Infrarrojo
-                    </option>
-                    <option value="simulado" {{ old('tipo_sensor') === 'simulado' ? 'selected' : '' }}>
-                        Simulado
-                    </option>
-                </select>
-            </div>
         </div>
 
         <div class="form-group">
@@ -108,6 +78,7 @@
             </label>
         </div>
 
+        @include('espacios.monitoreo-form')
         <div class="form-actions">
             <button type="submit" class="btn btn-primary">
                 Guardar espacio

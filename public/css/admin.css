@@ -1205,3 +1205,6 @@ textarea:focus {
     color: #3730A3;
     border-color: #C7D2FE;
 }
+/* Keep the expanded staff navigation usable on short screens. */
+.admin-sidebar { overflow-y: auto; }
+#aviso-pagos { display: block; margin-bottom: 18px; }

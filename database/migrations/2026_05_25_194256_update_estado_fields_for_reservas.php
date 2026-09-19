@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -17,8 +17,9 @@ return new class extends Migration
         }
 
         DB::statement("ALTER TABLE espacios MODIFY estado_actual ENUM('libre', 'ocupado', 'reservado', 'mantenimiento') DEFAULT 'libre'");
+        Schema::table('espacios', fn (Blueprint $t) => $t->string('estado_actual')->default('libre')->change());
 
-        DB::statement("ALTER TABLE registros_ocupacion MODIFY estado_detectado ENUM('libre', 'ocupado', 'reservado', 'mantenimiento')");
+        Schema::table('registros_ocupacion', fn (Blueprint $t) => $t->string('estado_detectado')->change());
     }
 
     /**
@@ -34,8 +35,8 @@ return new class extends Migration
 
         DB::statement("UPDATE registros_ocupacion SET estado_detectado = 'libre' WHERE estado_detectado IN ('reservado', 'mantenimiento')");
 
-        DB::statement("ALTER TABLE espacios MODIFY estado_actual ENUM('libre', 'ocupado') DEFAULT 'libre'");
+        Schema::table('espacios', fn (Blueprint $t) => $t->string('estado_actual')->default('libre')->change());
 
-        DB::statement("ALTER TABLE registros_ocupacion MODIFY estado_detectado ENUM('libre', 'ocupado')");
+        Schema::table('registros_ocupacion', fn (Blueprint $t) => $t->string('estado_detectado')->change());
     }
 };

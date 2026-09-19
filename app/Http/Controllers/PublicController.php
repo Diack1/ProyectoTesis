@@ -3,10 +3,8 @@
 namespace App\Http\Controllers;
 use App\Models\Espacio;
 use App\Services\ReservaService;
-use App\Models\Tarifa;
 use App\Models\VehiculoTipo;
 use App\Services\ReservaDisponibilidadService;
-use App\Services\SensoresApiService;
 
 class PublicController extends Controller
 {
@@ -35,69 +33,26 @@ class PublicController extends Controller
         ));
     }
 
-    public function disponibilidad(
-        ReservaService $reservaService,
-        SensoresApiService $sensoresApiService,
-        ReservaDisponibilidadService $disponibilidadService
-    )
+    private function espaciosPlano()
     {
-        $reservaService->procesarReservasAutomaticas();
+        return Espacio::with(['vehiculoTipos.tarifas', 'sensor'])->where('activo', true)->orderBy('codigo')->get();
+    }
 
-        $espacios = Espacio::with(['vehiculoTipos.tarifas', 'sensor'])
-            ->where('activo', true)
-            ->orderBy('codigo')
-            ->get();
+    public function disponibilidad(ReservaService $reservas, ReservaDisponibilidadService $disponibilidad)
+    {
+        $reservas->procesarReservasAutomaticas();
+        $espacios = $this->espaciosPlano();
+        $disponibilidadPorEspacio = $espacios->mapWithKeys(fn ($e) => [$e->id => $disponibilidad->estadoParaTarjeta($e)]);
+        return response()->view('public.disponibilidad', compact('espacios', 'disponibilidadPorEspacio'))->header('Cache-Control', 'no-store');
+    }
 
-        $estadoSensores = $sensoresApiService->obtenerEstado();
-        $sensoresPorCodigo = collect($estadoSensores['sensores'] ?? [])
-            ->keyBy('codigo');
-        $disponibilidadPorEspacio = $espacios
-            ->mapWithKeys(function ($espacio) use ($sensoresPorCodigo, $disponibilidadService) {
-                $sensorLocal = $espacio->sensor;
-                $sensorExterno = $sensorLocal ? $sensoresPorCodigo->get($sensorLocal->codigo_sensor) : null;
-
-                return [
-                    $espacio->id => $disponibilidadService->estadoParaTarjeta($espacio, $sensorExterno),
-                ];
-            });
-
-        $totalEspacios = $espacios->count();
-        $espaciosLibres = $espacios
-            ->filter(fn ($espacio) => ($disponibilidadPorEspacio[$espacio->id]['estado_visual'] ?? null) === 'libre')
-            ->count();
-        $espaciosOcupados = $espacios
-            ->filter(fn ($espacio) => ($disponibilidadPorEspacio[$espacio->id]['estado_visual'] ?? null) === 'ocupado')
-            ->count();
-        $espaciosReservados = $espacios
-            ->filter(fn ($espacio) => ($disponibilidadPorEspacio[$espacio->id]['estado_visual'] ?? null) === 'reservado')
-            ->count();
-        $espaciosMantenimiento = $espacios
-            ->filter(fn ($espacio) => ($disponibilidadPorEspacio[$espacio->id]['estado_visual'] ?? null) === 'mantenimiento')
-            ->count();
-        $espaciosSinDatos = $espacios
-            ->filter(fn ($espacio) => ($disponibilidadPorEspacio[$espacio->id]['estado_visual'] ?? null) === 'sin_datos')
-            ->count();
-        $espaciosSinConfiguracion = $espacios
-            ->filter(fn ($espacio) => in_array(
-                $disponibilidadPorEspacio[$espacio->id]['estado_visual'] ?? null,
-                ['sin_tipos', 'sin_tarifa'],
-                true
-            ))
-            ->count();
-
-        return view('public.disponibilidad', compact(
-            'espacios',
-            'totalEspacios',
-            'espaciosLibres',
-            'espaciosOcupados',
-            'espaciosReservados',
-            'espaciosMantenimiento',
-            'espaciosSinDatos',
-            'espaciosSinConfiguracion',
-            'estadoSensores',
-            'sensoresPorCodigo',
-            'disponibilidadPorEspacio'
-        ));
+    public function estadoPlano(ReservaService $reservas, ReservaDisponibilidadService $disponibilidad)
+    {
+        $reservas->procesarReservasAutomaticas();
+        return response()->json(['espacios' => $this->espaciosPlano()->map(fn ($e) => [
+            'id' => $e->id, 'codigo' => $e->codigo,
+            ...$disponibilidad->estadoParaTarjeta($e),
+        ])])->header('Cache-Control', 'no-store');
     }
 
     public function tarifas()

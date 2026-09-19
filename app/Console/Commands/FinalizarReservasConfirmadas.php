@@ -9,13 +9,13 @@ class FinalizarReservasConfirmadas extends Command
 {
     protected $signature = 'reservas:finalizar';
 
-    protected $description = 'Finaliza las reservas confirmadas cuya hora de salida ya pasó.';
+    protected $description = 'Libera reservas sin llegada y deja los pagos para revisión manual.';
 
     public function handle(ReservaService $reservaService): int
     {
         $cantidad = $reservaService->finalizarReservasConfirmadas();
 
-        $this->info("Reservas finalizadas: {$cantidad}");
+        $this->info("Inasistencias procesadas: {$cantidad}");
 
         return self::SUCCESS;
     }

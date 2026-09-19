@@ -4,13 +4,17 @@
 <head>
     <meta charset="UTF-8">
 
-    <title>@yield('title', 'Panel Administrativo - Cochera Tentación')</title>
+    <title>@yield('title', 'Panel Administrativo - Parke’o')</title>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <link rel="stylesheet" href="{{ asset('css/cochera-ui.css') }}">
     <link rel="stylesheet" href="{{ asset('css/admin.css') }}">
 
+    <link rel="stylesheet" href="{{ asset('css/operaciones.css') }}">
+    <script src="{{ asset('js/parkeo.js') }}" defer></script>
+    <link rel="stylesheet" href="{{ asset('css/claridad.css') }}">
+    <script src="{{ asset('js/plano.js') }}" defer></script>
     @stack('styles')
 </head>
 
@@ -48,6 +52,7 @@
             </header>
 
             <section class="admin-content">
+                <a id="aviso-pagos" class="alert-box" href="{{ route('admin.pagos.index') }}" data-notifications="{{ route('admin.pagos.pendientes') }}" aria-live="polite">Consultar pagos pendientes</a>
                 @yield('content')
             </section>
         </main>

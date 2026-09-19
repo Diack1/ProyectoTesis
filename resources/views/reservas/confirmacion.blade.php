@@ -1,6 +1,6 @@
 @extends('layouts.public')
 
-@section('title', 'Confirmar reserva - Cochera Tentación')
+@section('title', 'Confirmar reserva - Parke’o')
 
 @push('styles')
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
@@ -95,6 +95,10 @@
             </div>
 
             <div class="reservation-list">
+                <div class="reservation-row">
+                    <span class="reservation-label">Placa del vehículo</span>
+                    <span class="reservation-value">{{ $placa }}</span>
+                </div>
 
                 <div class="reservation-row">
                     <span class="reservation-label">Espacio seleccionado</span>
@@ -122,12 +126,12 @@
                 </div>
 
                 <div class="reservation-row">
-                    <span class="reservation-label">Hora de ingreso</span>
+                    <span class="reservation-label">Llegada prevista</span>
                     <span class="reservation-value">{{ $fechaHoraInicio->format('H:i') }}</span>
                 </div>
 
                 <div class="reservation-row">
-                    <span class="reservation-label">Hora de salida</span>
+                    <span class="reservation-label">Fin previsto (referencial)</span>
                     <span class="reservation-value">{{ $fechaHoraFin->format('H:i') }}</span>
                 </div>
 
@@ -154,7 +158,7 @@
                 </div>
 
                 <div class="reservation-row">
-                    <span class="reservation-label">Tolerancia</span>
+                    <span class="reservation-label">Tolerancia de exceso</span>
                     <span class="reservation-value">{{ $calculo['tolerancia_minutos'] }} minutos</span>
                 </div>
 
@@ -165,14 +169,15 @@
 
             </div>
 
-            <div class="reservation-alert">
-                Al confirmar, el espacio quedará reservado temporalmente por 10 minutos mientras realizas el pago.
+            <div class="alert alert-info">El tiempo contratado comienza con la detección del vehículo estacionado o con el ticket en un espacio manual. Te esperamos hasta {{ \App\Models\ConfiguracionPago::actual()->tolerancia_llegada }} minutos después de la llegada prevista. Si no llegas, se libera el espacio y el pago queda para revisión y posible reembolso manual.</div><div class="reservation-alert">
+                Al confirmar, el espacio quedará reservado temporalmente durante el plazo indicado en la pantalla de pago.
             </div>
 
             <form id="formConfirmarReserva" action="{{ route('reservas.store', $espacio) }}" method="POST" autocomplete="off">
                 @csrf
 
                 <input type="hidden" name="vehiculo_tipo_id" value="{{ $vehiculoTipo->id }}">
+                <input type="hidden" name="placa" value="{{ $placa }}">
                 <input type="hidden" name="fecha_reserva" value="{{ $fechaReserva }}">
                 <input type="hidden" name="hora_inicio" value="{{ $horaInicio }}">
                 <input type="hidden" name="duracion_minutos" value="{{ $duracionMinutos }}">

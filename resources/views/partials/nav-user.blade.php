@@ -1,9 +1,9 @@
 <nav class="public-header">
     <div class="public-header-inner">
         <a href="{{ route('public.home') }}" class="brand">
-            <div class="brand-logo">CT</div>
+            <div class="brand-logo">P</div>
             <div class="brand-text">
-                <span class="brand-title">Cochera Tentación</span>
+                <span class="brand-title">Parke’o</span>
                 <span class="brand-subtitle">Portal de usuario</span>
             </div>
         </a>

@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
-@section('title', 'Administradores - Cochera Tentación')
-@section('page-title', 'Gestión de administradores')
+@section('title', 'Administradores - Parke’o')
+@section('page-title', 'Gestión del personal')
 @section('page-subtitle', 'Crea, revisa y desactiva cuentas administrativas del sistema')
 
 @section('content')
@@ -26,7 +26,7 @@ $listaAdmins = $admins ?? $usuarios ?? collect();
     <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
         <div>
             <h2 class="section-title" style="margin-bottom:6px;">
-                Administradores registrados
+                Personal registrado
             </h2>
 
             <p>
@@ -37,7 +37,7 @@ $listaAdmins = $admins ?? $usuarios ?? collect();
 
         @if(Route::has('superadmin.admins.create'))
         <a href="{{ route('superadmin.admins.create') }}" class="btn btn-primary">
-            + Nuevo administrador
+            + Nueva cuenta
         </a>
         @endif
     </div>
@@ -87,7 +87,7 @@ $listaAdmins = $admins ?? $usuarios ?? collect();
 
                 <td>
                     <div class="table-actions">
-                        @if($admin->id !== auth()->id())
+                        @if($admin->role === 'operador' || ($admin->role === 'admin' && auth()->user()->role === 'super_admin'))
                         <form action="{{ route('superadmin.admins.toggleActivo', $admin) }}" method="POST"
                             onsubmit="return confirm('¿Seguro que deseas cambiar el estado de este administrador?');">
                             @csrf

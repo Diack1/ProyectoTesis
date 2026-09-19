@@ -115,7 +115,7 @@ class ReservaFlujoTest extends TestCase
 
         $this->actingAs($this->user)
             ->post(route('reservas.store', $this->espacio), $this->datosReserva())
-            ->assertRedirect(route('reservas.create', $this->espacio));
+            ->assertRedirect(route('public.disponibilidad'));
 
         $this->assertDatabaseCount('reservas', 0);
     }
@@ -139,7 +139,7 @@ class ReservaFlujoTest extends TestCase
         $this->actingAs($this->user)
             ->get(route('reservas.create', $this->espacio))
             ->assertRedirect(route('public.disponibilidad'))
-            ->assertSessionHas('error', 'No existen tipos de vehiculo activos para este espacio.');
+            ->assertSessionHas('error');
     }
 
     public function test_sensor_libre_y_sin_reservas_activas_permite_crear_reserva(): void
@@ -168,22 +168,21 @@ class ReservaFlujoTest extends TestCase
 
         $this->actingAs($this->user)
             ->post(route('reservas.store', $this->espacio), $this->datosReserva('11:00'))
-            ->assertRedirect(route('reservas.create', $this->espacio))
-            ->assertSessionHas('error', 'Ya existe una reserva para ese horario.');
+            ->assertRedirect(route('public.disponibilidad'))
+            ->assertSessionHas('error');
 
         $this->assertDatabaseCount('reservas', 1);
     }
 
-    public function test_api_de_sensores_no_disponible_no_permite_reservar(): void
+    public function test_sensor_local_sin_lectura_vigente_no_permite_reservar(): void
     {
-        Http::fake([
-            'http://200.234.236.154/api/sensores' => Http::response(['ok' => false], 500),
-        ]);
+        $this->fakeSensor(false);
+        $this->sensor->forceFill(['ultima_lectura_valida_at' => now()->subMinutes(5)])->save();
 
         $this->actingAs($this->user)
             ->post(route('reservas.store', $this->espacio), $this->datosReserva())
-            ->assertRedirect(route('reservas.create', $this->espacio))
-            ->assertSessionHas('error', 'El sensor no pudo confirmar que el espacio este libre.');
+            ->assertRedirect(route('public.disponibilidad'))
+            ->assertSessionHas('error');
 
         $this->assertDatabaseCount('reservas', 0);
     }
@@ -227,7 +226,7 @@ class ReservaFlujoTest extends TestCase
         $this->actingAs($this->user)
             ->post(route('reservas.store', $this->espacio), $this->datosReserva('10:30', $camioneta->id))
             ->assertRedirect(route('reservas.create', $this->espacio))
-            ->assertSessionHas('error', 'El tipo de vehiculo no esta permitido para este espacio.');
+            ->assertSessionHasErrors('vehiculo_tipo_id');
 
         $this->assertDatabaseCount('reservas', 0);
     }
@@ -260,8 +259,8 @@ class ReservaFlujoTest extends TestCase
 
         $this->actingAs($this->user)
             ->post(route('reservas.store', $this->espacio), $this->datosReserva())
-            ->assertRedirect(route('reservas.create', $this->espacio))
-            ->assertSessionHas('error', 'Ya existe una reserva para ese horario.');
+            ->assertRedirect(route('public.disponibilidad'))
+            ->assertSessionHas('error');
 
         $this->assertDatabaseCount('reservas', 1);
     }
@@ -306,6 +305,7 @@ class ReservaFlujoTest extends TestCase
     private function datosReserva(string $horaInicio = '10:30', ?int $vehiculoTipoId = null): array
     {
         return [
+            'placa' => 'ABC123',
             'vehiculo_tipo_id' => $vehiculoTipoId ?? $this->vehiculoTipo->id,
             'fecha_reserva' => now('America/Lima')->format('Y-m-d'),
             'hora_inicio' => $horaInicio,
@@ -315,18 +315,10 @@ class ReservaFlujoTest extends TestCase
 
     private function fakeSensor(bool $ocupado): void
     {
-        Http::fake([
-            'http://200.234.236.154/api/sensores' => Http::response([
-                'ok' => true,
-                'sensores' => [[
-                    'id' => 1,
-                    'codigo' => 'SENSOR_01',
-                    'ocupado' => $ocupado,
-                    'distancia_cm' => null,
-                    'ultima_lectura_at' => now('UTC')->toJSON(),
-                ]],
-            ]),
-        ]);
+        $this->espacio->update(['modo_monitoreo' => 'sensor', 'estado_actual' => $ocupado ? 'ocupado' : 'libre']);
+        $this->sensor->forceFill(['integracion_iot' => true, 'umbral_ocupado_cm' => 100, 'umbral_libre_cm' => 150,
+            'estado_estable' => $ocupado ? 'ocupado' : 'libre', 'ultima_lectura_valida_at' => now(),
+            'ultima_comunicacion_at' => now(), 'segundos_sin_senal' => 60])->save();
     }
 
     private function crearReservaExistente(

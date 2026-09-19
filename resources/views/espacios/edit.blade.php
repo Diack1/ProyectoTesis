@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Editar espacio - Cochera Tentación')
+@section('title', 'Editar espacio - Parke’o')
 @section('page-title', 'Editar espacio')
 @section('page-subtitle', 'Actualiza los datos del espacio, estado y vehículos permitidos')
 
@@ -36,10 +36,9 @@
             <div class="form-group">
                 <label for="estado_actual">Estado actual</label>
                 <select name="estado_actual" id="estado_actual" class="form-control" required>
-                    <option value="libre" {{ old('estado_actual', $espacio->estado_actual) === 'libre' ? 'selected' : '' }}>Libre</option>
-                    <option value="ocupado" {{ old('estado_actual', $espacio->estado_actual) === 'ocupado' ? 'selected' : '' }}>Ocupado</option>
-                    <option value="reservado" {{ old('estado_actual', $espacio->estado_actual) === 'reservado' ? 'selected' : '' }}>Reservado</option>
-                    <option value="mantenimiento" {{ old('estado_actual', $espacio->estado_actual) === 'mantenimiento' ? 'selected' : '' }}>Mantenimiento</option>
+                    <option value="libre" {{ old('estado_actual', $espacio->getRawOriginal('estado_actual') === 'reservado' ? 'libre' : $espacio->getRawOriginal('estado_actual')) === 'libre' ? 'selected' : '' }}>Libre</option>
+                    <option value="ocupado" {{ old('estado_actual', $espacio->getRawOriginal('estado_actual') === 'reservado' ? 'libre' : $espacio->getRawOriginal('estado_actual')) === 'ocupado' ? 'selected' : '' }}>Ocupado</option>
+                    <option value="mantenimiento" {{ old('estado_actual', $espacio->getRawOriginal('estado_actual') === 'reservado' ? 'libre' : $espacio->getRawOriginal('estado_actual')) === 'mantenimiento' ? 'selected' : '' }}>Mantenimiento</option>
                 </select>
             </div>
         </div>
@@ -81,6 +80,7 @@
             </label>
         </div>
 
+        @include('espacios.monitoreo-form')
         <div class="form-actions">
             <button type="submit" class="btn btn-primary">
                 Actualizar espacio

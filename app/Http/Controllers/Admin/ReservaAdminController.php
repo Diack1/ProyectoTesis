@@ -3,8 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Reserva;
 use App\Models\Reembolso;
+use App\Models\Reserva;
+use App\Services\ReservaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -13,7 +14,9 @@ class ReservaAdminController extends Controller
 {
     public function index(Request $request)
     {
+        app(ReservaService::class)->procesarReservasAutomaticas();
         $query = Reserva::with([
+            'estadia',
             'usuario',
             'espacio',
             'pagos',

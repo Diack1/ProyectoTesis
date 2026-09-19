@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Tarifas - Cochera Tentación')
+@section('title', 'Tarifas - Parke’o')
 @section('page-title', 'Gestión de tarifas')
 @section('page-subtitle', 'Administra tarifas por vehículo, horario, duración, tolerancia y penalidad')
 

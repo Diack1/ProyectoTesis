@@ -30,7 +30,7 @@ class AuthenticatedSessionController extends Controller
 
         $user = $request->user();
 
-        if (!$user->activo) {
+        if (! $user->activo) {
             Auth::guard('web')->logout();
 
             $request->session()->invalidate();
@@ -47,11 +47,11 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('superadmin.dashboard');
         }
 
-        if ($user->role === 'admin') {
+        if (in_array($user->role, ['admin', 'operador'])) {
             return redirect()->route('admin.dashboard');
         }
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        return redirect()->intended(route('dashboard'));
     }
 
     /**

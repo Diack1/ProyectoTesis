@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 class Reserva extends Model
@@ -11,9 +12,10 @@ class Reserva extends Model
     public const ESTADOS_BLOQUEANTES = ['pendiente_pago', 'confirmada'];
 
     protected $fillable = [
-        'user_id',
+        'user_id', 'tolerancia_llegada_minutos', 'minutos_fraccion_snapshot', 'inasistencia_at',
         'espacio_id',
         'codigo_reserva',
+        'placa',
         'fecha_reserva',
         'hora_inicio',
         'hora_fin',
@@ -39,7 +41,7 @@ class Reserva extends Model
     protected function casts(): array
     {
         return [
-            'fecha_reserva' => 'date',
+            'fecha_reserva' => 'date', 'inasistencia_at' => 'datetime',
             'expires_at' => 'datetime',
             'pagado_at' => 'datetime',
             'cancelado_at' => 'datetime',
@@ -49,6 +51,16 @@ class Reserva extends Model
             'penalidad_por_fraccion' => 'decimal:2',
             'monto_penalidad' => 'decimal:2',
         ];
+    }
+
+    public function estadia()
+    {
+        return $this->hasOne(Estadia::class);
+    }
+
+    public function getLimiteLlegadaAttribute(): Carbon
+    {
+        return Carbon::parse($this->fecha_reserva->format('Y-m-d').' '.$this->hora_inicio)->addMinutes($this->tolerancia_llegada_minutos ?? 15);
     }
 
     public function usuario()
@@ -71,7 +83,7 @@ class Reserva extends Model
         return $this->belongsTo(Tarifa::class, 'tarifa_id');
     }
 
-     public function pagos()
+    public function pagos()
     {
         return $this->hasMany(Pago::class, 'reserva_id');
     }
@@ -81,12 +93,12 @@ class Reserva extends Model
         return $this->hasOne(Pago::class, 'reserva_id')
             ->where('estado', 'aprobado');
     }
-    
+
     public function reembolsos()
     {
         return $this->hasMany(Reembolso::class, 'reserva_id');
     }
-    
+
     public function estaPendientePago(): bool
     {
         return $this->estado === 'pendiente_pago';
@@ -106,7 +118,7 @@ class Reserva extends Model
     {
         return $this->estado === 'expirada';
     }
-    
+
     public function requiereReembolso(): bool
     {
         return in_array($this->estado, [

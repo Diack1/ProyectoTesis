@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Reportes - Cochera Tentación')
+@section('title', 'Reportes - Parke’o')
 @section('page-title', 'Reportes del sistema')
 @section('page-subtitle', 'Consulta registros de ocupación, estados detectados y actividad histórica de espacios')
 

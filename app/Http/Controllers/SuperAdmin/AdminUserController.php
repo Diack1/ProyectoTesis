@@ -11,7 +11,7 @@ class AdminUserController extends Controller
 {
     public function index()
     {
-        $admins = User::whereIn('role', ['admin', 'super_admin'])
+        $admins = User::whereIn('role', ['admin', 'super_admin', 'operador'])
             ->orderBy('role', 'desc')
             ->orderBy('name')
             ->paginate(10);
@@ -30,14 +30,15 @@ class AdminUserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
+            'role' => $request->user()->role === 'super_admin' ? 'required|in:admin,operador' : 'required|in:operador',
         ]);
 
         User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => 'admin',
-            'activo' => true,
+            'role' => $request->role,
+            'activo' => $request->boolean('activo'),
         ]);
 
         return redirect()
@@ -47,14 +48,14 @@ class AdminUserController extends Controller
 
     public function toggleActivo(User $user)
     {
-        if ($user->role !== 'admin') {
+        if (! in_array($user->role, ['admin', 'operador']) || ($user->role === 'admin' && auth()->user()->role !== 'super_admin')) {
             return redirect()
                 ->route('superadmin.dashboard')
                 ->with('error', 'Solo se puede activar o desactivar cuentas de administrador.');
         }
 
         $user->update([
-            'activo' => !$user->activo,
+            'activo' => ! $user->activo,
         ]);
 
         return redirect()

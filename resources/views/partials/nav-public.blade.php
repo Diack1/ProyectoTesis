@@ -1,9 +1,9 @@
 <nav class="public-navbar">
     <div class="container public-navbar-inner">
         <a href="{{ route('public.home') }}" class="brand">
-            <div class="brand-logo">CT</div>
+            <div class="brand-logo">P</div>
             <div>
-                <span class="brand-title">Cochera Tentación</span>
+                <span class="brand-title">Parke’o</span>
                 <span class="brand-subtitle">Cochera inteligente</span>
             </div>
         </a>
@@ -19,11 +19,6 @@
                 Disponibilidad
             </a>
 
-            <a href="{{ route('sensores.estado') }}"
-                class="{{ request()->routeIs('sensores.estado') ? 'active' : '' }}">
-                Sensores
-            </a>
-
             <a href="{{ route('public.tarifas') }}"
                 class="{{ request()->routeIs('public.tarifas') ? 'active' : '' }}">
                 Tarifas
@@ -37,21 +32,13 @@
             </a>
             @endif
 
-            @if(auth()->user()->role === 'admin')
+            @if(auth()->user()->tieneRol('admin','operador','super_admin'))
             <a href="{{ route('admin.dashboard') }}">
                 Panel admin
             </a>
             @endif
 
-            @if(auth()->user()->role === 'super_admin')
-            <a href="{{ route('superadmin.dashboard') }}">
-                Super admin
-            </a>
 
-            <a href="{{ route('admin.dashboard') }}">
-                Panel admin
-            </a>
-            @endif
 
             <form action="{{ route('logout') }}" method="POST" style="display:inline;">
                 @csrf

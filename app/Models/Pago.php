@@ -9,14 +9,14 @@ class Pago extends Model
     protected $table = 'pagos';
 
     protected $fillable = [
-        'reserva_id',
+        'reserva_id', 'estadia_id',
         'user_id',
         'codigo_pago',
         'metodo_pago',
         'monto',
         'estado',
         'referencia_pago',
-        'comprobante',
+        'comprobante', 'enviado_at', 'revisado_at', 'revisado_por', 'motivo_revision', 'operacion_unica',
         'pagado_at',
     ];
 
@@ -24,7 +24,7 @@ class Pago extends Model
     {
         return [
             'monto' => 'decimal:2',
-            'pagado_at' => 'datetime',
+            'pagado_at' => 'datetime', 'enviado_at' => 'datetime', 'revisado_at' => 'datetime',
         ];
     }
 

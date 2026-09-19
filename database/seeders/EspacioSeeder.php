@@ -41,5 +41,6 @@ class EspacioSeeder extends Seeder
                 ]
             );
         }
+        $this->call(ParkeoSeeder::class);
     }
 }
