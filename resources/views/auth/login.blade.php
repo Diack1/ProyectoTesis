@@ -72,7 +72,7 @@
 
     <div class="auth-bottom">
         ¿No tienes una cuenta?
-        <a href="{{ route('register') }}">Regístrate aquí</a>
+        <a data-auth-switch href="{{ route('register') }}">Regístrate aquí</a>
     </div>
 
     <a href="{{ route('public.home') }}" class="back-home">

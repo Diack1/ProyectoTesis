@@ -3,6 +3,7 @@
 $paths = [
 'parking'=>'M8 20V4h5a5 5 0 0 1 0 10H8 M3 3h18v18H3z',
 'car'=>'M5 10l2-6h10l2 6 M3 10h18v8H3z M5 18v2 M19 18v2 M6 14h2 M16 14h2',
+'map'=>'M3 5l6-2 6 2 6-2v16l-6 2-6-2-6 2z M9 3v16 M15 5v16',
 'grid'=>'M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z',
 'clock'=>'M12 8v5l3 2 M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0',
 'arrow'=>'M4 12h16 M14 6l6 6-6 6',

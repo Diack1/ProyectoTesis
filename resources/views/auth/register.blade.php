@@ -74,7 +74,7 @@
 
     <div class="auth-bottom">
         ¿Ya tienes una cuenta?
-        <a href="{{ route('login') }}">Inicia sesión</a>
+        <a data-auth-switch href="{{ route('login') }}">Inicia sesión</a>
     </div>
 
     <a href="{{ route('public.home') }}" class="back-home">

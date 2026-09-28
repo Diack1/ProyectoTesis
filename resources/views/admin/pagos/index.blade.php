@@ -2,6 +2,7 @@
 @section('page-title', 'Revisión de pagos')
 @section('page-subtitle', 'Verifica cada abono en el celular del negocio antes de aprobarlo')
 @section('content')
+@include('admin.reservas.tabs')
 @include('partials.payment-feedback')
 @forelse($pagos as $pago)
 <article class="admin-page-card">

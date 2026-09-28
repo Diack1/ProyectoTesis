@@ -1,0 +1,92 @@
+/* Shared visual theme: public, reception, owner and authentication. */
+body.atmosphere {
+ --public-bg:#080c13;--public-nav:#0b1019;--public-surface:#111923;--public-raised:#182230;--public-line:#344152;--public-ink:#f4f7fc;--public-muted:#b0bdd0;
+ --panel-bg:#080c13;--panel-surface:#111923;--panel-line:#344152;--panel-muted:#b0bdd0;--panel-ink:#f4f7fc;--panel-gold:#569dff;
+ --color-bg:#080c13;--color-card:#111923;--color-border:#344152;--color-text:#f4f7fc;--color-muted:#b0bdd0;--color-accent:#569dff;
+ --text:#f4f7fc;--muted:#b0bdd0;--card:#111923;--border:#344152;--primary:#f4f7fc;--accent:#83b5ff;
+ color-scheme:dark;color:#f4f7fc;min-height:100vh;
+ background-color:#080c13;
+ background-image:radial-gradient(ellipse 48% 370px at 70% -40px,#91b8ec60,transparent 95%),radial-gradient(ellipse 40% 460px at 20% 0,#276bc54b,transparent 90%),linear-gradient(155deg,#142035 0,transparent 520px);
+ background-repeat:no-repeat;font-family:Inter,system-ui,sans-serif;
+}
+body.atmosphere :is(main,.admin-shell,.admin-main,.admin-content,.hero,.section,.section-sm,.page-heading,.page-content,.auth-shell,.auth-panel,.auth-form-area){background:transparent}
+body.atmosphere :is(.hero-panel,.space-card,.page-card,.page-heading-card,.tariff-card,.reservation-item,.parking-widget,.admin-page-card,.card,.stat-card,.metric,.table-wrapper,.table-container,.auth-card,.quick-card,.reception-actions a,.payment-qr-card,.public-price-callout){
+ background:linear-gradient(145deg,#192431e8,#0e151ff5);color:#f4f7fc;border:1px solid #344152;border-radius:20px;box-shadow:0 16px 40px #00000024,inset 0 1px #ffffff05;
+}
+body.atmosphere :is(h1,h2,h3,h4){color:#f4f7fc;letter-spacing:-.035em}
+body.atmosphere :is(.hero-copy>p,.section-subtitle,.page-subtitle,.admin-page-subtitle,.text-muted,.auth-card>p,.auth-panel p,.public-price-callout p,.how-grid p,.space-card-meta){color:#b0bdd0}
+body.atmosphere .hero{padding:76px 0 56px}
+body.atmosphere .hero h1{font-size:clamp(38px,4.8vw,68px);font-weight:750;line-height:1.08;letter-spacing:-.055em}
+body.atmosphere .hero h1 :is(span,em){color:#8dbaff;background:none;-webkit-text-fill-color:currentColor}
+body.atmosphere .hero-panel{border-color:#52677e;padding:30px;box-shadow:0 24px 70px #0005,inset 0 1px #dceaff18}
+body.atmosphere :is(.hero-badge,.eyebrow,.how-number){background:#182b43;color:#a6ceff;border:1px solid #344e6b;border-radius:12px}
+body.atmosphere .public-navbar{width:calc(100% - 40px);max-width:1320px;margin:18px auto 0;top:12px;background:#0b1019f5;border:1px solid #344152;border-radius:24px;box-shadow:0 8px 32px #0004}
+body.atmosphere .public-navbar-inner{width:calc(100% - 40px);min-height:76px}
+body.atmosphere .public-menu>a{border-radius:12px}
+body.atmosphere .public-menu>a.active,body.atmosphere .admin-menu a.active{background:#20334c;color:#bad8ff;box-shadow:inset 0 0 0 1px #496587}
+body.atmosphere .admin-sidebar{background:#0b1019;border-right:1px solid #344152}
+body.atmosphere .admin-topbar{background:#0b111bea;border-bottom:1px solid #344152}
+body.atmosphere :is(.admin-user-box,.auth-feature,.reservation-selected,.reservation-summary,.reservation-list,.reservation-row,.space-dialog){background:#111b28;color:#f4f7fc;border-color:#344152}
+body.atmosphere :is(.btn-primary,.btn-auth){background:#367cf0;color:#fff;border:1px solid #80b0ff;border-radius:12px;box-shadow:0 5px 20px #1356aa22;min-height:46px}
+body.atmosphere :is(.btn-primary,.btn-auth):hover{background:#2467d4}
+body.atmosphere :is(.btn-secondary,.hero-secondary,.public-menu-toggle,.admin-mobile-toggle){background:#182330;color:#edf4ff;border:1px solid #40546b;border-radius:12px}
+body.atmosphere .hero-secondary{display:inline-flex;align-items:center;justify-content:center;padding:14px 22px;text-decoration:none}
+body.atmosphere :is(input:not([type=checkbox]):not([type=radio]),select,textarea){background:#0a111c;color:#f4f7fc;border:1px solid #50647c;border-radius:10px;color-scheme:dark}
+body.atmosphere :is(input,textarea)::placeholder{color:#99a9bc;opacity:1}
+body.atmosphere :is(a,button,input,select,textarea,summary):focus-visible{outline:3px solid #9ecbff;outline-offset:3px}
+body.atmosphere :is(button,input,select):disabled{opacity:.55;cursor:not-allowed}
+body.atmosphere :is(table,tbody,tr,td){background:#111923;color:#edf4ff;border-color:#344152}
+body.atmosphere th{background:#0a111c;color:#b8cce5;border-color:#344152}
+body.atmosphere tbody tr:hover td{background:#1b2a3c}
+body.atmosphere .checkout-total{background:#142b48;border:1px solid #5d83b3;box-shadow:inset 3px 0 #82b6ff}
+body.atmosphere .checkout-total strong{color:#fff}
+body.atmosphere .public-footer{background:#0b111b;border-top:1px solid #344152;margin-top:40px}
+body.atmosphere .public-footer :is(p,a){color:#b8c8dc}
+body.atmosphere .auth-panel::before,body.atmosphere .auth-panel::after{display:none}
+body.atmosphere .auth-panel{border-right:1px solid #344152}
+body.atmosphere .auth-card{max-width:620px;margin-inline:auto}
+body.atmosphere .auth-feature{border:1px solid #344152;border-radius:16px}
+body.atmosphere .parkeo-pagination{background:#101925;border-color:#344152}
+/* Legacy account screens share the palette as well. */
+body.atmosphere :is(.bg-gray-100,.bg-gray-50){background:transparent}
+body.atmosphere .bg-white{background:#111923;border-color:#344152}
+body.atmosphere :is(.text-gray-900,.text-gray-800,.text-gray-700){color:#edf4ff}
+body.atmosphere :is(.text-gray-600,.text-gray-500){color:#b0bdd0}
+@media(min-width:1000px) and (prefers-reduced-motion:no-preference){
+ body.atmosphere .hero-panel{animation:atmosphere-arrive .6s ease-out both}
+ @keyframes atmosphere-arrive{from{opacity:.5;transform:translateY(12px)}to{opacity:1;transform:none}}
+}
+@media(max-width:760px){
+ body.atmosphere{background-size:auto;background-image:radial-gradient(ellipse 100% 320px at 50% 0,#3b6fad35,transparent 95%)}
+ body.atmosphere .public-navbar{width:calc(100% - 20px);margin-top:10px;top:8px;border-radius:18px}
+ body.atmosphere .public-navbar-inner{width:calc(100% - 24px);min-height:64px}
+ body.atmosphere .hero{padding:32px 0}
+ body.atmosphere .hero h1{font-size:clamp(34px,9vw,44px)}
+ body.atmosphere .hero-panel{padding:22px;border-radius:18px}
+ body.atmosphere :is(.public-menu,.admin-menu){background:#0b1019}
+ body.atmosphere :is(.page-card,.auth-card,.admin-page-card){border-radius:16px}
+ body.atmosphere .auth-panel{border-right:0;border-top:1px solid #344152}
+ body.atmosphere :is(input:not([type=checkbox]):not([type=radio]),select,textarea){font-size:16px}
+}
+/* Public-only vector decoration stays behind content and never intercepts taps. */
+body.atmosphere.public-hex{
+ background-color:#090f18;
+ background-image:linear-gradient(#090f1899,#090f1899),url('../../images/hexagons.svg'),radial-gradient(ellipse 65% 650px at 48% 0,#25303d,transparent);
+ background-position:center top,right top,center top;
+ background-size:100% 720px,360px 720px,100% 900px;
+ background-repeat:no-repeat;
+}
+body.atmosphere.public-hex-home{
+ background-image:url('../../images/hexagons.svg'),radial-gradient(ellipse 65% 650px at 48% 0,#25303d,transparent);
+ background-position:right top,center top;
+ background-size:360px 720px,100% 900px;
+}
+body.atmosphere.public-hex :is(.hero-panel,.space-card,.page-card,.tariff-card,.reservation-item,.parking-widget){background:#111923}
+@media(max-width:760px){
+ body.atmosphere.public-hex,body.atmosphere.public-hex-home{
+  background-image:linear-gradient(#090f1880,#090f1880),url('../../images/hexagons.svg'),radial-gradient(ellipse at 40% 0,#202b39,transparent 75%);
+  background-size:100% 480px,240px 480px,100% 600px;
+  background-position:center top,right -70px top,center top;
+ }
+}
+@media print{body.atmosphere{background:#fff!important;color:#000!important;color-scheme:light}body.atmosphere :is(table,tr,td,th,.page-card,.admin-page-card){background:#fff!important;color:#000!important;box-shadow:none}}

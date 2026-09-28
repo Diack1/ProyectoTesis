@@ -19,6 +19,25 @@ class PlanoTest extends TestCase
         return $space;
     }
 
+    public function test_preloaded_status_does_not_query_again_per_space(): void
+    {
+        $space = $this->space();
+        $user = User::factory()->create();
+        Reserva::create(['user_id'=>$user->id, 'espacio_id'=>$space->id,
+            'codigo_reserva'=>'RES-STATUS', 'fecha_reserva'=>today(),
+            'hora_inicio'=>'10:00:00', 'hora_fin'=>'11:00:00',
+            'estado'=>'pendiente_pago', 'expires_at'=>now()->addMinutes(10)]);
+        $expected = $space->fresh()->estado_actual;
+        $spaces = Espacio::conEstadoOperativo()->with('sensor')->get();
+        \Illuminate\Support\Facades\DB::enableQueryLog();
+        \Illuminate\Support\Facades\DB::flushQueryLog();
+        foreach (range(1, 5) as $repeat) {
+            $this->assertSame($expected, $spaces->first()->estado_actual);
+        }
+        $this->assertCount(0, \Illuminate\Support\Facades\DB::getQueryLog());
+        \Illuminate\Support\Facades\DB::disableQueryLog();
+    }
+
     public function test_public_map_uses_manual_state_and_does_not_expose_customer_details(): void
     {
         $this->travelTo(now()->startOfDay()->addHours(8));

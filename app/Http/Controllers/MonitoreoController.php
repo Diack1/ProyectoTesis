@@ -14,7 +14,7 @@ class MonitoreoController extends Controller
     public function index()
     {
         app(ReservaService::class)->procesarReservasAutomaticas();
-        $espacios = Espacio::with(['sensor', 'estadias' => fn ($q) => $q->activas()])
+        $espacios = Espacio::conEstadoOperativo()->with(['sensor', 'estadias' => fn ($q) => $q->activas()])
             ->orderBy('codigo')
             ->get();
 

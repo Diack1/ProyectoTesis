@@ -9,7 +9,7 @@
 
 .admin-sidebar {
     background: var(--primary);
-    color: white;
+    color: var(--panel-ink);
     padding: 24px;
     position: sticky;
     top: 0;
@@ -29,11 +29,11 @@
     width: 44px;
     height: 44px;
     border-radius: 14px;
-    background: linear-gradient(135deg, var(--accent), #1D4ED8);
+    background: linear-gradient(135deg, var(--accent), var(--panel-surface));
     display: grid;
     place-items: center;
     font-weight: 800;
-    color: white;
+    color: var(--panel-ink);
 }
 
 .admin-brand-title {
@@ -44,7 +44,7 @@
 
 .admin-brand-subtitle {
     display: block;
-    color: #CBD5E1;
+    color: var(--panel-ink);
     font-size: 12px;
     margin-top: 2px;
 }
@@ -60,7 +60,7 @@
     width: 100%;
     border: none;
     background: transparent;
-    color: #CBD5E1;
+    color: var(--panel-ink);
     text-decoration: none;
     text-align: left;
     padding: 12px 14px;
@@ -74,11 +74,11 @@
 .admin-menu button:hover,
 .admin-menu a.active {
     background: rgba(255, 255, 255, 0.10);
-    color: white;
+    color: var(--panel-ink);
 }
 
 .admin-menu .danger {
-    color: #FCA5A5;
+    color: var(--panel-ink);
 }
 
 .admin-main {
@@ -117,7 +117,7 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    background: white;
+    background: var(--panel-surface);
     border: 1px solid var(--border);
     border-radius: 999px;
     padding: 8px 14px;
@@ -129,7 +129,7 @@
     height: 34px;
     border-radius: 999px;
     background: var(--accent);
-    color: white;
+    color: var(--panel-ink);
     display: grid;
     place-items: center;
     font-weight: 800;
@@ -175,7 +175,7 @@
 
 .stat-card,
 .card {
-    background: white;
+    background: var(--panel-surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
@@ -223,7 +223,7 @@
 }
 
 .quick-card {
-    background: white;
+    background: var(--panel-surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
@@ -251,7 +251,7 @@
 .table-wrapper {
     width: 100%;
     overflow-x: auto;
-    background: white;
+    background: var(--panel-surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
@@ -264,7 +264,7 @@
 }
 
 .data-table th {
-    background: #F1F5F9;
+    background: var(--panel-surface);
     color: var(--primary);
     text-align: left;
     padding: 15px 16px;
@@ -280,7 +280,7 @@
 }
 
 .data-table tbody tr:hover {
-    background: #F8FAFC;
+    background: var(--panel-surface);
 }
 
 .badge {
@@ -288,7 +288,7 @@
     align-items: center;
     padding: 6px 10px;
     border-radius: 999px;
-    color: white;
+    color: var(--panel-ink);
     font-size: 12px;
     font-weight: 800;
     text-transform: capitalize;
@@ -322,7 +322,7 @@
 }
 
 .badge-reembolso_solicitado {
-    background: #6D28D9;
+    background: var(--panel-surface);
 }
 
 .btn {
@@ -341,11 +341,11 @@
 
 .btn-primary {
     background: var(--accent);
-    color: white;
+    color: var(--panel-ink);
 }
 
 .btn-secondary {
-    background: #E2E8F0;
+    background: var(--panel-surface);
     color: var(--primary);
 }
 
@@ -400,7 +400,7 @@
 }
 
 .admin-space-card {
-    background: white;
+    background: var(--panel-surface);
     border: 1px solid var(--border);
     border-left: 5px solid var(--border);
     border-radius: var(--radius-lg);
@@ -452,22 +452,22 @@
 
 .btn-success {
     background: var(--success);
-    color: white;
+    color: var(--panel-ink);
 }
 
 .btn-danger {
     background: var(--danger);
-    color: white;
+    color: var(--panel-ink);
 }
 
 .btn-warning {
     background: var(--warning);
-    color: white;
+    color: var(--panel-ink);
 }
 
 .btn-maintenance {
     background: var(--maintenance);
-    color: white;
+    color: var(--panel-ink);
 }
 
 .alert-box {
@@ -478,15 +478,15 @@
 }
 
 .alert-success {
-    background: #DCFCE7;
-    color: #166534;
-    border: 1px solid #BBF7D0;
+    background: var(--panel-surface);
+    color: var(--panel-ink);
+    border: 1px solid var(--panel-line);
 }
 
 .alert-error {
-    background: #FEE2E2;
-    color: #991B1B;
-    border: 1px solid #FECACA;
+    background: var(--panel-surface);
+    color: var(--panel-ink);
+    border: 1px solid var(--panel-line);
 }
 
 @media (max-width: 1100px) {
@@ -508,7 +508,7 @@
 /* ============================= */
 
 .admin-page-card {
-    background: white;
+    background: var(--panel-surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
@@ -529,17 +529,17 @@
 
 .btn-danger {
     background: var(--danger);
-    color: white;
+    color: var(--panel-ink);
 }
 
 .btn-warning {
     background: var(--warning);
-    color: white;
+    color: var(--panel-ink);
 }
 
 .btn-success {
     background: var(--success);
-    color: white;
+    color: var(--panel-ink);
 }
 
 .vehicle-tags {
@@ -549,8 +549,8 @@
 }
 
 .vehicle-tag {
-    background: #EFF6FF;
-    color: #1D4ED8;
+    background: var(--panel-surface);
+    color: var(--panel-ink);
     padding: 5px 9px;
     border-radius: 999px;
     font-size: 12px;
@@ -573,7 +573,7 @@
 /* ============================= */
 
 .form-card {
-    background: white;
+    background: var(--panel-surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
@@ -606,7 +606,7 @@
     font-size: 15px;
     outline: none;
     transition: 0.2s ease;
-    background: white;
+    background: var(--panel-surface);
 }
 
 .form-control:focus {
@@ -624,7 +624,7 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: #F8FAFC;
+    background: var(--panel-surface);
     border: 1px solid var(--border);
     border-radius: 999px;
     padding: 9px 13px;
@@ -644,9 +644,9 @@
 }
 
 .errors-box {
-    background: #FEE2E2;
-    color: #991B1B;
-    border: 1px solid #FECACA;
+    background: var(--panel-surface);
+    color: var(--panel-ink);
+    border: 1px solid var(--panel-line);
     border-radius: var(--radius-md);
     padding: 14px 16px;
     margin-bottom: 20px;
@@ -677,7 +677,7 @@
 }
 
 .reservation-summary-card {
-    background: white;
+    background: var(--panel-surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
@@ -702,7 +702,7 @@
     align-items: center;
     padding: 6px 10px;
     border-radius: 999px;
-    color: white;
+    color: var(--panel-ink);
     font-size: 12px;
     font-weight: 800;
     text-transform: capitalize;
@@ -741,17 +741,17 @@
 
 .btn-success {
     background: var(--success);
-    color: white;
+    color: var(--panel-ink);
 }
 
 .btn-danger {
     background: var(--danger);
-    color: white;
+    color: var(--panel-ink);
 }
 
 .btn-warning {
     background: var(--warning);
-    color: white;
+    color: var(--panel-ink);
 }
 
 @media (max-width: 1100px) {
@@ -772,7 +772,7 @@
 /* ============================= */
 
 .filters-card {
-    background: white;
+    background: var(--panel-surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
@@ -807,7 +807,7 @@
 }
 
 .badge-nocturna {
-    background: #6D28D9;
+    background: var(--panel-surface);
 }
 
 .badge-activa {
@@ -845,7 +845,7 @@
 /* ============================= */
 
 .report-filters {
-    background: white;
+    background: var(--panel-surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
@@ -867,7 +867,7 @@
 }
 
 .badge-manual_admin {
-    background: #6D28D9;
+    background: var(--panel-surface);
 }
 
 .badge-sensor {
@@ -900,7 +900,7 @@
     align-items: center;
     padding: 6px 10px;
     border-radius: 999px;
-    color: white;
+    color: var(--panel-ink);
     font-size: 12px;
     font-weight: 800;
     text-transform: capitalize;
@@ -911,7 +911,7 @@
 }
 
 .role-super_admin {
-    background: #6D28D9;
+    background: var(--panel-surface);
 }
 
 .role-user {
@@ -955,7 +955,7 @@ body {
 .admin-menu button:hover,
 .admin-menu a.active {
     background: rgba(245, 158, 11, 0.14);
-    color: #FFFFFF;
+    color: var(--panel-ink);
 }
 
 .admin-menu a.active {
@@ -963,7 +963,7 @@ body {
 }
 
 .admin-menu .danger {
-    color: #FCA5A5;
+    color: var(--panel-ink);
 }
 
 /* TOPBAR */
@@ -1020,22 +1020,22 @@ body {
 
 .btn-primary:hover {
     background: var(--color-accent-hover);
-    color: #FFFFFF;
+    color: var(--panel-ink);
 }
 
 .btn-secondary {
-    background: #E2E8F0;
+    background: var(--panel-surface);
     color: var(--color-primary);
 }
 
 .btn-success {
     background: var(--color-success);
-    color: white;
+    color: var(--panel-ink);
 }
 
 .btn-danger {
     background: var(--color-danger);
-    color: white;
+    color: var(--panel-ink);
 }
 
 .btn-warning {
@@ -1071,9 +1071,9 @@ textarea:focus {
 .badge-activa,
 .badge-aprobado,
 .badge-reembolso_aprobado {
-    background: #DCFCE7;
-    color: #166534;
-    border-color: #BBF7D0;
+    background: var(--panel-surface);
+    color: var(--panel-ink);
+    border-color: var(--panel-line);
 }
 
 .badge-ocupado,
@@ -1081,16 +1081,16 @@ textarea:focus {
 .badge-cancelada,
 .badge-rechazado,
 .badge-reembolso_rechazado {
-    background: #FEE2E2;
-    color: #991B1B;
-    border-color: #FECACA;
+    background: var(--panel-surface);
+    color: var(--panel-ink);
+    border-color: var(--panel-line);
 }
 
 .badge-reservado,
 .badge-info {
-    background: #DBEAFE;
-    color: #1D4ED8;
-    border-color: #BFDBFE;
+    background: var(--panel-surface);
+    color: var(--panel-ink);
+    border-color: var(--panel-line);
 }
 
 .badge-mantenimiento,
@@ -1099,56 +1099,56 @@ textarea:focus {
 .badge-expirada,
 .badge-finalizada,
 .badge-inactiva {
-    background: #FEF3C7;
-    color: #92400E;
-    border-color: #FDE68A;
+    background: var(--panel-surface);
+    color: var(--panel-ink);
+    border-color: var(--panel-line);
 }
 
 .badge-por_hora {
-    background: #DBEAFE;
-    color: #1D4ED8;
-    border-color: #BFDBFE;
+    background: var(--panel-surface);
+    color: var(--panel-ink);
+    border-color: var(--panel-line);
 }
 
 .badge-fraccion,
 .badge-nocturna {
-    background: #FEF3C7;
-    color: #92400E;
-    border-color: #FDE68A;
+    background: var(--panel-surface);
+    color: var(--panel-ink);
+    border-color: var(--panel-line);
 }
 
 .badge-diaria {
-    background: #DCFCE7;
-    color: #166534;
-    border-color: #BBF7D0;
+    background: var(--panel-surface);
+    color: var(--panel-ink);
+    border-color: var(--panel-line);
 }
 
 /* TABLAS */
 
 .data-table th {
-    background: #F8FAFC;
+    background: var(--panel-surface);
     color: var(--color-text);
 }
 
 .data-table tbody tr:hover {
-    background: #FFFBEB;
+    background: var(--panel-surface);
 }
 
 /* ROLES */
 
 .role-super_admin {
-    background: #E0E7FF;
-    color: #3730A3;
+    background: var(--panel-surface);
+    color: var(--panel-ink);
 }
 
 .role-admin {
-    background: #FEF3C7;
-    color: #92400E;
+    background: var(--panel-surface);
+    color: var(--panel-ink);
 }
 
 .role-user {
-    background: #E2E8F0;
-    color: #334155;
+    background: var(--panel-surface);
+    color: var(--panel-ink);
 }
 
 
@@ -1201,9 +1201,9 @@ textarea:focus {
 
 
 .badge-api_simulada {
-    background: #E0E7FF;
-    color: #3730A3;
-    border-color: #C7D2FE;
+    background: var(--panel-surface);
+    color: var(--panel-ink);
+    border-color: var(--panel-line);
 }
 /* Keep the expanded staff navigation usable on short screens. */
 .admin-sidebar { overflow-y: auto; }

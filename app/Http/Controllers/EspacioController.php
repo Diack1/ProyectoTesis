@@ -12,7 +12,7 @@ class EspacioController extends Controller
 {
     public function index()
     {
-        return view('espacios.index', ['espacios' => Espacio::with('sensor', 'vehiculoTipos')->orderBy('codigo')->paginate(30)]);
+        return view('espacios.index', ['espacios' => Espacio::conEstadoOperativo()->with('sensor', 'vehiculoTipos')->orderBy('codigo')->paginate(30)]);
     }
 
     public function create()

@@ -12,6 +12,7 @@ class Reserva extends Model
     public const ESTADOS_BLOQUEANTES = ['pendiente_pago', 'confirmada'];
 
     protected $fillable = [
+        'reserva_inmediata',
         'user_id', 'tolerancia_llegada_minutos', 'minutos_fraccion_snapshot', 'inasistencia_at',
         'espacio_id',
         'codigo_reserva',
@@ -41,6 +42,7 @@ class Reserva extends Model
     protected function casts(): array
     {
         return [
+            'reserva_inmediata' => 'boolean',
             'fecha_reserva' => 'date', 'inasistencia_at' => 'datetime',
             'expires_at' => 'datetime',
             'pagado_at' => 'datetime',
@@ -60,6 +62,9 @@ class Reserva extends Model
 
     public function getLimiteLlegadaAttribute(): Carbon
     {
+        if ($this->reserva_inmediata && $this->pagado_at) {
+            return $this->pagado_at->copy()->addMinutes($this->tolerancia_llegada_minutos ?? 15);
+        }
         return Carbon::parse($this->fecha_reserva->format('Y-m-d').' '.$this->hora_inicio)->addMinutes($this->tolerancia_llegada_minutos ?? 15);
     }
 

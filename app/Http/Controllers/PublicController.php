@@ -12,7 +12,7 @@ class PublicController extends Controller
     {
         $reservaService->procesarReservasAutomaticas();
 
-        $espacios = Espacio::with('vehiculoTipos')
+        $espacios = Espacio::conEstadoOperativo()->with(['vehiculoTipos', 'sensor'])
             ->where('activo', true)
             ->orderBy('codigo')
             ->get();
@@ -35,7 +35,7 @@ class PublicController extends Controller
 
     private function espaciosPlano()
     {
-        return Espacio::with(['vehiculoTipos.tarifas', 'sensor'])->where('activo', true)->orderBy('codigo')->get();
+        return Espacio::conEstadoOperativo()->with(['vehiculoTipos.tarifas', 'sensor'])->where('activo', true)->orderBy('codigo')->get();
     }
 
     public function disponibilidad(ReservaService $reservas, ReservaDisponibilidadService $disponibilidad)

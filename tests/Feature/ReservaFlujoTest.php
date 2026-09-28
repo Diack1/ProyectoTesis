@@ -291,15 +291,17 @@ class ReservaFlujoTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_fecha_u_hora_pasada_muestra_error_de_validacion(): void
+    public function test_posted_arrival_cannot_schedule_or_extend_an_immediate_reservation(): void
     {
         $this->fakeSensor(false);
-
-        $this->actingAs($this->user)
-            ->post(route('reservas.store', $this->espacio), $this->datosReserva('09:00'))
-            ->assertSessionHasErrors('hora_inicio');
-
-        $this->assertDatabaseCount('reservas', 0);
+        $data=$this->datosReserva('23:00');
+        $data['fecha_reserva']=now()->addDays(10)->toDateString();
+        $this->actingAs($this->user)->post(route('reservas.store',$this->espacio),$data)->assertSessionHasNoErrors();
+        $reserva=\App\Models\Reserva::firstOrFail();
+        $this->assertTrue($reserva->reserva_inmediata);
+        $this->assertSame(now()->toDateString(),$reserva->fecha_reserva->toDateString());
+        $this->assertSame(now()->startOfMinute()->format('H:i:s'),$reserva->hora_inicio);
+        $this->assertSame(15,$reserva->tolerancia_llegada_minutos);
     }
 
     private function datosReserva(string $horaInicio = '10:30', ?int $vehiculoTipoId = null): array

@@ -86,15 +86,14 @@
         <div class="page-card">
 
             <div class="mb-3">
-                <span class="badge badge-warning">Confirmación</span>
+                @include('partials.booking-steps',['step'=>2])
                 <h1 class="section-title mt-1">Confirmar reserva</h1>
                 <p class="section-subtitle">
-                    Revisa los datos antes de continuar. En el siguiente paso se generará una reserva
-                    con estado <strong>pendiente de pago</strong>.
+                    Revisa tus datos y el total. Después podrás enviar tu pago por Yape o Plin.
                 </p>
             </div>
 
-            <div class="reservation-list">
+            <div class="arrival-policy"><h3>Reserva para llegar ahora</h3><p>Tras aprobar tu pago, tendrás 15 minutos para llegar. Consulta la hora límite en Mis reservas.</p></div><div class="reservation-list">
                 <div class="reservation-row">
                     <span class="reservation-label">Placa del vehículo</span>
                     <span class="reservation-value">{{ $placa }}</span>
@@ -120,20 +119,14 @@
                     <span class="reservation-value">{{ $calculo['tarifa']->tipo_tarifa }}</span>
                 </div>
 
-                <div class="reservation-row">
-                    <span class="reservation-label">Fecha</span>
-                    <span class="reservation-value">{{ $fechaHoraInicio->format('d/m/Y') }}</span>
-                </div>
+
 
                 <div class="reservation-row">
                     <span class="reservation-label">Llegada prevista</span>
-                    <span class="reservation-value">{{ $fechaHoraInicio->format('H:i') }}</span>
+                    <span class="reservation-value">15 minutos desde la aprobación del pago</span>
                 </div>
 
-                <div class="reservation-row">
-                    <span class="reservation-label">Fin previsto (referencial)</span>
-                    <span class="reservation-value">{{ $fechaHoraFin->format('H:i') }}</span>
-                </div>
+
 
                 <div class="reservation-row">
                     <span class="reservation-label">Duración</span>
@@ -169,7 +162,7 @@
 
             </div>
 
-            <div class="alert alert-info">El tiempo contratado comienza con la detección del vehículo estacionado o con el ticket en un espacio manual. Te esperamos hasta {{ \App\Models\ConfiguracionPago::actual()->tolerancia_llegada }} minutos después de la llegada prevista. Si no llegas, se libera el espacio y el pago queda para revisión y posible reembolso manual.</div><div class="reservation-alert">
+            <div class="alert alert-info">El tiempo contratado comienza con la detección del vehículo estacionado o con el ticket en un espacio manual. Te esperamos durante 15 minutos desde la aprobación del pago. Si no llegas, se libera el espacio y el pago queda para revisión y posible reembolso manual.</div><div class="reservation-alert">
                 Al confirmar, el espacio quedará reservado temporalmente durante el plazo indicado en la pantalla de pago.
             </div>
 
@@ -184,7 +177,7 @@
 
                 <div class="reservation-actions">
                     <button type="submit" id="btnConfirmarReserva" class="btn btn-primary">
-                        Confirmar y generar reserva
+                        Confirmar y continuar al pago
                     </button>
 
                     <a href="{{ route('reservas.create', $espacio) }}" class="btn btn-secondary">

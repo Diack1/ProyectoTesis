@@ -43,14 +43,30 @@ class AuthenticatedSessionController extends Controller
                 ]);
         }
 
+        $request->session()->forget(['mfa_verified', 'mfa_setup', 'mfa_recovery_display', 'staff_access_verified', 'staff_access_nonce', 'staff_access_request']);
+        if (app(\App\Services\StaffAccessService::class)->required($user)) {
+            $access = app(\App\Services\StaffAccessService::class);
+            if ($access->mailReady()) {
+                try { $access->start($request); }
+                catch (\Illuminate\Validation\ValidationException $e) {
+                    return redirect()->route('staff-access.show')->withErrors($e->errors());
+                } catch (\Symfony\Component\Mailer\Exception\TransportExceptionInterface $e) {
+                    return redirect()->route('staff-access.show')->withErrors(['access'=>'No se pudo enviar el código. Solicítalo nuevamente.']);
+                }
+            }
+
+            return redirect()->route(app(\App\Services\StaffAccessService::class)->entryRoute());
+        }
+
         if ($user->role === 'super_admin') {
-            return redirect()->route('superadmin.dashboard');
+            return redirect()->route('admin.dashboard');
         }
 
         if (in_array($user->role, ['admin', 'operador'])) {
             return redirect()->route('admin.dashboard');
         }
 
+        if (!$user->hasVerifiedEmail()) { return redirect()->route('verification.notice'); }
         return redirect()->intended(route('dashboard'));
     }
 

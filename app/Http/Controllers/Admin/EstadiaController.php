@@ -29,7 +29,7 @@ class EstadiaController extends Controller
         }
         if ($request->filled('buscar')) {
             $buscar = $request->buscar;
-            $query->where(fn ($q) => $q->where('placa', 'like', '%'.$buscar.'%')->orWhere('codigo_ticket', 'like', '%'.$buscar.'%'));
+            $query->where(fn ($q) => $q->where('placa', 'like', '%'.$buscar.'%')->orWhere('codigo_ticket', 'like', '%'.$buscar.'%')->orWhereHas('reserva.usuario', fn ($u) => $u->where('name', 'like', '%'.$buscar.'%'))->orWhereIn('placa', \App\Models\ClienteVehiculo::select('placa')->where('activo', true)->where('nombre', 'like', '%'.$buscar.'%')));
         }
 
         return view('admin.estadias.index', ['estadias' => $query->latest('hora_ingreso')->paginate(15)->withQueryString(),
@@ -48,7 +48,7 @@ class EstadiaController extends Controller
                 $q->where('codigo_reserva', 'like', '%'.$request->buscar.'%')->orWhereHas('usuario', fn ($u) => $u->where('name', 'like', '%'.$request->buscar.'%')->orWhere('email', 'like', '%'.$request->buscar.'%'));
             });
         }
-        $espacios = Espacio::with('sensor', 'vehiculoTipos')->where('activo', true)->orderBy('codigo')->get()
+        $espacios = Espacio::conEstadoOperativo()->with('sensor', 'vehiculoTipos')->where('activo', true)->orderBy('codigo')->get()
             ->filter(fn ($e) => $e->estado_actual === 'libre' || $e->id === $reserva?->espacio_id);
 
         return view('admin.estadias.create', ['reserva' => $reserva, 'reservas' => $query->orderBy('fecha_reserva')->limit(20)->get(),

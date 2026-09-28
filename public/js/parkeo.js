@@ -1,8 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
- document.querySelectorAll('[data-menu-toggle]').forEach(button => button.addEventListener('click', () => {
-  const menu=document.getElementById(button.dataset.menuToggle); const open=button.getAttribute('aria-expanded')==='true';
-  button.setAttribute('aria-expanded',String(!open)); menu.classList.toggle('is-open',!open);
- }));
  document.querySelectorAll('[data-space-filter]').forEach(button=>button.addEventListener('click',()=>{
   document.querySelectorAll('[data-space-filter]').forEach(b=>{b.classList.toggle('active',b===button);b.setAttribute('aria-pressed',String(b===button));});
   let visibles=0; document.querySelectorAll('[data-space-type]').forEach(card=>{
@@ -10,10 +6,31 @@ document.addEventListener('DOMContentLoaded', () => {
   }); const empty=document.querySelector('[data-filter-empty]');if(empty)empty.hidden=visibles>0;
  }));
  const notice=document.querySelector('[data-notifications]');
- if(notice){let running=false;const update=async()=>{if(document.hidden||running)return;running=true;try{
-  const r=await fetch(notice.dataset.notifications,{headers:{Accept:'application/json'},cache:'no-store'});
-  if(!r.ok)throw new Error();const d=await r.json();document.querySelectorAll('[data-payment-count]').forEach(b=>{b.hidden=!d.cantidad;b.textContent=d.cantidad;});notice.textContent=d.cantidad?`${d.cantidad} pago(s) por verificar`:'Pagos al día · Sin revisiones pendientes';
- }catch(_){notice.textContent='Consultar bandeja de pagos';}finally{running=false;}};update();setInterval(update,15000);}
+ if(notice){
+  let running=false;
+  const render=(state,title,detail)=>{
+   notice.dataset.state=state;
+   notice.querySelector('[data-notice-title]').textContent=title;
+   notice.querySelector('[data-notice-detail]').textContent=detail;
+  };
+  const update=async()=>{
+   if(document.hidden||running)return;
+   running=true;
+   const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),10000);
+   try{
+    const r=await fetch(notice.dataset.notifications,{headers:{Accept:'application/json'},cache:'no-store',signal:controller.signal});
+    if(!r.ok)throw new Error();
+    const d=await r.json();
+    if(!Number.isInteger(d.cantidad)||d.cantidad<0)throw new Error();
+    document.querySelectorAll('[data-payment-count]').forEach(b=>{b.hidden=!d.cantidad;b.textContent=d.cantidad;});
+    render(d.cantidad?'pending':'clear',d.cantidad?`${d.cantidad} ${d.cantidad===1?'pago por revisar':'pagos por revisar'}`:'Sin pagos pendientes de revisión',d.cantidad?'Comprueba los pagos recibidos y confirma las solicitudes.':'No hay solicitudes pendientes en la bandeja de pagos.');
+   }catch(_){
+    document.querySelectorAll('[data-payment-count]').forEach(b=>{b.hidden=true;});
+    render('error','No se pudo actualizar el estado de pagos','Abre la bandeja para consultar los pagos. Reintentaremos automáticamente.');
+   }finally{clearTimeout(timeout);running=false;}
+  };
+  update();setInterval(update,15000);
+ }
  document.querySelectorAll('[data-print]').forEach(b=>b.addEventListener('click',()=>window.print()));
  const method=document.querySelector('[data-payment-method]');if(method){const change=()=>{
   document.querySelectorAll('[data-cash-field]').forEach(e=>{e.hidden=method.value!=='efectivo';e.querySelectorAll('input').forEach(i=>i.disabled=e.hidden);});
@@ -26,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
  };space.addEventListener('change',change);change();}
 });
 
-if ('IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+if (matchMedia('(min-width: 761px)').matches && 'IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
  const sections = document.querySelectorAll('body > main > section');
  const observer = new IntersectionObserver(entries => entries.forEach(entry => {
   if (entry.isIntersecting) {entry.target.classList.add('is-visible');observer.unobserve(entry.target);}

@@ -101,24 +101,8 @@ class ReservaController extends Controller
                 ->with('error', 'El espacio seleccionado ya no está disponible.');
         }
 
-        $hoy = now('America/Lima')->format('Y-m-d');
-        $manana = now('America/Lima')->addDay()->format('Y-m-d');
-
-        $request->validate([
-            'vehiculo_tipo_id' => 'required|exists:vehiculo_tipos,id',
-            'fecha_reserva' => [
-                'required',
-                'date',
-                'after_or_equal:'.$hoy,
-                'before_or_equal:'.$manana,
-            ],
-            'hora_inicio' => 'required|date_format:H:i',
-            'duracion_minutos' => 'required|integer|in:60,120,180,240',
-        ], [
-            'fecha_reserva.after_or_equal' => 'No puedes reservar en fechas pasadas.',
-            'fecha_reserva.before_or_equal' => 'Solo puedes reservar para hoy o como máximo mañana.',
-            'hora_inicio.date_format' => 'La hora de ingreso debe tener un formato válido.',
-        ]);
+        $request->validate(['vehiculo_tipo_id' => 'required|exists:vehiculo_tipos,id',
+            'duracion_minutos' => 'required|integer|in:60,120,180,240']);
 
         $vehiculoTipo = $espacio->vehiculoTipos()
             ->where('vehiculo_tipos.activo', true)
@@ -134,26 +118,10 @@ class ReservaController extends Controller
                 ->withInput();
         }
 
-        $fechaReserva = $request->fecha_reserva;
-        $horaInicio = $request->hora_inicio;
+        $fechaHoraInicio = now('America/Lima')->startOfMinute();
+        $fechaReserva = $fechaHoraInicio->toDateString();
+        $horaInicio = $fechaHoraInicio->format('H:i');
         $duracionMinutos = (int) $request->duracion_minutos;
-
-        $fechaHoraInicio = Carbon::createFromFormat(
-            'Y-m-d H:i',
-            $fechaReserva.' '.$horaInicio,
-            'America/Lima'
-        );
-
-        $minimoPermitido = now('America/Lima')->addMinutes(15)->startOfMinute();
-
-        if ($fechaHoraInicio->lt($minimoPermitido)) {
-            return redirect()
-                ->route('reservas.create', $espacio)
-                ->withErrors([
-                    'hora_inicio' => 'La reserva debe realizarse con al menos 15 minutos de anticipación.',
-                ])
-                ->withInput();
-        }
 
         $fechaHoraFin = $fechaHoraInicio->copy()->addMinutes($duracionMinutos);
 
@@ -172,8 +140,6 @@ class ReservaController extends Controller
                 ->withInput();
         }
 
-        $fechaReserva = $request->input('fecha_reserva');
-        $horaInicio = $request->input('hora_inicio');
 
         return response()
             ->view('reservas.confirmacion', compact(
@@ -203,24 +169,8 @@ class ReservaController extends Controller
                 ->with('error', 'El espacio seleccionado ya no está disponible para reserva.');
         }
 
-        $hoy = now('America/Lima')->format('Y-m-d');
-        $manana = now('America/Lima')->addDay()->format('Y-m-d');
-
-        $request->validate([
-            'vehiculo_tipo_id' => 'required|exists:vehiculo_tipos,id',
-            'fecha_reserva' => [
-                'required',
-                'date',
-                'after_or_equal:'.$hoy,
-                'before_or_equal:'.$manana,
-            ],
-            'hora_inicio' => 'required|date_format:H:i',
-            'duracion_minutos' => 'required|integer|in:60,120,180,240',
-        ], [
-            'fecha_reserva.after_or_equal' => 'No puedes reservar en fechas pasadas.',
-            'fecha_reserva.before_or_equal' => 'Solo puedes reservar para hoy o como máximo mañana.',
-            'hora_inicio.date_format' => 'La hora de ingreso debe tener un formato válido.',
-        ]);
+        $request->validate(['vehiculo_tipo_id' => 'required|exists:vehiculo_tipos,id',
+            'duracion_minutos' => 'required|integer|in:60,120,180,240']);
 
         $vehiculoTipo = $espacio->vehiculoTipos()
             ->where('vehiculo_tipos.activo', true)
@@ -236,26 +186,10 @@ class ReservaController extends Controller
                 ->withInput();
         }
 
-        $fechaReserva = $request->fecha_reserva;
-        $horaInicio = $request->hora_inicio;
+        $fechaHoraInicio = now('America/Lima')->startOfMinute();
+        $fechaReserva = $fechaHoraInicio->toDateString();
+        $horaInicio = $fechaHoraInicio->format('H:i');
         $duracionMinutos = (int) $request->duracion_minutos;
-
-        $fechaHoraInicio = Carbon::createFromFormat(
-            'Y-m-d H:i',
-            $fechaReserva.' '.$horaInicio,
-            'America/Lima'
-        );
-
-        $minimoPermitido = now('America/Lima')->addMinutes(15)->startOfMinute();
-
-        if ($fechaHoraInicio->lt($minimoPermitido)) {
-            return redirect()
-                ->route('reservas.create', $espacio)
-                ->withErrors([
-                    'hora_inicio' => 'La reserva debe realizarse con al menos 15 minutos de anticipación.',
-                ])
-                ->withInput();
-        }
 
         $fechaHoraFin = $fechaHoraInicio->copy()->addMinutes($duracionMinutos);
 
@@ -311,11 +245,12 @@ class ReservaController extends Controller
                 'penalidad_por_fraccion' => $calculo['penalidad_por_fraccion'],
                 'monto_penalidad' => 0,
 
-                'tolerancia_llegada_minutos' => ConfiguracionPago::actual()->tolerancia_llegada ?? 15,
+                'tolerancia_llegada_minutos' => 15,
                 'minutos_fraccion_snapshot' => $tarifa->minutos_fraccion ?: 60,
                 'estado' => 'pendiente_pago',
                 'expires_at' => now('America/Lima')->addMinutes(ConfiguracionPago::actual()->minutos_pago),
-                'observacion' => 'Reserva generada desde la plataforma pública.',
+                'reserva_inmediata' => true,
+                'observacion' => 'Reserva inmediata desde la plataforma pública.',
             ]);
 
             Pago::create([

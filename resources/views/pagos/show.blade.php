@@ -2,9 +2,13 @@
 @section('title', 'Pago de reserva - Parke’o')
 @section('content')
 <section class="page-content"><div class="container" style="max-width:850px"><div class="page-card">
+@include('partials.booking-steps',['step'=>3])
 <span class="eyebrow">RESERVA WEB · PAGO ANTICIPADO</span><h1>Pago de tu reserva</h1>
 @include('partials.payment-feedback')
-<p><strong>{{ $reserva->codigo_reserva }}</strong> <span>· Placa: {{ $reserva->placa ?? 'Sin placa registrada' }}</span> · Espacio {{ $reserva->espacio->codigo }} · {{ $reserva->fecha_reserva->format('d/m/Y') }} · Llegada {{ substr($reserva->hora_inicio,0,5) }} · {{ $reserva->duracion_minutos }} min contratados</p>
+<p><strong>{{ $reserva->codigo_reserva }}</strong> <span>· Placa: {{ $reserva->placa ?? 'Sin placa registrada' }}</span> · Espacio {{ $reserva->espacio->codigo }} · {{ $reserva->fecha_reserva->format('d/m/Y') }} · {{ $reserva->reserva_inmediata ? 'Reserva inmediata' : 'Llegada '.substr($reserva->hora_inicio,0,5) }} · {{ $reserva->duracion_minutos }} min contratados</p>
+@if($reserva->reserva_inmediata)
+<div class="arrival-policy">@if($reserva->estado === 'confirmada' && !$reserva->estadia)<strong>Llega antes de las {{ $reserva->limite_llegada->format('H:i') }} del {{ $reserva->limite_llegada->format('d/m/Y') }}</strong><p>Tu pago está aprobado. Dispones de 15 minutos desde la aprobación.</p>@elseif($reserva->estado === 'pendiente_pago')<strong>15 minutos para llegar desde la aprobación del pago</strong><p>El plazo aún no ha empezado. Consulta aquí el resultado de la revisión.</p>@endif</div>
+@endif
 <div class="checkout-total"><small>Importe a pagar por adelantado</small><strong>S/ {{ number_format($reserva->monto_total,2) }}</strong></div>
 @if($reserva->estado !== 'pendiente_pago')
 <p>Estado de la reserva: <strong>{{ str_replace('_',' ',$reserva->estado) }}</strong>.</p>

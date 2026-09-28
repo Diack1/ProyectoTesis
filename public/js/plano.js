@@ -1,6 +1,12 @@
 document.querySelectorAll('[data-parking]').forEach(widget => {
     const dialog = widget.querySelector('dialog'), content = widget.querySelector('[data-dialog-content]');
     let selected = null, busy = false;
+    if (widget.dataset.refresh && matchMedia('(max-width: 760px)').matches) {
+        widget.classList.add('is-list');
+        const toggle = widget.querySelector('[data-map-toggle]');
+        toggle.textContent = 'Ver plano 2D';
+        toggle.setAttribute('aria-pressed', 'true');
+    }
     const updateDetail = () => {
         if (!selected) return;
         content.querySelector('[data-detail-state]').textContent = selected.querySelector('[data-state-label]').textContent;

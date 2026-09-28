@@ -1,0 +1,219 @@
+/* Unified public dark theme. Layout rules retained; superseded palettes removed. */
+.public-refined{--public-bg:#15222E;--public-nav:#091728;--public-surface:#1B2A39;--public-raised:#182A3D;--public-line:#2B4055;--public-ink:#F8FAFC;--public-muted:#A9B8C8;--public-accent:#1683FF;--public-button:#096CE5;--public-hover:#075BB9;--public-success:#34D399;--public-warning:#FBBF24;--public-danger:#EF4444;--color-bg:var(--public-bg);--color-border:var(--public-line);--color-accent:var(--public-accent);--color-accent-hover:#8DC4FF;--color-muted:var(--public-muted);--color-text:var(--public-ink);--text:var(--public-ink);--muted:var(--public-muted);--card:var(--public-surface);--border:var(--public-line);--primary:var(--public-ink);--accent:var(--public-accent);color-scheme:dark;background:var(--public-surface);color:var(--public-ink)}
+.public-refined .container{width:min(1280px,92%)}
+.public-refined .public-navbar{background:var(--public-surface);border-bottom:1px solid var(--public-line);backdrop-filter:none}
+.public-refined .brand-title{font-size:30px;letter-spacing:-1.6px;color:var(--public-ink);font-weight:850;text-shadow:none}
+.public-refined .brand-subtitle{color:var(--public-ink);font-size:11px;margin-top:5px;letter-spacing:.3px}
+.public-refined .public-menu>a{color:var(--public-ink);font-size:14px}
+.public-refined .public-menu>a.active{background:#1683ff1a;border-radius:9px;color:#8DC4FF}
+.public-refined .btn{border-radius:10px;box-shadow:none;font-weight:650;min-height:44px}
+.public-refined .btn-primary{background:var(--public-surface);color:var(--public-ink);border:1px solid var(--public-line)}
+.public-refined .btn-primary:hover{background:var(--public-surface)}
+.public-refined .btn-secondary{background:var(--public-surface);color:var(--public-ink);border:1px solid var(--public-line)}
+.public-refined :is(a,button,input,select,summary):focus-visible{outline:3px solid #568dc5;outline-offset:3px}
+.public-menu-toggle{display:none}
+.public-refined .auth-brand-title{font-size:32px;letter-spacing:-1.6px;text-shadow:none}
+.public-refined .auth-panel{background:var(--public-surface)}
+.public-refined .auth-card{border-radius:18px;box-shadow:none}
+.public-refined .hero{padding:54px 0;background:var(--public-surface);border-bottom:0;border-color:var(--public-line)}
+.public-refined .hero-grid{grid-template-columns:1.2fr .85fr;gap:70px;align-items:center}
+.public-refined .hero-badge{background:var(--public-surface);color:var(--public-ink);padding:9px 14px;border:0;font-size:11px;letter-spacing:1.2px;display:inline-block;border-radius:8px}
+.public-refined .hero h1{font-size:clamp(40px,5vw,66px);line-height:1.09;letter-spacing:-2.6px;color:var(--public-ink);margin:22px 0;text-shadow:none}
+.public-refined .hero-copy>p{max-width:500px;font-size:18px;line-height:1.7;color:var(--public-ink)}
+.public-refined .hero-actions{align-items:center;gap:26px;margin-top:26px}
+.hero-secondary{color:var(--public-ink);font-size:14px;font-weight:650;text-underline-offset:5px}
+.public-refined .hero-copy .hero-footnote{font-size:12px;margin-top:22px}
+.public-refined .hero-panel{padding:26px;border-radius:22px;background:var(--public-surface);border:1px solid var(--public-line);box-shadow:none;color:var(--public-ink);border-color:var(--public-line)}
+.public-refined .eyebrow{font-size:10px;letter-spacing:1.5px;color:var(--public-ink);font-weight:750;display:inline-block;background:var(--public-surface);padding:7px 10px;border-radius:7px}
+.availability-number{font-size:76px;font-weight:750;letter-spacing:-4px;margin:18px 0 24px;line-height:1.15}
+.availability-number span{display:block;font-size:14px;letter-spacing:0;font-weight:500;color:var(--public-ink)}
+.availability-breakdown{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;border-top:1px solid var(--public-line);padding-top:20px}
+.availability-breakdown strong{display:block;font-size:23px}
+.availability-breakdown span{font-size:12px;color:var(--public-ink)}
+.public-refined .hero-panel>p{font-size:12px;line-height:1.6;margin:20px 0}
+.public-refined .section{padding:56px 0}
+.public-refined .section-title{font-size:29px;letter-spacing:-.7px;color:var(--public-ink)}
+.public-refined .section-subtitle{color:var(--public-ink);font-size:15px;line-height:1.6}
+.public-refined .space-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
+.public-refined .space-card{background:var(--public-surface);border:1px solid var(--public-line);border-radius:16px;padding:22px;box-shadow:none;transition:border-color .2s;border-color:var(--public-line)}
+.public-refined .space-card:hover{transform:none;border-color:var(--public-line)}
+.public-refined .space-code{font-size:25px;letter-spacing:-.5px;font-weight:750}
+.public-refined .space-car{color:var(--public-muted);background:transparent;border-radius:10px;margin:12px 0;padding:10px;display:grid;place-items:center;height:66px}
+.public-refined .space-action{font-size:13px;display:flex;align-items:center;justify-content:space-between;color:var(--public-ink);margin-top:18px}
+.public-refined .space-card-meta{font-size:13px}
+.public-refined .space-card-meta .muted{display:none}
+.public-price-callout{display:flex;align-items:center;justify-content:space-between;gap:30px;padding:36px;background:var(--public-surface);border:1px solid var(--public-line);border-radius:18px}
+.public-price-callout h2{font-size:27px;letter-spacing:-.6px;margin:8px 0}
+.public-price-callout p{font-size:14px;color:var(--public-ink);max-width:650px}
+.how-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:24px;margin-top:30px}
+.how-number{font-size:13px;color:var(--public-ink);background:var(--public-surface);border-radius:10px;padding:10px;display:inline-block}
+.how-grid h3{font-size:16px;margin:18px 0 10px}
+.how-grid p{font-size:13px;line-height:1.7;color:var(--public-ink)}
+.public-refined .public-footer{background:var(--public-surface);color:var(--public-ink);padding:34px 0}
+.public-refined .public-footer p,.public-refined .public-footer a{color:var(--public-ink);font-size:13px;line-height:1.8}
+.public-refined .public-footer strong{color:var(--public-ink)}
+.public-refined .page-card,.public-refined .tariff-card,.public-refined .page-heading-card{border:1px solid var(--public-line);border-radius:18px;box-shadow:none;background:var(--public-surface)}
+.public-refined .tariff-price{color:var(--public-ink);font-size:28px}
+.public-refined .tariff-detail{font-size:14px;color:var(--public-ink)}
+.public-refined .reservation-wrapper{max-width:1160px}
+.public-refined .reservation-selected{background:var(--public-surface);border:1px solid var(--public-line);padding:16px 20px;display:flex;align-items:center;gap:16px;margin-bottom:18px}
+.public-refined .reservation-selected h2{font-size:19px;margin:0 0 4px}
+.public-refined .reservation-selected a{font-size:12px;color:var(--public-ink)}
+.booking-steps{list-style:none;display:flex;gap:24px;margin:0 0 25px;padding:0;font-size:13px;color:var(--public-ink)}
+.booking-steps li{display:flex;align-items:center;gap:8px}
+.booking-steps span{display:grid;place-items:center;width:28px;height:28px;background:var(--public-surface);border-radius:50%;font-weight:700}
+.booking-steps .current{color:var(--public-ink);font-weight:700}
+.booking-steps .current span{background:var(--public-surface)}
+.booking-note{font-size:13px;color:var(--public-ink);line-height:1.7;margin-bottom:24px}
+#formNuevaReserva{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(300px,.85fr);column-gap:44px;align-items:start}
+#formNuevaReserva>.form-group{grid-column:1;margin-bottom:20px}
+#formNuevaReserva>.reservation-summary{grid-column:2;grid-row:1 / span 4;margin:0;padding:24px;background:var(--public-surface);border-radius:14px;border:1px solid var(--public-line)}
+#formNuevaReserva .reservation-summary h2{font-size:19px;margin:0 0 20px}
+#formNuevaReserva .reservation-summary p{font-size:13px;line-height:1.6;margin-bottom:12px}
+#formNuevaReserva [data-role=tarifa-monto]{font-size:23px;font-weight:750;display:block;margin-top:5px;color:var(--public-ink)}
+#formNuevaReserva .reservation-actions{grid-column:1 / -1;border-top:1px solid var(--public-line);padding-top:22px;margin-top:8px}
+.public-refined .form-group :is(input,select){min-height:46px;border-radius:9px;border:1px solid var(--public-line);background:var(--public-surface)}
+.public-refined .form-group label{font-size:14px}
+.public-refined .form-group small{display:block;font-size:12px;line-height:1.6;color:var(--public-ink);margin-top:7px}
+.public-refined details summary{cursor:pointer;font-size:13px;font-weight:650;padding:12px 0}
+.public-refined .reservation-summary details{border-top:1px solid var(--public-line)}
+.public-refined .parking-widget{border-radius:18px;border-color:var(--public-line);background:var(--public-surface)}
+.public-refined .hero-secondary{color:var(--public-ink);padding:12px 16px;border-radius:10px;text-decoration:none}
+.public-refined .hero-panel .eyebrow{color:var(--public-ink);background:var(--public-surface)}
+.public-refined main>.section{background:var(--public-surface)}
+.public-refined main>.section:last-child{background:var(--public-surface)}
+.whole-space-link{display:block;text-decoration:none;color:var(--public-ink);border-radius:16px}
+.whole-space-link .space-card{height:100%;transition:transform .18s,border-color .18s,box-shadow .18s}
+.whole-space-link:hover .space-card{transform:translateY(-4px);border-color:var(--public-line);box-shadow:none}
+.whole-space-link:focus-visible{outline:3px solid #355f83;outline-offset:4px}
+.public-refined .whole-space-link .space-action{background:var(--public-surface);padding:11px 13px;border-radius:8px;text-decoration:none;font-weight:700;color:var(--public-ink);border:1px solid var(--public-line)}
+.public-refined .public-price-callout{background:var(--public-surface);border-color:var(--public-line);padding:26px}
+.public-refined .how-grid article{background:var(--public-surface);border:1px solid var(--public-line);padding:20px;border-radius:14px}
+.public-refined .page-card,.public-refined .page-heading-card,.public-refined .tariff-card,.public-refined .reservation-item{background:var(--public-surface);border-color:var(--public-line)}
+.public-refined .space-dialog{background:var(--public-surface);border:1px solid var(--public-line);padding:22px;color:var(--public-ink)}
+.public-refined .space-dialog h2{background:var(--public-raised);color:var(--public-ink);border-radius:10px;padding:18px;margin-top:18px}
+.public-refined .space-dialog [data-detail-state]{display:inline-block;background:var(--public-raised);padding:8px 14px;border-radius:20px;color:var(--public-ink)}
+.public-refined .space-dialog [data-reserve-action]{width:100%;margin-top:16px;justify-content:center}
+.public-refined .space-dialog::backdrop{background:#030b16bb;backdrop-filter:blur(3px)}
+.public-refined .parking-space:focus{box-shadow:none;z-index:2;outline:3px solid #8DC4FF;outline-offset:2px}
+.arrival-policy{background:var(--public-surface);border:1px solid var(--public-line);border-radius:13px;padding:18px;margin:0 0 20px;font-size:14px;line-height:1.6}
+.arrival-policy h3{margin:10px 0 6px;font-size:19px}
+.arrival-policy p{margin:8px 0}
+#formNuevaReserva>.arrival-policy{grid-column:1}
+.public-refined #resumenTarifaReserva{background:var(--public-surface);border-color:var(--public-line)}
+.public-refined .public-footer-inner{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:36px;align-items:start}
+.public-footer a{overflow-wrap:anywhere}
+.legal-pending{font-size:11px!important;color:var(--public-ink)}
+.public-refined main,.public-refined main>section,.public-refined main>.section:last-child{background:var(--public-surface)}
+.public-refined .hero-copy>p,.public-refined .hero-copy .hero-footnote{color:var(--public-ink)}
+.public-refined .hero-badge,.public-refined .hero-panel .eyebrow{background:var(--public-surface);color:var(--public-ink);border:1px solid var(--public-line);letter-spacing:1px}
+.public-refined :is(.hero-panel,.space-card,.public-price-callout,.how-grid article,.page-card,.page-heading-card,.tariff-card,.reservation-item,.parking-widget,.space-dialog){background:var(--public-surface);border:1px solid var(--public-line);box-shadow:none;border-radius:14px}
+.public-refined .hero-panel .availability-number{font-size:62px;letter-spacing:-2px;margin:16px 0}
+.public-refined .hero-panel .availability-number span{font-size:15px;color:var(--public-ink)}
+.occupancy-label{font-size:12px;color:var(--public-ink);display:block;margin-bottom:8px}
+.occupancy-meter{display:block;appearance:none;width:100%;height:9px;border:0;border-radius:10px;background:var(--public-surface);overflow:hidden;margin-bottom:20px}
+.occupancy-meter::-webkit-progress-bar{background:var(--public-surface);border-radius:10px}
+.occupancy-meter::-webkit-progress-value{background:var(--public-surface);border-radius:10px}
+.occupancy-meter::-moz-progress-bar{background:var(--public-surface);border-radius:10px}
+.public-refined .availability-breakdown{border-top:1px solid var(--public-line);padding-top:14px;gap:10px}
+.public-refined .availability-breakdown strong{font-size:21px}
+.public-refined .availability-breakdown span{color:var(--public-ink)}
+.public-refined .hero-panel .availability-hours{background:var(--public-raised);color:var(--public-ink);border-radius:8px;padding:10px;font-size:12px;margin:18px 0}
+.availability-cta{width:100%;justify-content:space-between}
+.public-refined .hero-panel .availability-note{font-size:11px;margin:12px 0 0;color:var(--public-ink)}
+.public-refined .space-card-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.public-refined .space-car svg{width:48px;height:48px}
+.public-refined .whole-space-link:hover .space-card{border-color:var(--public-accent);box-shadow:none}
+.public-refined .reservation-item{padding:20px;gap:20px;grid-template-columns:minmax(0,1fr) minmax(220px,.38fr)}
+.public-refined .reservation-item h2{font-size:21px;margin:10px 0}
+.public-refined .reservation-payment{border-left:1px solid var(--public-line);padding-left:20px;font-size:13px}
+.public-refined .reservation-payment .amount{font-size:25px}
+.public-refined .reservation-more summary{padding:9px 0;min-height:40px;color:var(--public-ink)}
+.public-refined .reservation-more dl{margin:14px 0;gap:14px}
+.public-refined .reservation-more .reservation-code{margin:8px 0}
+.public-refined .reservation-buttons{margin-top:10px}
+.public-refined .badge-finalizada{background:var(--public-surface);color:var(--public-ink);border:1px solid var(--public-line)}
+.public-refined .badge-expirada,.public-refined .badge-cancelada{background:var(--public-surface);color:var(--public-ink);border:1px solid var(--public-line)}
+.public-refined .badge-confirmada,.public-refined .badge-libre{background:var(--public-surface);color:var(--public-ink);border:1px solid var(--public-line)}
+.public-refined .tariff-card .badge{background:var(--public-surface);color:var(--public-ink);border:1px solid var(--public-line)}
+.public-refined,.public-refined main,.public-refined main>section,.public-refined .hero,.public-refined .auth-form-area{background:var(--public-bg)}
+.public-refined .public-navbar,.public-refined .public-footer,.public-refined .auth-panel{background:var(--public-nav);border-color:var(--public-line)}
+.public-refined :is(.card,.auth-card,.reservation-selected,.reservation-summary,.payment-qr-card,.checkout-total,.arrival-policy,.alert-box){background:var(--public-surface);color:var(--public-ink);border:1px solid var(--public-line);border-radius:14px}
+.public-refined :is(h1,h2,h3,h4,label,.brand-title,.auth-brand-title,.amount,.space-code){color:var(--public-ink)}
+.public-refined :is(.section-subtitle,.text-muted,.muted,.tariff-detail,.reservation-code,.reservation-item dt,.booking-note,.auth-card-header p,.auth-row,.form-group small){color:var(--public-muted)}
+.public-refined .hero-copy>p,.public-refined .hero-copy .hero-footnote,.public-refined .hero-panel>p,.public-refined .availability-number span,.public-refined .availability-breakdown span,.public-refined .how-grid p,.public-refined .public-price-callout p{color:var(--public-muted)}
+.public-refined .hero h1 .hero-accent{color:var(--public-accent)}
+.public-refined .btn-primary,.public-refined .btn-auth,.public-refined .whole-space-link .space-action{background:var(--public-button);color:#fff;border:1px solid var(--public-button);transition:background .2s ease,border-color .2s ease}
+.public-refined .btn-primary:hover,.public-refined .btn-auth:hover,.public-refined .whole-space-link:hover .space-action{background:var(--public-hover);border-color:var(--public-hover)}
+.public-refined .btn-secondary,.public-refined .hero-secondary,.public-refined .public-menu-toggle{background:var(--public-raised);color:var(--public-ink);border:1px solid var(--public-line)}
+.public-refined .btn-secondary:hover,.public-refined .hero-secondary:hover{border-color:var(--public-accent)}
+.public-refined .public-menu a::after{background:var(--public-accent)}
+.public-refined .hero-badge,.public-refined .eyebrow,.public-refined .hero-panel .eyebrow,.public-refined .how-number{background:#1683ff18;color:#8DC4FF;border:1px solid var(--public-line)}
+.public-refined .occupancy-label,.public-refined .availability-note{color:var(--public-muted)}
+.public-refined .occupancy-meter,.public-refined .occupancy-meter::-webkit-progress-bar{background:var(--public-raised)}
+.public-refined .occupancy-meter::-webkit-progress-value{background:var(--public-success)}
+.public-refined .occupancy-meter::-moz-progress-bar{background:var(--public-success)}
+.public-refined .booking-steps span,.public-refined .payment-step span{background:var(--public-raised);color:var(--public-muted)}
+.public-refined .booking-steps .current,.public-refined .reservation-selected a,.public-refined .reservation-more summary{color:#8DC4FF}
+.public-refined .booking-steps .current span{background:var(--public-button);color:#fff}
+.public-refined #formNuevaReserva>.reservation-summary,.public-refined #resumenTarifaReserva{background:var(--public-raised);border-color:var(--public-line)}
+.public-refined :is(input,select,textarea),.public-refined .form-group :is(input,select){background:var(--public-nav);color:var(--public-ink);border:1px solid #476079;accent-color:var(--public-accent)}
+.public-refined input::placeholder,.public-refined textarea::placeholder{color:var(--public-muted);opacity:1}
+.public-refined :is(a,button,input,select,textarea,summary):focus-visible{outline:3px solid #8DC4FF;outline-offset:3px}
+.public-refined :is(button,input,select):disabled{opacity:.55;cursor:not-allowed}
+.public-refined input[readonly]{background:var(--public-raised);color:var(--public-muted)}
+.public-refined input[type=checkbox]{min-height:auto}
+.public-refined :is(.badge,.tariff-card .badge){background:var(--public-raised);color:var(--public-muted);border:1px solid var(--public-line)}
+.public-refined :is(.badge-libre,.badge-confirmada,.badge-success,.alert-success){background:#123B32;color:var(--public-success);border-color:#276653}
+.public-refined :is(.badge-reservado,.badge-pendiente_pago,.badge-warning,.payment-deadline,.alert-warning){background:#362D19;color:#FCD774;border-color:#705C2C}
+.public-refined :is(.badge-ocupado,.badge-danger,.alert-error,.alert-danger){background:#3C202B;color:#FDA4AF;border-color:#793647}
+.public-refined .btn-danger{background:#A8233C;color:#fff;border-color:#C23550}
+.public-refined .btn-warning{background:#362D19;color:#FCD774;border-color:#705C2C}
+.public-refined .badge-info{background:#1683ff18;color:#8DC4FF;border-color:var(--public-line)}
+.public-refined .parking-lot{background:var(--public-nav);border-color:var(--public-line);border-bottom-color:transparent}
+.public-refined :is(.lot-office,.lot-services,.lot-gate,.parking-space){background:var(--public-raised);color:var(--public-muted);border-color:#476079}
+.public-refined .parking-space[data-state=libre]{background:#123B32;color:var(--public-success);border-color:#276653}
+.public-refined .parking-space[data-state=reservado]{background:#362D19;color:#FCD774;border-color:#705C2C}
+.public-refined .parking-space[data-state=ocupado]{background:#3C202B;color:#FDA4AF;border-color:#793647}
+.public-refined .parking-space:hover{filter:brightness(1.2)}
+.public-refined .lot-lane,.public-refined .parking-scroll:after{color:var(--public-muted)}
+.public-refined table,.public-refined td{background:var(--public-surface);color:var(--public-ink);border-color:var(--public-line)}
+.public-refined th{background:var(--public-nav);color:var(--public-muted);border-color:var(--public-line)}
+.public-refined .payment-qr-card img{background:white;padding:8px;border-radius:8px}
+.public-refined main>.section,.public-refined main>.section:last-child{background:var(--public-bg)}
+.public-refined .btn-primary,.public-refined .btn-secondary,.public-refined .btn-auth{color:#F8FAFC!important}
+@media(max-width:1000px){.public-refined .hero-grid{gap:30px}.public-refined .space-grid{grid-template-columns:repeat(2,1fr)}.how-grid{grid-template-columns:repeat(3,1fr)}.public-refined .public-navbar-inner{gap:14px}.public-refined .public-menu{gap:8px}}
+@media(max-width:760px){.public-refined .public-navbar-inner{flex-direction:row;flex-wrap:wrap;padding:14px 0;min-height:70px}.public-refined .public-menu{display:none;flex-basis:100%;align-items:stretch}.public-refined .public-menu.is-open{display:flex;flex-direction:column}.public-menu-toggle{display:flex;align-items:center;gap:8px;border:1px solid #ffffff30;border-radius:9px;padding:10px 12px;font:inherit;font-size:13px;min-height:44px}.public-menu-toggle svg{width:18px;height:18px}.public-refined .hero{padding:40px 0}.public-refined .hero-grid{grid-template-columns:1fr}.public-refined .hero h1{font-size:46px}.public-refined .hero-copy>p{font-size:16px}.public-refined .hero-panel{padding:24px}.public-refined .section{padding:36px 0}.public-price-callout{padding:24px;align-items:flex-start;flex-direction:column}.how-grid{grid-template-columns:1fr 1fr;gap:22px}.public-refined .section-title{font-size:25px}#formNuevaReserva{grid-template-columns:1fr}#formNuevaReserva>.reservation-summary{grid-column:1;grid-row:auto}#formNuevaReserva .reservation-actions{grid-column:1}.booking-steps{gap:12px;font-size:11px;flex-wrap:wrap}.public-refined .page-card{padding:22px}.public-refined .space-card{padding:16px}.public-refined .public-navbar{position:relative}.public-refined .public-footer-inner{grid-template-columns:1fr;gap:22px}.public-refined .hero-panel{}.public-refined .how-grid article{padding:18px}.public-refined .hero{padding:32px 0}.public-refined .hero-panel{padding:22px}.public-refined .reservation-item{grid-template-columns:1fr;padding:18px;gap:14px}.public-refined .reservation-payment{border-left:0;border-top:1px solid #899aa8;padding:14px 0 0}.public-refined .reservation-more dl{grid-template-columns:1fr 1fr}.public-refined .public-price-callout{padding:22px}}
+@media(max-width:400px){.public-refined .space-grid{grid-template-columns:1fr}.how-grid{grid-template-columns:1fr}.public-refined .hero-actions{gap:18px}.booking-steps{gap:8px}}
+@media(prefers-reduced-motion:reduce){.public-refined *{transition:none!important}.public-refined *{transition:none!important;animation:none!important}}
+.public-refined .auth-card a{color:#8DC4FF}
+.public-refined .auth-card .error-message{color:#FDA4AF}
+
+/* Reference composition: shared icon sizing and a deeper availability panel. */
+.public-refined .brand-title .brand-accent{color:var(--public-accent)}
+.public-refined .hero-grid{grid-template-columns:1.25fr 1fr;gap:70px;align-items:center}
+.public-refined .hero{padding:44px 0 24px}
+.public-refined .hero h1{font-size:clamp(42px,4.2vw,68px);line-height:1.08;letter-spacing:-2px;margin:30px 0 22px}
+.public-refined .hero-copy>p{max-width:620px;font-size:19px;line-height:1.55}
+.public-refined .hero-copy .hero-footnote{font-size:13px}
+.public-refined .hero-badge,.public-refined .eyebrow{display:inline-flex;align-items:center;gap:10px;letter-spacing:.25px;font-size:12px;padding:10px 12px}
+.public-refined .hero-badge{color:#65AEFF;background:#193B60}
+.public-refined .hero .hero-panel{background:#0E1C29;border:1px solid #3A4D5E;border-radius:14px;padding:26px;box-shadow:0 10px 28px #00000012}
+.public-refined .hero-panel .availability-heading{background:#185443;color:#E6FFF4;border-color:#236B56}
+.public-refined .hero-panel .availability-number{font-size:68px;margin:22px 0 12px}
+.public-refined .hero-panel .availability-number span{font-size:17px;color:var(--public-muted)}
+.public-refined .availability-breakdown strong{font-size:24px}
+.public-refined .availability-breakdown span{display:flex;align-items:center;gap:6px;margin-top:5px}
+.public-refined .status-dot{display:inline-block;width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.public-refined .status-dot.occupied{background:var(--public-danger)}
+.public-refined .status-dot.reserved{background:var(--public-warning)}
+.public-refined .status-dot.available{background:var(--public-success)}
+.public-refined .hero-panel .availability-hours{display:flex;align-items:center;gap:10px;font-size:13px;padding:13px 12px}
+.public-refined .availability-hours .icon{color:#8DC4FF;flex-shrink:0}
+.public-refined .hero-actions .btn,.public-refined .hero-secondary{padding:16px 22px;min-height:54px}
+.public-refined .availability-cta{font-size:17px;min-height:54px}
+.public-refined .hero + .section{padding-top:0}
+.public-refined .hero + .section .btn-secondary{color:#8DC4FF!important;border-color:#265682;gap:10px}
+.public-refined .hero-badge .icon,.public-refined .eyebrow .icon,.public-refined .btn .icon{width:21px;height:21px;flex-shrink:0}
+@media(max-width:1000px){.public-refined .hero-grid{gap:30px}.public-refined .hero h1{font-size:48px}}
+@media(max-width:760px){.public-refined .hero-grid{grid-template-columns:1fr}.public-refined .hero{padding:32px 0}.public-refined .hero h1{font-size:44px}.public-refined .hero-panel{padding:22px}.public-refined .hero-copy>p{font-size:16px}.public-refined .hero-actions{gap:12px;flex-wrap:wrap}.public-refined .availability-breakdown span{font-size:11px}.public-refined .hero + .section{padding-top:20px}}

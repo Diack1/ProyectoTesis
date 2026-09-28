@@ -17,6 +17,7 @@ class ProfileUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'current_password' => [Rule::requiredIf(fn () => $this->input('email') !== $this->user()->email), 'nullable', 'current_password'],
             'name' => ['required', 'string', 'max:255'],
             'email' => [
                 'required',

@@ -1,31 +1,18 @@
-<x-guest-layout>
-    <div class="mb-4 text-sm text-gray-600">
-        {{ __('Thanks for signing up! Before getting started, could you verify your email address by clicking on the link we just emailed to you? If you didn\'t receive the email, we will gladly send you another.') }}
-    </div>
-
-    @if (session('status') == 'verification-link-sent')
-        <div class="mb-4 font-medium text-sm text-green-600">
-            {{ __('A new verification link has been sent to the email address you provided during registration.') }}
-        </div>
-    @endif
-
-    <div class="mt-4 flex items-center justify-between">
-        <form method="POST" action="{{ route('verification.send') }}">
-            @csrf
-
-            <div>
-                <x-primary-button>
-                    {{ __('Resend Verification Email') }}
-                </x-primary-button>
-            </div>
-        </form>
-
-        <form method="POST" action="{{ route('logout') }}">
-            @csrf
-
-            <button type="submit" class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                {{ __('Log Out') }}
-            </button>
-        </form>
-    </div>
-</x-guest-layout>
+@extends('layouts.auth')
+@section('title', 'Verifica tu correo')
+@section('content')
+<div class="auth-card" style="width:100%;overflow-wrap:anywhere">
+<h1>Verifica tu correo</h1>
+<p>Para activar las reservas, confirma el correo de tu cuenta: <strong>{{ auth()->user()->email }}</strong>.</p>
+@if(session('status'))<p role="status">{{ session('status') }}</p>@endif
+@foreach($errors->all() as $error)<p role="alert">{{ $error }}</p>@endforeach
+<form method="post" action="{{ route('verification.verify') }}">@csrf
+<label for="code">Código de seis dígitos</label>
+<input id="code" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required style="width:100%;box-sizing:border-box;font-size:1.25rem;letter-spacing:.2em">
+<p>El código vence en 10 minutos. Revisa también la carpeta de spam.</p>
+<button class="btn-auth" type="submit">Verificar correo</button>
+</form>
+<form method="post" action="{{ route('verification.send') }}" style="margin-top:1rem">@csrf<button class="btn-auth" type="submit">Reenviar código</button></form>
+<form method="post" action="{{ route('logout') }}" style="margin-top:1rem">@csrf<button class="btn-auth" type="submit">Cerrar sesión</button></form>
+</div>
+@endsection

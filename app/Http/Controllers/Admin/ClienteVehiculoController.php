@@ -17,7 +17,7 @@ class ClienteVehiculoController extends Controller
 
         return response()->view('admin.placas.clientes', [
             'vehiculos' => ClienteVehiculo::with('usuario')->when($request->filled('buscar'), fn ($q) => $q->where(function ($q) use ($request) {
-                $q->where('placa', 'like', '%'.$request->buscar.'%')->orWhere('nombre', 'like', '%'.$request->buscar.'%')
+                $q->where('placa', 'like', '%'.$request->buscar.'%')->orWhere('nombre', 'like', '%'.$request->buscar.'%')->orWhere('telefono', 'like', '%'.$request->buscar.'%')
                     ->orWhereHas('usuario', fn ($u) => $u->where('name', 'like', '%'.$request->buscar.'%'));
             }))->orderBy('placa')->paginate(20)->withQueryString(),
             'editar' => $request->filled('editar') ? ClienteVehiculo::findOrFail($request->editar) : null,

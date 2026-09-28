@@ -10,12 +10,11 @@
             <span class="badge badge-info">Tarifas vigentes</span>
 
             <h1 class="section-title">
-                Consulta de tarifas por tipo de vehículo
+                Elige con el precio claro
             </h1>
 
             <p class="section-subtitle">
-                El usuario no selecciona directamente la tarifa. El sistema calcula automáticamente
-                el monto según el tipo de vehículo, la hora de ingreso, la duración y las tarifas activas.
+                Consulta el precio según tu vehículo y horario. Antes de pagar verás el total de tu reserva.
             </p>
 
             <div class="mt-2">
@@ -84,7 +83,7 @@
                     </p>
 
                     <p class="tariff-detail">
-                        <strong>Tolerancia:</strong>
+                        <strong>Tolerancia de exceso:</strong>
                         {{ $tarifa->tolerancia_minutos }} minutos
                     </p>
 

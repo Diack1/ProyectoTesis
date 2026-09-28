@@ -63,9 +63,9 @@
     </div>
 
     <div style="margin-top:14px;">
-        <a href="{{ route('sensores.estado') }}" class="btn btn-secondary">
+        @if(auth()->user()->esSuperAdmin())<a href="{{ route('sensores.estado') }}" class="btn btn-secondary">
             Ver sensores externos
-        </a>
+        </a>@endif
     </div>
 
     <div class="admin-space-grid" style="margin-top:18px;">

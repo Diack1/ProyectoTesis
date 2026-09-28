@@ -1,0 +1,6 @@
+/* Preserve the cascade around page-specific styles. */
+@import "../shared/cochera-ui.css";
+@import "../admin/admin.css";
+@import "../shared/operaciones.css";
+@import "../shared/claridad.css";
+@import "../admin/admin-refinado.css";

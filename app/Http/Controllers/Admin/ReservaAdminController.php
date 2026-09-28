@@ -15,6 +15,8 @@ class ReservaAdminController extends Controller
     public function index(Request $request)
     {
         app(ReservaService::class)->procesarReservasAutomaticas();
+        $request->validate(['vista'=>'nullable|in:hoy,proximas,historial','buscar'=>'nullable|string|max:100','estado'=>'nullable|string|max:40']);
+        $vista = $request->input('vista', 'hoy');
         $query = Reserva::with([
             'estadia',
             'usuario',
@@ -22,6 +24,11 @@ class ReservaAdminController extends Controller
             'pagos',
             'reembolsos',
         ]);
+
+        if ($vista !== 'historial') {
+            $query->whereDoesntHave('estadia')->whereNull('inasistencia_at')->whereIn('estado', ['pendiente_pago','confirmada']);
+            $query->whereDate('fecha_reserva', $vista === 'hoy' ? '=' : '>', today());
+        }
 
         if ($request->filled('estado')) {
             $query->where('estado', $request->estado);
@@ -31,7 +38,7 @@ class ReservaAdminController extends Controller
             $buscar = $request->buscar;
 
             $query->where(function ($q) use ($buscar) {
-                $q->where('codigo_reserva', 'like', "%{$buscar}%")
+                $q->where('codigo_reserva', 'like', "%{$buscar}%")->orWhere('placa', 'like', "%{$buscar}%")
                     ->orWhereHas('usuario', function ($userQuery) use ($buscar) {
                         $userQuery->where('name', 'like', "%{$buscar}%")
                             ->orWhere('email', 'like', "%{$buscar}%");
@@ -43,7 +50,7 @@ class ReservaAdminController extends Controller
         }
 
         $reservas = $query
-            ->orderBy('created_at', 'desc')
+            ->orderBy('fecha_reserva', $vista === 'historial' ? 'desc' : 'asc')->orderBy('hora_inicio')
             ->paginate(15)
             ->withQueryString();
 
@@ -70,6 +77,9 @@ class ReservaAdminController extends Controller
         }
 
         DB::transaction(function () use ($reembolso) {
+            Reserva::lockForUpdate()->findOrFail($reembolso->reserva_id);
+            $reembolso = Reembolso::lockForUpdate()->findOrFail($reembolso->id);
+            abort_unless($reembolso->estado === 'solicitado', 409, 'Este reembolso ya fue procesado.');
             $reembolso->update([
                 'estado' => 'aprobado',
                 'procesado_at' => now(),
@@ -103,6 +113,9 @@ class ReservaAdminController extends Controller
         }
 
         DB::transaction(function () use ($reembolso) {
+            Reserva::lockForUpdate()->findOrFail($reembolso->reserva_id);
+            $reembolso = Reembolso::lockForUpdate()->findOrFail($reembolso->id);
+            abort_unless($reembolso->estado === 'solicitado', 409, 'Este reembolso ya fue procesado.');
             $reembolso->update([
                 'estado' => 'rechazado',
                 'procesado_at' => now(),

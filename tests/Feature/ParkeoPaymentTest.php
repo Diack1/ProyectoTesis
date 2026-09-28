@@ -75,7 +75,7 @@ class ParkeoPaymentTest extends TestCase
     {
         $reserva = $this->reservation();
         $pago = $this->submit($reserva);
-        $this->actingAs(User::factory()->create(['role' => 'admin']))
+        $this->actingAs(User::factory()->create(['role' => 'super_admin']))
             ->post(route('admin.pagos.revisar', $pago), ['decision' => 'rechazado'])->assertSessionHasErrors('motivo_revision');
         $this->post(route('admin.pagos.revisar', $pago), ['decision' => 'rechazado', 'motivo_revision' => 'No coincide el importe'])->assertRedirect();
         $this->assertTrue($reserva->fresh()->expires_at->isFuture());
@@ -139,12 +139,12 @@ class ParkeoPaymentTest extends TestCase
         $this->get(route('admin.pagos.index'))->assertRedirect(route('login'));
     }
 
-    public function test_admin_creates_operator_but_cannot_escalate_role(): void
+    public function test_owner_creates_reception_but_cannot_create_another_owner(): void
     {
-        $admin = User::factory()->create(['role' => 'admin']);
-        $data = ['name' => 'Operador', 'email' => 'operador@example.test', 'password' => 'password123', 'password_confirmation' => 'password123', 'role' => 'operador', 'activo' => 1];
+        $admin = User::factory()->create(['role' => 'super_admin']);
+        $data = ['name' => 'Operador', 'email' => 'operador@example.test', 'password' => 'password123', 'password_confirmation' => 'password123', 'role' => 'admin', 'activo' => 1];
         $this->actingAs($admin)->post(route('superadmin.admins.store'), $data)->assertSessionHasNoErrors();
-        $this->assertDatabaseHas('users', ['email' => $data['email'], 'role' => 'operador']);
+        $this->assertDatabaseHas('users', ['email' => $data['email'], 'role' => 'admin']);
         $data['email'] = 'otro@example.test';
         $data['role'] = 'super_admin';
         $this->post(route('superadmin.admins.store'), $data)->assertSessionHasErrors('role');
@@ -152,7 +152,7 @@ class ParkeoPaymentTest extends TestCase
 
     public function test_configuration_upload_and_pages_render(): void
     {
-        $this->actingAs(User::factory()->create(['role' => 'admin']))
+        $this->actingAs(User::factory()->create(['role' => 'super_admin']))
             ->put(route('admin.pagos.configuracion.update'), ['titular' => 'Parke’o', 'telefono' => '999999999', 'minutos_pago' => 15,
                 'qr_yape' => $this->png()])->assertSessionHasNoErrors();
         $this->get(route('admin.pagos.configuracion'))->assertOk()->assertSee('Parke’o');
@@ -176,7 +176,7 @@ class ParkeoPaymentTest extends TestCase
     public function test_manual_space_can_be_saved_without_sensor_and_deactivation_preserves_history(): void
     {
         $type = VehiculoTipo::create(['nombre' => 'Auto', 'codigo' => 'auto', 'activo' => true]);
-        $this->actingAs(User::factory()->create(['role' => 'admin']))->post(route('admin.espacios.store'), [
+        $this->actingAs(User::factory()->create(['role' => 'super_admin']))->post(route('admin.espacios.store'), [
             'codigo' => 'E30', 'estado_actual' => 'libre', 'modo_monitoreo' => 'manual', 'activo' => 1, 'vehiculo_tipo_ids' => [$type->id],
         ])->assertSessionHasNoErrors();
         $space = Espacio::where('codigo', 'E30')->firstOrFail();
@@ -225,4 +225,24 @@ class ParkeoPaymentTest extends TestCase
         $this->actingAs($reserva->usuario)->post('/reservas/'.$reserva->id.'/pago-simulado')->assertNotFound();
         $this->assertSame('pendiente_pago', $reserva->fresh()->estado);
     }
+    public function test_immediate_arrival_clock_starts_at_approval_and_expires_to_manual_refund(): void
+    {
+        $this->travelTo(now()->setTime(10,0,0));
+        $r=$this->reservation();
+        $r->update(['reserva_inmediata'=>true,'tolerancia_llegada_minutos'=>15,'expires_at'=>null]);
+        $p=Pago::create(['reserva_id'=>$r->id,'user_id'=>$r->user_id,'codigo_pago'=>'PAG-INMEDIATA','metodo_pago'=>'yape','monto'=>5,'estado'=>'pendiente','enviado_at'=>now()]);
+        $this->travel(2)->hours();
+        $this->actingAs(User::factory()->create(['role'=>'admin']))->post(route('admin.pagos.revisar',$p),['decision'=>'aprobado'])->assertRedirect();
+        $r->refresh();
+        $this->assertTrue($r->limite_llegada->equalTo(now()->addMinutes(15)));
+        $this->assertSame(now()->format('H:i:s'),$r->hora_inicio);
+        $this->travel(15)->minutes();
+        $this->assertSame(0,app(ReservaService::class)->procesarInasistencias());
+        $this->post(route('admin.pagos.revisar',$p),['decision'=>'aprobado'])->assertConflict();
+        $this->travel(1)->seconds();
+        $this->assertSame(1,app(ReservaService::class)->procesarInasistencias());
+        $this->assertSame('reembolso_solicitado',$r->fresh()->estado);
+        $this->assertDatabaseHas('reembolsos',['reserva_id'=>$r->id,'estado'=>'solicitado']);
+    }
+
 }

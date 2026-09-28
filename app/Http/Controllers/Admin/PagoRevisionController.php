@@ -37,6 +37,10 @@ class PagoRevisionController extends Controller
             $reserva->update($data['decision'] === 'aprobado'
              ? ['estado' => 'confirmada', 'pagado_at' => now(), 'expires_at' => null]
              : ['expires_at' => now()->addMinutes(ConfiguracionPago::actual()->minutos_pago)]);
+            if ($data['decision'] === 'aprobado' && $reserva->reserva_inmediata) {
+                $reserva->update(['fecha_reserva' => now()->toDateString(), 'hora_inicio' => now()->format('H:i:s'),
+                    'hora_fin' => now()->addMinutes($reserva->duracion_minutos)->format('H:i:s')]);
+            }
         });
 
         return back()->with('success', 'Revisión guardada. El cliente puede consultar el resultado en su reserva.');

@@ -2,66 +2,44 @@
 <html lang="es">
 
 <head>
+    @include('partials.menu-controller')
     <meta charset="UTF-8">
 
     <title>@yield('title', 'Acceso - Parke’o')</title>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link rel="stylesheet" href="{{ asset('css/cochera-ui.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
-
+    @vite('resources/css/auth/base.css')
     @stack('styles')
+    @vite('resources/css/auth/theme.css')
+
+<script src="/js/auth-diagonal.js?v={{ filemtime(public_path('js/auth-diagonal.js')) }}" defer></script>
 </head>
 
-<body>
-
+<body class="atmosphere public-refined auth-diagonal {{ request()->routeIs('register') ? 'auth-register' : 'auth-login' }}">
+    <header class="access-header"><x-brand :href="route('public.home')"/><a href="{{ route('public.home') }}">← Volver al inicio</a></header>
+    <div class="access-stage">
     <div class="auth-shell">
+        <div class="access-diagonal" aria-hidden="true"></div>
         <section class="auth-panel">
-            <a href="{{ route('public.home') }}" class="auth-brand">
-                <div class="auth-logo">P</div>
-                <div>
-                    <span class="auth-brand-title">Parke’o</span>
-                    <span class="auth-brand-subtitle">Cochera inteligente</span>
-                </div>
-            </a>
-
-            <div class="auth-panel-content">
-                <h1>Reserva tu espacio de forma rápida y segura</h1>
-                <p>
-                    Consulta disponibilidad, selecciona un espacio libre y gestiona tus reservas
-                    desde una plataforma moderna y confiable.
-                </p>
-
-                <div class="auth-features">
-                    <div class="auth-feature">
-                        <strong>Disponibilidad en tiempo real</strong>
-                        <span>Consulta espacios libres, ocupados, reservados o en mantenimiento.</span>
-                    </div>
-
-                    <div class="auth-feature">
-                        <strong>Reservas con control de pago</strong>
-                        <span>Genera reservas pendientes, confirma pagos y revisa tu historial.</span>
-                    </div>
-
-                    <div class="auth-feature">
-                        <strong>Gestión inteligente</strong>
-                        <span>Plataforma preparada para integración con sensores IoT.</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="auth-panel-footer">
-                Proyecto universitario orientado a gestión inteligente de disponibilidad y reservas.
-            </div>
+            <span class="access-symbol"><x-icon name="car"/></span>
+            <span class="access-eyebrow">TU ESPACIO, ANTES DE LLEGAR</span>
+            <h1>{{ request()->routeIs('register') ? 'Tu próxima parada empieza aquí.' : 'Qué bueno tenerte de vuelta.' }}</h1>
+            <p>{{ request()->routeIs('register') ? 'Crea tu cuenta, verifica tu correo y elige dónde estacionar.' : 'Accede a tu cuenta y encuentra tu lugar en Parke’o.' }}</p>
+            <div class="access-assurance"><x-icon name="shield"/><span>Verificación por correo<br>para proteger tu acceso</span></div>
         </section>
-
         <main class="auth-form-area">
+            @if(request()->routeIs('login', 'register'))
+            <nav class="access-tabs" aria-label="Acceso a tu cuenta">
+                <a data-auth-switch href="{{ route('login') }}" @if(request()->routeIs('login')) aria-current="page" @endif>Iniciar sesión</a>
+                <a data-auth-switch href="{{ route('register') }}" @if(request()->routeIs('register')) aria-current="page" @endif>Crear cuenta</a>
+            </nav>
+            @endif
             @yield('content')
         </main>
     </div>
+    <p class="access-caption">Parke’o · Menos vueltas. Más tranquilidad.</p>
+    </div>
     @stack('scripts')
-
 </body>
-
 </html>

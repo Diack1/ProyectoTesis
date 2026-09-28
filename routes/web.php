@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| Rutas pÃºblicas
+| Rutas pÃÆ’Æ’ºblicas
 |--------------------------------------------------------------------------
 */
 
@@ -35,10 +35,10 @@ Route::get('/tarifas', [PublicController::class, 'tarifas'])
     ->name('public.tarifas');
 
 Route::get('/sensores/estado', [SensorEstadoController::class, 'index'])
-    ->name('sensores.estado')->middleware(['auth', 'role:admin,super_admin,operador']);
+    ->name('sensores.estado')->middleware(['auth', 'role:super_admin']);
 
 Route::get('/sensores/estado/json', [SensorEstadoController::class, 'json'])
-    ->name('sensores.estado.json')->middleware(['auth', 'role:admin,super_admin,operador']);
+    ->name('sensores.estado.json')->middleware(['auth', 'role:super_admin']);
 
 /*
 |--------------------------------------------------------------------------
@@ -47,23 +47,13 @@ Route::get('/sensores/estado/json', [SensorEstadoController::class, 'json'])
 */
 
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', function () {
-        if (auth()->user()->role === 'super_admin') {
-            return redirect()->route('superadmin.dashboard');
-        }
-
-        if (auth()->user()->tieneRol('admin', 'operador')) {
-            return redirect()->route('admin.dashboard');
-        }
-
-        return redirect()->route('reservas.index');
-    })->name('dashboard');
-
+    Route::post('/profile/email/confirm', [ProfileController::class, 'confirmEmail'])->middleware('throttle:5,1')->name('profile.email.confirm');
+    Route::delete('/profile/email', [ProfileController::class, 'cancelEmail'])->name('profile.email.cancel');
     Route::get('/profile', [ProfileController::class, 'edit'])
         ->name('profile.edit');
 
     Route::patch('/profile', [ProfileController::class, 'update'])
-        ->name('profile.update');
+        ->middleware('throttle:5,1')->name('profile.update');
 
     Route::delete('/profile', [ProfileController::class, 'destroy'])
         ->name('profile.destroy');
@@ -75,7 +65,7 @@ Route::middleware('auth')->group(function () {
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth', 'role:user'])->group(function () {
+Route::middleware(['auth', 'role:user', \App\Http\Middleware\VerifiedCustomer::class])->group(function () {
     Route::get('/reservas', [ReservaController::class, 'index'])
         ->name('reservas.index');
 
@@ -85,13 +75,13 @@ Route::middleware(['auth', 'role:user'])->group(function () {
     Route::post('/reservas/confirmar/{espacio}', [ReservaController::class, 'confirmar'])
         ->name('reservas.confirmar');
 
-    Route::post('/reservas/guardar/{espacio}', [ReservaController::class, 'store'])
+    Route::post('/reservas/guardar/{espacio}', [ReservaController::class, 'store'])->middleware('throttle:booking-actions')
         ->name('reservas.store');
 
     Route::get('/reservas/{reserva}/pago', [PagoController::class, 'show'])
         ->name('pagos.show');
 
-    Route::post('/reservas/{reserva}/pago', [PagoController::class, 'enviar'])->name('pagos.enviar');
+    Route::post('/reservas/{reserva}/pago', [PagoController::class, 'enviar'])->middleware('throttle:payment-upload')->name('pagos.enviar');
 
     Route::post('/reservas/{reserva}/cancelar', [ReservaController::class, 'cancelar'])
         ->name('reservas.cancelar');
@@ -120,58 +110,58 @@ Route::middleware(['auth', 'role:admin,super_admin,operador'])
             ->name('espacios.estado');
 
         Route::get('/espacios', [EspacioController::class, 'index'])
-            ->name('espacios.index')->middleware('role:admin,super_admin');
+            ->name('espacios.index')->middleware('role:super_admin');
 
         Route::get('/espacios/crear', [EspacioController::class, 'create'])
-            ->name('espacios.create')->middleware('role:admin,super_admin');
+            ->name('espacios.create')->middleware('role:super_admin');
 
         Route::post('/espacios', [EspacioController::class, 'store'])
-            ->name('espacios.store')->middleware('role:admin,super_admin');
+            ->name('espacios.store')->middleware('role:super_admin');
 
         Route::get('/espacios/{espacio}/editar', [EspacioController::class, 'edit'])
-            ->name('espacios.edit')->middleware('role:admin,super_admin');
+            ->name('espacios.edit')->middleware('role:super_admin');
 
         Route::put('/espacios/{espacio}', [EspacioController::class, 'update'])
-            ->name('espacios.update')->middleware('role:admin,super_admin');
+            ->name('espacios.update')->middleware('role:super_admin');
 
         Route::delete('/espacios/{espacio}', [EspacioController::class, 'destroy'])
-            ->name('espacios.destroy')->middleware('role:admin,super_admin');
+            ->name('espacios.destroy')->middleware('role:super_admin');
 
         Route::get('/reportes', [ReporteController::class, 'index'])
-            ->name('reportes.index');
+            ->name('reportes.index')->middleware('role:super_admin');
 
         Route::get('/reportes/exportar-csv', [ReporteController::class, 'exportarCsv'])
-            ->name('reportes.exportarCsv');
+            ->name('reportes.exportarCsv')->middleware('role:super_admin');
 
         Route::get('/reservas', [ReservaAdminController::class, 'index'])
             ->name('reservas.index');
 
         Route::post('/reembolsos/{reembolso}/aprobar', [ReservaAdminController::class, 'aprobarReembolso'])
-            ->name('reembolsos.aprobar')->middleware('role:admin,super_admin');
+            ->name('reembolsos.aprobar')->middleware('role:super_admin');
 
         Route::post('/reembolsos/{reembolso}/rechazar', [ReservaAdminController::class, 'rechazarReembolso'])
-            ->name('reembolsos.rechazar')->middleware('role:admin,super_admin');
+            ->name('reembolsos.rechazar')->middleware('role:super_admin');
 
         Route::get('/tarifas', [TarifaAdminController::class, 'index'])
-            ->name('tarifas.index')->middleware('role:admin,super_admin');
+            ->name('tarifas.index')->middleware('role:super_admin');
 
         Route::get('/tarifas/crear', [TarifaAdminController::class, 'create'])
-            ->name('tarifas.create')->middleware('role:admin,super_admin');
+            ->name('tarifas.create')->middleware('role:super_admin');
 
         Route::post('/tarifas', [TarifaAdminController::class, 'store'])
-            ->name('tarifas.store')->middleware('role:admin,super_admin');
+            ->name('tarifas.store')->middleware('role:super_admin');
 
         Route::get('/tarifas/{tarifa}/editar', [TarifaAdminController::class, 'edit'])
-            ->name('tarifas.edit')->middleware('role:admin,super_admin');
+            ->name('tarifas.edit')->middleware('role:super_admin');
 
         Route::put('/tarifas/{tarifa}', [TarifaAdminController::class, 'update'])
-            ->name('tarifas.update')->middleware('role:admin,super_admin');
+            ->name('tarifas.update')->middleware('role:super_admin');
 
         Route::patch('/tarifas/{tarifa}/activar', [TarifaAdminController::class, 'activar'])
-            ->name('tarifas.activar')->middleware('role:admin,super_admin');
+            ->name('tarifas.activar')->middleware('role:super_admin');
 
         Route::patch('/tarifas/{tarifa}/desactivar', [TarifaAdminController::class, 'desactivar'])
-            ->name('tarifas.desactivar')->middleware('role:admin,super_admin');
+            ->name('tarifas.desactivar')->middleware('role:super_admin');
     });
 
 /*
@@ -180,7 +170,7 @@ Route::middleware(['auth', 'role:admin,super_admin,operador'])
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth', 'role:admin,super_admin'])
+Route::middleware(['auth', 'role:super_admin'])
     ->prefix('super-admin')
     ->name('superadmin.')
     ->group(function () {
@@ -199,7 +189,7 @@ Route::middleware(['auth', 'role:admin,super_admin'])
 
 /*
 |--------------------------------------------------------------------------
-| Rutas de autenticaciÃ³n
+| Rutas de autenticaciÃÆ’Æ’³n
 |--------------------------------------------------------------------------
 */
 
@@ -214,14 +204,14 @@ Route::middleware(['auth', 'role:admin,super_admin,operador'])->prefix('admin')-
     Route::get('/pagos/pendientes', [PagoRevisionController::class, 'pendientes'])->name('pagos.pendientes');
     Route::post('/pagos/{pago}/revision', [PagoRevisionController::class, 'revisar'])->name('pagos.revisar');
 });
-Route::middleware(['auth', 'role:admin,super_admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'role:super_admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/configuracion-pagos', [ConfiguracionPagoController::class, 'edit'])->name('pagos.configuracion');
     Route::put('/configuracion-pagos', [ConfiguracionPagoController::class, 'update'])->name('pagos.configuracion.update');
 });
 
 Route::get('/dashboard', function (Request $request) {
     return redirect()->route(match ($request->user()->role) {
-        'super_admin' => 'superadmin.dashboard',
+        'super_admin' => 'admin.dashboard',
         'admin', 'operador' => 'admin.dashboard',
         default => 'reservas.index',
     });
@@ -247,7 +237,23 @@ Route::middleware(['auth','role:admin,super_admin,operador'])->prefix('admin')->
  Route::post('/placas/analizar', [\App\Http\Controllers\Admin\PlacaVisionController::class, 'analizar'])->middleware('throttle:10,1')->name('placas.analizar');
  Route::post('/placas/confirmar', [\App\Http\Controllers\Admin\PlacaVisionController::class, 'confirmar'])->name('placas.confirmar');
  Route::delete('/placas', [\App\Http\Controllers\Admin\PlacaVisionController::class, 'limpiar'])->name('placas.limpiar');
- Route::get('/sensores-iot',[\App\Http\Controllers\Admin\SensorIotController::class,'index'])->name('sensores.index');
- Route::put('/sensores-iot/{sensor}',[\App\Http\Controllers\Admin\SensorIotController::class,'update'])->middleware('role:admin,super_admin')->name('sensores.update');
- Route::post('/sensores-iot/{sensor}/credencial',[\App\Http\Controllers\Admin\SensorIotController::class,'token'])->middleware('role:admin,super_admin')->name('sensores.token');
+ Route::get('/sensores-iot',[\App\Http\Controllers\Admin\SensorIotController::class,'index'])->name('sensores.index')->middleware('role:super_admin');
+ Route::put('/sensores-iot/{sensor}',[\App\Http\Controllers\Admin\SensorIotController::class,'update'])->middleware('role:super_admin')->name('sensores.update');
+ Route::post('/sensores-iot/{sensor}/credencial',[\App\Http\Controllers\Admin\SensorIotController::class,'token'])->middleware('role:super_admin')->name('sensores.token');
 });
+
+Route::get('/admin/seguridad', function () {
+    return view('admin.seguridad', ['events' => \Illuminate\Support\Facades\DB::table('security_events')->orderByDesc('id')->paginate(30)]);
+})->middleware(['auth', 'role:super_admin'])->name('admin.seguridad');
+
+Route::post('/admin/seguridad/{event}/review', function (\Illuminate\Http\Request $request, int $event) {
+    \Illuminate\Support\Facades\DB::transaction(function () use ($request, $event) {
+        $row = \Illuminate\Support\Facades\DB::table('security_events')->lockForUpdate()->find($event);
+        abort_unless($row, 404);
+        if (!$row->reviewed_at && $row->requires_attention) {
+            \Illuminate\Support\Facades\DB::table('security_events')->where('id', $event)->update(['reviewed_at' => now(), 'reviewed_by' => $request->user()->id]);
+            \App\Services\SecurityEvents::record('SecurityEvent', $event, 'reviewed', ['reviewed_at']);
+        }
+    });
+    return back()->with('success', 'Evento marcado como revisado.');
+})->middleware(['auth', 'role:super_admin', 'throttle:30,1'])->name('admin.seguridad.review');

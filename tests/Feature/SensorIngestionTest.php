@@ -95,13 +95,13 @@ class SensorIngestionTest extends TestCase
         $this->assertSame('libre', $this->sensor->espacio->fresh()->getRawOriginal('estado_actual'));
     }
 
-    public function test_staff_can_view_but_only_admin_can_calibrate_and_rotate_keys(): void
+    public function test_only_owner_can_view_calibrate_and_rotate_keys(): void
     {
         $operator = User::factory()->create(['role' => 'operador']);
         $this->actingAs($operator);
-        $this->get(route('admin.sensores.index'))->assertOk()->assertDontSee($this->sensor->token_hash);
+        $this->get(route('admin.sensores.index'))->assertForbidden();
         $this->post(route('admin.sensores.token', $this->sensor))->assertForbidden();
-        $this->actingAs(User::factory()->create(['role' => 'admin']))->post(route('admin.sensores.token', $this->sensor))->assertSessionHas('sensor_token');
+        $this->actingAs(User::factory()->create(['role' => 'super_admin']))->post(route('admin.sensores.token', $this->sensor))->assertSessionHas('sensor_token');
         $this->send(50)->assertUnauthorized();
     }
 
@@ -133,7 +133,7 @@ class SensorIngestionTest extends TestCase
 
     public function test_calibration_rejects_inverted_thresholds_and_out_of_range_values(): void
     {
-        $this->actingAs(User::factory()->create(['role' => 'admin']));
+        $this->actingAs(User::factory()->create(['role' => 'super_admin']));
         $data = ['umbral_ocupado_cm' => 150, 'umbral_libre_cm' => 100, 'distancia_min_cm' => 20, 'distancia_max_cm' => 450, 'lecturas_confirmacion' => 3, 'segundos_sin_senal' => 60, 'estado' => 'activo'];
         $this->put(route('admin.sensores.update', $this->sensor), $data)->assertSessionHasErrors('umbral_libre_cm');
         $data['umbral_libre_cm'] = 200;

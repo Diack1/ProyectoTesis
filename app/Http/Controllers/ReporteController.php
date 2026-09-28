@@ -114,11 +114,11 @@ class ReporteController extends Controller
                     fputcsv($handle, [
                         $registro->id,
                         $registro->fecha_hora,
-                        $registro->espacio->codigo ?? '-',
-                        $registro->sensor->codigo_sensor ?? '-',
+                        self::csvText($registro->espacio->codigo ?? '-'),
+                        self::csvText($registro->sensor->codigo_sensor ?? '-'),
                         $registro->estado_detectado,
                         $registro->distancia_cm,
-                        $registro->origen,
+                        self::csvText($registro->origen),
                         $registro->created_at,
                     ], ';');
                 }
@@ -126,5 +126,10 @@ class ReporteController extends Controller
 
             fclose($handle);
         }, 200, $headers);
+    }
+    public static function csvText(?string $value): string
+    {
+        $value ??= '';
+        return preg_match('/^[\s]*[=+@-]|^[\t\r\n]/u', $value) ? "'".$value : $value;
     }
 }

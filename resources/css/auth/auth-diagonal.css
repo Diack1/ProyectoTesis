@@ -1,0 +1,46 @@
+body.atmosphere.auth-diagonal{background-color:#080c15;background-image:radial-gradient(ellipse at 50% 20%,#234e7840,transparent 65%);min-height:100dvh}
+.access-header{max-width:1180px;margin:auto;padding:26px 28px;display:flex;justify-content:space-between;align-items:center;gap:20px}
+.access-header>a:last-child{color:#b7cce4;font-size:13px}
+.access-stage{max-width:1120px;margin:24px auto 40px;padding:0 28px}
+body.atmosphere.auth-diagonal .auth-shell{position:relative;isolation:isolate;display:grid;grid-template-columns:1fr 1fr;min-height:620px;border:1px solid #4c86b5;border-radius:24px;background:#0b121e;box-shadow:0 0 36px #388ddb1c,0 30px 90px #0005;overflow:hidden}
+.access-diagonal{position:absolute;inset:0;z-index:-1;background:linear-gradient(140deg,#132e51,#176e9c 85%,#5fa9ce);clip-path:polygon(54% 0,100% 0,100% 100%,88% 100%);transition:clip-path .3s ease}
+body.atmosphere.auth-diagonal .auth-form-area{grid-column:1;grid-row:1;padding:42px 36px;display:flex;flex-direction:column;justify-content:center;align-items:stretch;min-width:0;background:transparent}
+body.atmosphere.auth-diagonal .auth-card{padding:0;background:transparent;border:0;box-shadow:none;border-radius:0;animation:none;width:100%;max-width:none}
+body.atmosphere.auth-diagonal .auth-panel{grid-column:2;grid-row:1;border:0;background:transparent;padding:56px 36px 56px 65px;justify-content:center;gap:20px;min-width:0}
+body.atmosphere.auth-diagonal .auth-panel h1{font-size:clamp(30px,3vw,42px);line-height:1.14;margin:0;letter-spacing:-1.4px;max-width:330px}
+body.atmosphere.auth-diagonal .auth-panel p{color:#daebfa;font-size:15px;line-height:1.7;margin:0;max-width:300px}
+.access-eyebrow{font-size:10px;font-weight:700;letter-spacing:1.5px;color:#bcdfff}
+.access-symbol{display:grid;place-items:center;width:68px;height:68px;background:#9bdaff18;border:1px solid #81b4d875;border-radius:20px;color:#c6eaff}
+.access-symbol svg{width:38px;height:38px}
+.access-assurance{display:flex;gap:12px;align-items:center;color:#d4eaff;font-size:12px;line-height:1.5;padding-top:20px;border-top:1px solid #91bad942;margin-top:10px}
+.access-assurance svg{width:25px;height:25px;flex:none}
+.access-tabs{display:flex;padding:5px;border:1px solid #334861;border-radius:12px;background:#111e30;margin-bottom:26px;gap:5px}
+.access-tabs a{flex:1;text-align:center;padding:11px 5px;font-size:13px;border-radius:8px;color:#b4c7dd;text-decoration:none;min-height:42px}
+.access-tabs a[aria-current]{color:#fff;background:#294d75;box-shadow:inset 0 0 0 1px #5385b0}
+body.atmosphere.auth-diagonal .auth-card-header h2{font-size:30px;letter-spacing:-1px;margin:0 0 8px}
+body.atmosphere.auth-diagonal .auth-card-header p{font-size:14px;color:#afc0d4;line-height:1.6}
+body.atmosphere.auth-diagonal .auth-row{flex-wrap:wrap;font-size:12px;gap:10px}
+body.atmosphere.auth-diagonal .btn-auth{background:linear-gradient(110deg,#276be1,#177da9);border-color:#689fe3;box-shadow:none;transform:none}
+body.atmosphere.auth-diagonal .btn-auth:hover{background:#2268c8;transform:none}
+.access-caption{text-align:center;font-size:12px;color:#8ea4be;margin:20px 0}
+.password-field{position:relative}
+body.atmosphere.auth-diagonal .password-field input{padding-right:78px}
+.password-toggle{position:absolute;right:7px;top:50%;transform:translateY(-50%);min-height:40px;padding:8px;background:transparent;border:0;color:#acccf4;font-size:12px;cursor:pointer;border-radius:6px}
+body.atmosphere.auth-diagonal.auth-register .auth-form-area{grid-column:2}
+body.atmosphere.auth-diagonal.auth-register .auth-panel{grid-column:1;padding:56px 65px 56px 36px}
+.auth-register .access-diagonal{clip-path:polygon(0 0,46% 0,12% 100%,0 100%);background:linear-gradient(220deg,#132e51,#176e9c 85%,#5fa9ce)}
+@media(min-width:761px){.auth-diagonal.is-switching .access-diagonal{clip-path:polygon(0 0,100% 0,100% 100%,0 100%)}.auth-diagonal.is-switching .auth-form-area{opacity:.25;transition:opacity .2s}.auth-diagonal.is-switching .auth-panel{opacity:.4;transition:opacity .2s}}
+@media(max-width:760px){
+ .access-header{padding:18px 20px}.access-header>a:last-child{font-size:12px}.access-stage{padding:0 16px;margin:8px auto 24px}
+ body.atmosphere.auth-diagonal .auth-shell{display:flex;flex-direction:column;min-height:0;border-radius:20px}
+ body.atmosphere.auth-diagonal .auth-panel,body.atmosphere.auth-diagonal.auth-register .auth-panel{order:0;padding:24px;gap:12px;border-bottom:1px solid #416583;background:linear-gradient(125deg,#173354,#146283)}
+ body.atmosphere.auth-diagonal .auth-panel h1{font-size:25px;max-width:none;letter-spacing:-.7px}
+ body.atmosphere.auth-diagonal .auth-panel p{font-size:13px;max-width:none;line-height:1.5}
+ .access-symbol,.access-assurance{display:none}.access-diagonal{display:none}.access-eyebrow{font-size:9px}
+ body.atmosphere.auth-diagonal .auth-form-area{order:1;padding:24px 20px}
+ body.atmosphere.auth-diagonal .auth-card-header h2{font-size:25px}.access-tabs{margin-bottom:22px}
+ body.atmosphere.auth-diagonal .auth-card input{font-size:16px}.access-caption{font-size:11px}
+}
+@media(prefers-reduced-motion:reduce){.auth-diagonal *{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+body.atmosphere.auth-diagonal .auth-card a.back-home{display:none}

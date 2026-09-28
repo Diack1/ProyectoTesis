@@ -79,8 +79,9 @@ class SensorController extends Controller
         ], 201);
     }
 
-    public function estadoActual()
+    public function estadoActual(Request $request)
     {
+        abort_unless($request->user()->activo && $request->user()->tieneRol('admin', 'super_admin', 'operador'), 403);
         $espacios = Espacio::with('sensor')
             ->orderBy('codigo')
             ->get();

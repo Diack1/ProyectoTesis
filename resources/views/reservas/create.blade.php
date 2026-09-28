@@ -63,7 +63,7 @@
         <div class="page-card">
 
             <div class="mb-3">
-                <span class="badge badge-info">Reserva</span>
+                @include('partials.booking-steps',['step'=>1])
                 <h1 class="section-title mt-1">Nueva reserva</h1>
                 <p class="section-subtitle">
                     Completa los datos para reservar tu espacio de estacionamiento.
@@ -87,17 +87,7 @@
             </div>
             @endif
 
-            <div class="reservation-selected">
-                <h2>Espacio seleccionado: {{ $espacio->codigo }}</h2>
-                <p>{{ $espacio->descripcion }}</p>
-                <p>Estado actual: <strong>{{ $espacio->estado_actual }}</strong></p>
-                <p>Sensor asociado: <strong>{{ $espacio->sensor->codigo_sensor ?? 'Sin sensor' }}</strong></p>
-                @if(isset($sensorActual) && $sensorActual)
-                <p>Lectura del sensor: <strong>{{ $sensorActual['estado_texto'] }}</strong></p>
-                <p>Ultima lectura: <strong>{{ $sensorActual['ultima_lectura_formateada'] ?? 'Sin lectura' }}</strong></p>
-                @endif
-            </div>
-
+            <div class="reservation-selected"><x-icon name="car"/><div><h2>Tu espacio: {{ $espacio->codigo }}</h2><a href="{{ route('public.disponibilidad') }}">Elegir otro espacio</a></div></div>
             @php
             $fechaMinima = now('America/Lima')->format('Y-m-d');
             $fechaMaxima = now('America/Lima')->addDay()->format('Y-m-d');
@@ -106,8 +96,8 @@
             $horaMinimaHoy = now('America/Lima')->addMinutes(15)->format('H:i');
             @endphp
 
-            <div class="alert alert-info">La reserva web se paga por adelantado. El tiempo contratado comienza al detectar el sensor el vehículo estacionado o, en un espacio manual, al emitir el ticket de ingreso. Si no llegas dentro de la tolerancia, liberaremos el espacio y revisaremos tu pago para un posible reembolso manual.</div>
-<form id="formNuevaReserva" action="{{ route('reservas.confirmar', $espacio) }}" method="POST">
+            <p class="booking-note">Paga por Yape o Plin y revisa la aprobación en tu cuenta. Reservamos tu espacio para una llegada inmediata.</p>
+<form id="formNuevaReserva" data-server-now="{{ now()->getTimestampMs() }}" action="{{ route('reservas.confirmar', $espacio) }}" method="POST">
                 @csrf
 
                 <div class="form-group">
@@ -125,38 +115,11 @@
                 <div class="form-group">
                     <label for="placa">Placa del vehículo</label>
                     <input id="placa" name="placa" value="{{ old('placa') }}" maxlength="20" placeholder="ABC-123" required autocomplete="off" aria-describedby="placa-ayuda">
-                    <small id="placa-ayuda">Ingresa la placa del vehículo con el que llegarás. Al reconocerla, avisaremos al operador que tienes una reserva confirmada.</small>
+                    <small id="placa-ayuda">Usa la placa del vehículo con el que llegarás.</small>
                     @error('placa')<p class="text-danger">{{ $message }}</p>@enderror
                 </div>
 
-                <div class="form-group">
-                    <label for="fecha_reserva">Fecha de reserva</label>
-                    <input type="date"
-                        name="fecha_reserva"
-                        id="fecha_reserva"
-                        value="{{ old('fecha_reserva', $fechaMinima) }}"
-                        min="{{ $fechaMinima }}"
-                        max="{{ $fechaMaxima }}"
-                        required>
-
-                    <small style="display:block; margin-top:6px; color:#64748B;">
-                        Solo se permiten reservas para hoy o como máximo mañana.
-                    </small>
-                </div>
-
-                <div class="form-group">
-                    <label for="hora_inicio">Hora de ingreso</label>
-                    <input type="time"
-                        name="hora_inicio"
-                        id="hora_inicio"
-                        value="{{ old('hora_inicio', $horaActual) }}"
-                        required>
-
-                    <small style="display:block; margin-top:6px; color:#64748B;">
-                        Para reservas de hoy, la hora debe ser mayor a la hora actual.
-                    </small>
-                </div>
-
+                <div class="arrival-policy"><span class="badge badge-info">Reserva inmediata</span><h3>Tienes 15 minutos para llegar</h3><p>El plazo empieza cuando recepción apruebe tu pago. Verás la hora límite en Mis reservas.</p><input type="hidden" id="hora_inicio" value="{{ now('America/Lima')->format('H:i') }}"></div>
                 <div class="form-group">
                     <label for="duracion_minutos">Duración</label>
                     <select name="duracion_minutos" id="duracion_minutos" required>
@@ -167,36 +130,15 @@
                     </select>
                 </div>
 
-                <div class="reservation-summary" id="resumenTarifaReserva">
-                    <p><strong>Tarifa seleccionada:</strong> <span data-role="tarifa-nombre">Selecciona un tipo de vehiculo.</span></p>
-                    <p><strong>Duracion:</strong> <span data-role="tarifa-duracion">-</span></p>
+                <aside class="reservation-summary" id="resumenTarifaReserva"><h2>Tu reserva de un vistazo</h2><p><strong>Espacio:</strong> {{ $espacio->codigo }}</p><p><strong>Vehículo:</strong> <span data-booking-vehicle>Por elegir</span></p><p><strong>Placa:</strong> <span data-booking-plate>Por completar</span></p><p><strong>Llegada:</strong> <span>Dentro de los 15 minutos posteriores a la aprobación del pago</span></p>
+                    <p><strong>Tarifa:</strong> <span data-role="tarifa-nombre">Selecciona un tipo de vehiculo.</span></p>
+                    <p><strong>Duración:</strong> <span data-role="tarifa-duracion">-</span></p>
                     <p><strong>Monto estimado:</strong> <span data-role="tarifa-monto">-</span></p>
-                    <p><strong>Tolerancia:</strong> <span data-role="tarifa-tolerancia">-</span></p>
-                    <p style="font-size:13px; color:#64748B;">
-                        El monto final se recalcula en el servidor antes de registrar la reserva.
+                    <p><strong>Tolerancia de exceso:</strong> <span data-role="tarifa-tolerancia">-</span></p>
+                    <p class="booking-note">
+                        Verás el total confirmado antes de pagar.
                     </p>
-                </div>
-
-                <div class="reservation-summary">
-                    <p>
-                        <strong>Importante:</strong> el sistema trabaja con reservas inmediatas.
-                        Solo puedes reservar para hoy o como máximo mañana.
-                    </p>
-                    <p>
-                        El monto será calculado automáticamente según el tipo de vehículo,
-                        horario de ingreso, duración y tarifa activa.
-                    </p>
-                    <p>
-                        En el siguiente paso verás el monto total antes de generar la reserva pendiente de pago.
-                    </p>
-                    <p>
-                        Puedes consultar las tarifas vigentes aquí:
-                        <a href="{{ route('public.tarifas') }}" target="_blank">
-                            Ver tarifas
-                        </a>
-                    </p>
-                </div>
-
+                <p><strong>Plazo para enviar el pago:</strong> {{ \App\Models\ConfiguracionPago::actual()->minutos_pago }} min desde la confirmación.</p><p><strong>Tolerancia de llegada:</strong> 15 min desde la aprobación del pago.</p><details><summary>Sobre tu llegada y cancelación</summary><p>El tiempo comienza cuando te estacionas en un espacio con sensor o al emitir el ticket en un espacio manual. Si no llegas dentro de la tolerancia, se libera el espacio y tu pago queda para revisión y posible reembolso manual.</p></details></aside>
                 <div class="reservation-actions">
                     <button type="submit" id="btnNuevaReserva" class="btn btn-primary">
                         Continuar a confirmación
@@ -215,7 +157,6 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const fechaInput = document.getElementById('fecha_reserva');
         const horaInput = document.getElementById('hora_inicio');
         const formNuevaReserva = document.getElementById('formNuevaReserva');
         const btnNuevaReserva = document.getElementById('btnNuevaReserva');
@@ -223,24 +164,6 @@
         const duracionInput = document.getElementById('duracion_minutos');
         const resumenTarifa = document.getElementById('resumenTarifaReserva');
         const tarifasPorTipo = @json($tarifasFrontend ?? []);
-
-        const fechaHoy = "{{ $fechaMinima }}";
-        const horaMinimaHoy = "{{ $horaMinimaHoy }}";
-
-        function actualizarHoraMinima() {
-            if (fechaInput.value === fechaHoy) {
-                horaInput.min = horaMinimaHoy;
-
-                if (horaInput.value && horaInput.value < horaMinimaHoy) {
-                    horaInput.value = horaMinimaHoy;
-                }
-            } else {
-                horaInput.removeAttribute('min');
-            }
-        }
-
-        fechaInput.addEventListener('change', actualizarHoraMinima);
-        actualizarHoraMinima();
 
         function horaDentroDeRango(horaActual, horaInicio, horaFin) {
             if (!horaInicio || !horaFin) {
@@ -359,3 +282,7 @@
 </script>
 
 @endsection
+
+@push('scripts')
+<script src="/js/reserva-publica.js?v={{ filemtime(public_path('js/reserva-publica.js')) }}" defer></script>
+@endpush

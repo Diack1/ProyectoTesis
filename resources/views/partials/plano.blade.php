@@ -21,7 +21,7 @@
         <template data-space-detail="{{ $espacio->id }}">
             <h2>{{ $espacio->codigo }}</h2><p><strong data-detail-state>{{ $estado['estado_texto'] }}</strong></p>
             <p>{{ $espacio->vehiculoTipos->pluck('nombre')->implode(' · ') ?: 'Consultar vehículos permitidos al personal' }}</p>
-            <p>{{ $espacio->modo_monitoreo === 'sensor' ? 'Control por sensor' : 'Control manual por el personal' }}</p>
+            @if($administrativo)<p>{{ $espacio->modo_monitoreo === 'sensor' ? 'Control por sensor' : 'Control manual por el personal' }}</p>@endif
             @if($administrativo)
                 @php
                     $ticket = $espacio->estadias->first();
@@ -29,9 +29,9 @@
                 @php
                     $reserva = $espacio->reservas->first();
                 @endphp
-                @if($ticket)<p>Placa: <strong>{{ $ticket->placa }}</strong><br>Ingreso: {{ $ticket->hora_ingreso->format('d/m H:i') }}</p><a class="btn btn-primary" href="{{ route('admin.estadias.show', $ticket) }}">Ver ticket y salida</a>
-                @elseif($reserva)<p>Reserva: {{ $reserva->codigo_reserva }}<br>Placa: {{ $reserva->placa ?? 'Sin registrar' }}<br>{{ $reserva->usuario?->name }}<br>Llegada: {{ $reserva->fecha_reserva->format('d/m') }} {{ substr($reserva->hora_inicio,0,5) }}<br>{{ str_replace('_',' ',$reserva->estado) }}</p><a class="btn btn-secondary" href="{{ route('admin.reservas.index') }}">Revisar reserva y pago</a>
-                @elseif($espacio->estado_actual === 'libre')<a class="btn btn-primary" href="{{ route('admin.estadias.create', ['espacio_id'=>$espacio->id]) }}">Registrar ingreso aquí</a>@endif
+                @if($ticket)<p>Placa: <strong>{{ $ticket->placa }}</strong><br>Ingreso: {{ $ticket->hora_ingreso->format('d/m H:i') }}<br>Tiempo estacionado: {{ (int) $ticket->hora_ingreso->diffInMinutes(now()) }} min<br>Inicio del cobro: {{ $ticket->inicio_cobro?->format('H:i') ?? 'Pendiente de detección' }}<br>{{ $ticket->reserva?->usuario?->name }}</p><a class="btn btn-primary" href="{{ route('admin.estadias.show', $ticket) }}">Cobrar y registrar salida</a>
+                @elseif($reserva)<p>Reserva: {{ $reserva->codigo_reserva }}<br>Placa: {{ $reserva->placa ?? 'Sin registrar' }}<br>{{ $reserva->usuario?->name }}<br>Llegada: {{ $reserva->fecha_reserva->format('d/m') }} {{ substr($reserva->hora_inicio,0,5) }}<br>{{ str_replace('_',' ',$reserva->estado) }}</p>@if($reserva->estado === 'confirmada' && $reserva->pagos->contains('estado','aprobado'))<a class="btn btn-primary" href="{{ route('admin.estadias.create',['reserva'=>$reserva->id]) }}">Registrar llegada</a>@elseif(!$reserva->expires_at)<a class="btn btn-primary" href="{{ route('admin.pagos.index') }}">Revisar pago</a>@else<p>Esperando el pago del cliente.</p>@endif
+                @elseif($espacio->estado_actual === 'libre')<a class="btn btn-primary" href="{{ route('admin.estadias.create', ['espacio_id'=>$espacio->id]) }}">Registrar vehículo aquí</a>@endif
                 @if($espacio->modo_monitoreo === 'sensor')<p>{{ $espacio->sensor?->conexion_label ?? 'Sensor pendiente de instalar' }}</p>@endif
                 <p><a href="{{ route('admin.monitoreo.index') }}">Abrir control de espacios</a></p>
             @else
@@ -56,3 +56,9 @@
     <p class="text-muted"><small>Distribución de referencia para 30 espacios; numeración propuesta para revisar en la cochera.</small></p>
     <dialog class="space-dialog"><form method="dialog"><button class="btn btn-secondary" aria-label="Cerrar detalle">Cerrar ×</button></form><div data-dialog-content></div></dialog>
 </section>
+
+@once
+@push('scripts')
+<script src="/js/plano.js?v={{ filemtime(public_path('js/plano.js')) }}" defer></script>
+@endpush
+@endonce

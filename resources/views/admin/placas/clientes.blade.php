@@ -1,5 +1,5 @@
 @extends('layouts.admin')
-@section('page-title', 'Clientes y vehículos')
+@section('page-title', 'Clientes')
 @section('page-subtitle', 'Asocia una matrícula revisada con el cliente para reconocer próximas visitas.')
 @section('content')
 @include('admin.estadias.messages')
@@ -19,7 +19,7 @@
 <button class="btn btn-primary">Guardar asociación</button> @if($editar)<a href="{{ route('admin.clientes-vehiculos.index') }}">Cancelar edición</a>@endif
 </form></section>
 <section class="admin-page-card"><h2>Vehículos registrados</h2>
-<form method="get" class="search-form"><input name="buscar" aria-label="Buscar por placa o nombre" value="{{ request('buscar') }}" placeholder="Placa o nombre"><button class="btn btn-secondary">Buscar</button></form>
+<form method="get" class="search-form"><input name="buscar" aria-label="Buscar por placa o nombre" value="{{ request('buscar') }}" placeholder="Placa, nombre o teléfono"><button class="btn btn-secondary">Buscar</button></form>
 <div class="table-responsive"><table><thead><tr><th>Placa</th><th>Cliente asociado</th><th>Teléfono</th><th>Estado</th><th>Acción</th></tr></thead><tbody>
 @forelse($vehiculos as $v)<tr><td>{{ $v->placa }}</td><td>{{ $v->usuario?->name ?? $v->nombre }}</td><td>{{ $v->telefono ?? '—' }}</td><td>{{ $v->activo ? 'Activa' : 'Inactiva' }}</td><td><a href="{{ route('admin.clientes-vehiculos.index', ['editar' => $v->id]) }}">Editar</a></td></tr>@empty<tr><td colspan="5">No hay vehículos registrados. Añade el primero para probar la identificación del cliente.</td></tr>@endforelse
 </tbody></table></div>{{ $vehiculos->links() }}</section>

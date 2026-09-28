@@ -29,8 +29,7 @@
                     </h1>
 
                     <p class="section-subtitle">
-                        Primero verás las reservas pendientes y próximas. Revisa el estado de pago,
-                        solicita reembolsos o genera una nueva reserva desde la disponibilidad pública.
+                        Consulta tu pago y el plazo de llegada. Tus reservas activas aparecen primero.
                     </p>
                 </div>
 
@@ -46,12 +45,12 @@
         <article class="reservation-item">
         <div><span class="badge badge-{{ $reserva->estado }}">{{ $reserva->estado === 'pendiente_pago' && !$reserva->expires_at ? 'Pago en revisión' : ucfirst(str_replace('_',' ',$reserva->estado)) }}</span>
         <h2>{{ $reserva->placa ?? 'Sin placa registrada' }} · Espacio {{ $reserva->espacio->codigo ?? '-' }}</h2>
-        <p class="reservation-code">{{ $reserva->codigo_reserva }}</p>
+        <details class="reservation-more"><summary>Ver detalles</summary><p class="reservation-code">{{ $reserva->codigo_reserva }}</p>
         <dl><div><dt>Fecha de llegada</dt><dd>{{ $reserva->fecha_reserva->format('d/m/Y') }}</dd></div>
-        <div><dt>Llegada prevista</dt><dd>{{ substr($reserva->hora_inicio,0,5) }}</dd></div>
+        <div><dt>Llegada prevista</dt><dd>{{ $reserva->reserva_inmediata ? ($reserva->pagado_at ? 'Antes de '.$reserva->limite_llegada->format('H:i') : '15 min desde aprobación') : substr($reserva->hora_inicio,0,5) }}</dd></div>
         <div><dt>Tiempo contratado</dt><dd>{{ $reserva->duracion_minutos }} min</dd></div>
         <div><dt>Vehículo</dt><dd>{{ $reserva->tipo_vehiculo_nombre ?? '-' }}</dd></div>
-        <div><dt>Tarifa aplicada</dt><dd>{{ $reserva->tarifa_nombre ?? '-' }}</dd></div></dl>
+        <div><dt>Tarifa aplicada</dt><dd>{{ $reserva->tarifa_nombre ?? '-' }}</dd></div></dl></details>
         </div><div class="reservation-payment"><div class="text-muted">Monto de la reserva</div><div class="amount">S/ {{ number_format($reserva->monto_total,2) }}</div>
         @if($reserva->estado === 'pendiente_pago' && $reserva->expires_at)<p class="payment-deadline"><strong>Paga antes del</strong><br>{{ $reserva->expires_at->format('d/m/Y · H:i') }}</p>
         @elseif($reserva->estado === 'pendiente_pago')<p class="payment-deadline">Recibimos tu comprobante. El personal está revisando el pago.</p>@endif

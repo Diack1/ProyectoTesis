@@ -68,10 +68,7 @@
         <div class="form-group">
             <label for="role">Rol del usuario</label>
             <select name="role" id="role" class="form-control" required>
-                <option value="operador">Operador</option>
-                @if(auth()->user()->role === 'super_admin')
-                <option value="admin" @selected(old('role') === 'admin')>Administrador</option>
-                @endif
+                <option value="admin">Recepción</option>
             </select>
 
             <small class="form-help">

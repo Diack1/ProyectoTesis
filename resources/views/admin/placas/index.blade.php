@@ -2,9 +2,10 @@
 @section('page-title', 'Reconocimiento de placas')
 @section('page-subtitle', 'Reconoce matrículas desde la cámara o una fotografía y revisa el cliente asociado.')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/placas.css') }}">
+@vite('resources/css/pages/placas.css')
 @endpush
 @section('content')
+<p><a class="btn btn-secondary" href="{{ route('admin.estadias.create') }}">Escribir placa y registrar entrada</a> <a href="{{ route('admin.estadias.index') }}">Volver a entradas y salidas</a></p>
 @include('admin.estadias.messages')
 @include('admin.placas.camara')
 <section class="admin-page-card">

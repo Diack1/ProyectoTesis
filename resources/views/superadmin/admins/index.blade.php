@@ -69,7 +69,7 @@ $listaAdmins = $admins ?? $usuarios ?? collect();
 
                 <td>
                     <span class="role-badge role-{{ $admin->role }}">
-                        {{ str_replace('_', ' ', $admin->role) }}
+                        {{ $admin->role === 'super_admin' ? 'Dueño / encargado general' : 'Recepción' }}
                     </span>
                 </td>
 

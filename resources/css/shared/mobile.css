@@ -1,0 +1,97 @@
+/* Touch layouts shared by public booking and reception. No controls are hidden. */
+@media(max-width:760px){
+ .public-refined .container{width:calc(100% - 32px)}
+ .public-refined .page-content,.public-refined .page-heading{padding:24px 0}
+ .public-refined :is(.page-card,.page-heading-card,.tariff-card){padding:20px;min-width:0}
+ .public-refined .public-navbar-inner{align-items:center}
+ .public-refined .public-menu a,.public-refined .public-menu button{min-height:48px;display:flex;align-items:center}
+ .public-refined .public-menu form,.public-refined .public-menu button{width:100%}
+ .public-refined :is(input,select,textarea){font-size:16px;max-width:100%;min-width:0}
+ .public-refined input[type=file]{width:100%;font-size:14px;padding:12px 8px}
+ .public-refined input[type=file]::file-selector-button{padding:10px;margin-right:8px;border:1px solid #476079;border-radius:6px;background:#23394D;color:#fff}
+ .public-refined :is(.btn,.hero-secondary){min-height:48px;white-space:normal;text-align:center;justify-content:center}
+ .public-refined .hero h1{font-size:clamp(34px,9.7vw,44px);letter-spacing:-1.4px}
+ .public-refined .hero-actions{display:grid;grid-template-columns:1fr;width:100%;gap:12px}
+ .public-refined .hero-actions>a{width:100%}
+ .public-refined .hero-panel .availability-number{font-size:56px}
+ .public-refined .hero-panel .availability-hours{align-items:flex-start;line-height:1.6}
+ .public-refined .booking-steps{display:flex;flex-wrap:wrap;gap:10px 16px;font-size:12px}
+ .public-refined .reservation-row{display:grid;grid-template-columns:minmax(0,1fr);gap:7px;padding:14px 16px}
+ .public-refined .reservation-value{text-align:left;overflow-wrap:anywhere}
+ .public-refined :is(.reservation-actions,.reservation-buttons){display:flex;flex-direction:column;align-items:stretch;gap:12px}
+ .public-refined .reservation-actions>*,.public-refined .reservation-buttons>*,.public-refined .reservation-buttons button{width:100%}
+ .public-refined #formNuevaReserva{display:flex;flex-direction:column;gap:0}
+ .public-refined #formNuevaReserva>*{width:100%;min-width:0}
+ .public-refined #formNuevaReserva>.reservation-summary{padding:18px;margin:6px 0 20px}
+ .public-refined .reservation-item h2{font-size:20px;overflow-wrap:anywhere}
+ .public-refined .reservation-more dl{grid-template-columns:1fr 1fr}
+ .public-refined .payment-qr-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+ .public-refined .payment-qr-card{text-align:center;padding:18px}
+ .public-refined .checkout-total{padding:18px}
+ .public-refined .checkout-total strong{font-size:36px}
+ .public-refined .page-card>p{overflow-wrap:anywhere}
+ .public-refined .space-dialog{width:calc(100% - 32px);max-height:calc(100dvh - 40px);overflow-y:auto;margin:auto}
+ .public-refined .parking-toolbar{align-items:flex-start;gap:12px}
+ .public-refined .parking-toolbar>.btn{width:100%}
+ .public-refined .parking-scroll{overscroll-behavior-x:contain}
+ .public-refined .auth-shell{display:flex;flex-direction:column}
+ .public-refined .auth-form-area{padding:24px 16px;order:-1}
+ .public-refined .auth-panel{padding:28px 24px}
+ .public-refined .auth-card{padding:24px 20px;min-width:0}
+ .public-refined .auth-row{flex-wrap:wrap;gap:14px}
+ .admin-refined .admin-topbar{flex-wrap:wrap;gap:16px}
+ .admin-refined .admin-main,.admin-refined .admin-content{min-width:0}
+ .admin-refined :is(.table-wrapper,.table-container,.table-responsive){max-width:100%;overflow-x:auto}
+ .admin-refined :is(input,select,textarea){font-size:16px;max-width:100%}
+ .admin-refined .btn{min-height:44px;white-space:normal}
+}
+@media(max-width:380px){.public-refined .reservation-more dl{grid-template-columns:1fr}.public-refined .hero-badge{font-size:10px;gap:6px}.public-refined .hero-panel{padding:18px}}
+
+/* Compact phone layout; keep touch targets large, not every text block. */
+@media(max-width:760px){
+ .public-refined{font-size:14px}
+ .public-refined .public-navbar-inner{padding:10px 0;min-height:64px}
+ .public-refined .brand-title{font-size:26px}.public-refined .brand-subtitle{font-size:10px;margin-top:2px}
+ .public-refined .public-menu-toggle{padding:8px 12px;min-height:44px}
+ .public-refined .hero{padding:24px 0}.public-refined .hero-grid{gap:24px}
+ .public-refined .hero h1{font-size:36px;margin:20px 0 16px}
+ .public-refined .hero-copy>p{font-size:15px;line-height:1.55;margin:0}
+ .public-refined .hero-actions{margin-top:20px;gap:10px}
+ .public-refined .hero-actions .btn,.public-refined .hero-secondary{padding:12px 16px;min-height:46px;font-size:14px}
+ .public-refined .hero-copy .hero-footnote{font-size:11px;margin-top:14px}
+ .public-refined .hero-badge,.public-refined .eyebrow{font-size:10px;padding:7px 10px}
+ .public-refined .section-title{font-size:24px;line-height:1.2}.public-refined .section-subtitle{font-size:14px;line-height:1.5}
+ .public-refined .page-heading{padding:22px 0 12px}.public-refined .section{padding:24px 0}
+ .public-refined .parking-widget{padding:14px;border-radius:12px}
+ .public-refined .parking-toolbar h2{font-size:21px;margin:8px 0}
+ .public-refined .parking-toolbar{gap:8px}.public-refined .parking-toolbar>.btn{width:auto;padding:10px 14px;font-size:12px}
+ .public-refined .parking-widget>.text-muted{font-size:13px;line-height:1.5;margin:10px 0}
+ .public-refined .parking-legend{gap:8px 12px;font-size:11px;margin:12px 0}
+ .public-refined .is-list .parking-lot{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+ .public-refined .is-list .parking-space{height:66px;min-width:0}.public-refined .parking-space strong{font-size:14px}
+ .public-refined .is-list .parking-scroll:after{display:none}
+ .public-refined .reveal-ready{opacity:1;transform:none;transition:none}
+}
+
+@media(max-width:760px){.admin-refined .admin-menu.is-open{display:flex;flex-direction:column;align-items:stretch;width:100%}.admin-refined .admin-menu .menu-footer{width:100%;margin-top:16px}.admin-refined .menu-footer form,.admin-refined .menu-footer button{width:100%}}
+
+/* One brand and one drawer for all roles. */
+.parkeo-brand{display:inline-flex;flex-direction:column;text-decoration:none!important;gap:3px;color:#F8FAFC}
+.parkeo-wordmark{font-size:30px;line-height:1.1;letter-spacing:-1.4px;font-weight:850;color:#F8FAFC}.parkeo-wordmark>span{color:#1683FF}
+.parkeo-tagline{font-size:11px;color:#C5D5E5;font-weight:400;letter-spacing:.15px}
+.drawer-close{display:none}
+@media(max-width:760px){
+ body.drawer-open{overflow:hidden}
+ .drawer-backdrop{position:fixed;inset:0;background:#020812b8;z-index:1190}
+ .public-refined .public-navbar,.admin-refined .admin-sidebar{transform:none;backdrop-filter:none;z-index:auto}
+ .public-refined .public-menu.is-open,.admin-refined .admin-menu.is-open{position:fixed;inset:0 auto 0 0;width:min(310px,86vw);height:100dvh;max-height:100dvh;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:6px;background:#091728;padding:18px 16px max(20px,env(safe-area-inset-bottom));margin:0;border-right:1px solid #34516A;box-shadow:12px 0 36px #0005;z-index:1200;animation:drawer-enter .18s ease-out}
+ .public-refined .public-menu .drawer-close,.admin-refined .admin-menu .drawer-close{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:44px;border:1px solid #476079;background:#1B2A39;color:#fff;border-radius:9px;padding:10px 14px;margin:0 0 14px;font:inherit;cursor:pointer}
+ .public-refined .public-menu a,.admin-refined .admin-menu a{min-height:44px}
+ .admin-refined .admin-topbar{padding:16px;gap:10px}.admin-refined .admin-page-title{font-size:23px}.admin-refined .admin-page-subtitle{font-size:13px;line-height:1.5}
+ .admin-refined .admin-user-box{padding:6px 10px}.admin-refined .admin-user-avatar{width:30px;height:30px}.admin-refined .admin-user-name{font-size:12px}.admin-refined .admin-user-role{font-size:10px}
+ .admin-refined #aviso-pagos{padding:12px;gap:10px}.admin-refined .notice-copy strong{font-size:13px}.admin-refined .notice-copy small{font-size:11px}
+ .operation-links{display:grid;grid-template-columns:1fr;gap:10px}.operation-links .btn{width:100%;justify-content:center;gap:8px}
+ .parkeo-wordmark{font-size:28px}
+}
+@keyframes drawer-enter{from{transform:translateX(-100%)}to{transform:translateX(0)}}
+@media(prefers-reduced-motion:reduce){.public-refined .public-menu.is-open,.admin-refined .admin-menu.is-open{animation:none}}

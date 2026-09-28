@@ -1,22 +1,19 @@
 <aside class="admin-sidebar">
-<div class="admin-brand"><div class="admin-logo">P</div><div><span class="admin-brand-title">Parke’o</span><span class="admin-brand-subtitle">Panel de operaciones</span></div></div>
-<nav class="admin-menu" aria-label="Administración">
-<a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">Inicio</a>
-@php
-$grupos = [
- 'Operación' => ['admin.estadias.create'=>'Registrar ingreso','admin.estadias.index'=>'Tickets y salidas','admin.placas.index'=>'Reconocer placas','admin.clientes-vehiculos.index'=>'Clientes y vehículos','admin.monitoreo.index'=>'Control de espacios'],
- 'Reservas y pagos' => ['admin.reservas.index'=>'Reservas y reembolsos','admin.pagos.index'=>'Revisar pagos'],
-];
-$configuracion = ['admin.sensores.index'=>'Sensores IoT'];
-if(auth()->user()->tieneRol('admin','super_admin')) $configuracion += ['admin.espacios.index'=>'Espacios','admin.tarifas.index'=>'Tarifas','admin.pagos.configuracion'=>'Configuración de cobros','superadmin.dashboard'=>'Personal'];
-$grupos['Configuración'] = $configuracion;
-@endphp
-@foreach($grupos as $grupo=>$enlaces)
-@php($abierto = collect(array_keys($enlaces))->contains(fn($ruta) => request()->routeIs($ruta) || (str_ends_with($ruta,'.index') && request()->routeIs(substr($ruta,0,-5).'*'))))
-<details @if($abierto) open @endif><summary>{{ $grupo }} @if($grupo==='Reservas y pagos')<span class="menu-count" data-payment-count hidden></span>@endif</summary>
-@foreach($enlaces as $ruta=>$nombre)<a href="{{ route($ruta) }}" class="{{ request()->routeIs($ruta) ? 'active' : '' }}">{{ $nombre }}</a>@endforeach
-</details>
-@if($grupo==='Reservas y pagos')<a href="{{ route('admin.reportes.index') }}" class="{{ request()->routeIs('admin.reportes.*')?'active':'' }}">Reportes</a>@endif
+<div class="admin-brand"><x-brand :href="route('admin.dashboard')" :subtitle="auth()->user()->esSuperAdmin() ? 'Administración general' : 'Recepción'"/></div>
+<button type="button" class="admin-mobile-toggle" data-menu-toggle="admin-navigation" aria-controls="admin-navigation" aria-expanded="false"><x-icon name="menu"/> Menú</button>
+<nav id="admin-navigation" class="admin-menu" aria-label="Administración"><button type="button" class="drawer-close" data-menu-close>Cerrar menú ×</button>
+<a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard')?'active':'' }}"><x-icon name="grid"/>Inicio</a>
+<a href="{{ route('admin.estadias.index') }}" class="{{ request()->routeIs('admin.estadias.*','admin.placas.*','admin.monitoreo.*')?'active':'' }}"><x-icon name="car"/>{{ auth()->user()->esSuperAdmin() ? 'Operación' : 'Entradas y salidas' }}</a>
+<a href="{{ route('admin.reservas.index') }}" class="{{ request()->routeIs('admin.reservas.*','admin.pagos.index')?'active':'' }}"><x-icon name="clock"/>Reservas <span class="menu-count" data-payment-count hidden></span></a>
+<a href="{{ route('admin.clientes-vehiculos.index') }}" class="{{ request()->routeIs('admin.clientes-vehiculos.*')?'active':'' }}"><x-icon name="users"/>Clientes</a>
+@if(auth()->user()->esSuperAdmin())
+
+<a href="{{ route('admin.reportes.index') }}" class="{{ request()->routeIs('admin.reportes.*')?'active':'' }}"><x-icon name="chart"/>Reportes</a>
+<details @if(request()->routeIs('admin.espacios.*','admin.tarifas.*','admin.pagos.configuracion*','admin.sensores.*','admin.seguridad','superadmin.*')) open @endif><summary>Configuración</summary>
+@foreach(['admin.espacios.index'=>'Espacios','admin.tarifas.index'=>'Tarifas','admin.pagos.configuracion'=>'Formas de pago','superadmin.dashboard'=>'Personal','admin.sensores.index'=>'Sensores','admin.seguridad'=>'Seguridad'] as $ruta=>$nombre)
+<a href="{{ route($ruta) }}" class="{{ request()->routeIs($ruta)?'active':'' }}">{{ $nombre }}</a>
 @endforeach
-<div class="menu-footer"><a href="{{ route('public.home') }}">Ver página pública</a><form action="{{ route('logout') }}" method="POST">@csrf<button type="submit" class="danger">Cerrar sesión</button></form></div>
+</details>
+@endif
+<div class="menu-footer"><a href="{{ route(app(\App\Services\StaffAccessService::class)->entryRoute()) }}">Seguridad de mi cuenta</a><a href="{{ route('public.home') }}"><x-icon name="arrow"/>Ver página pública</a><form action="{{ route('logout') }}" method="POST">@csrf<button type="submit" class="danger"><x-icon name="exit"/>Cerrar sesión</button></form></div>
 </nav></aside>

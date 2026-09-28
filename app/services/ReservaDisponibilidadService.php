@@ -177,11 +177,6 @@ class ReservaDisponibilidadService
         return $this->respuesta(true, 'base_disponible', 'El espacio esta habilitado.');
     }
 
-    private function espacioBaseDisponible(Espacio $espacio): bool
-    {
-        return $espacio->activo && $espacio->estado_actual !== 'mantenimiento';
-    }
-
     private function verificarConfiguracionReserva(Espacio $espacio): array
     {
         $tiposActivos = $this->tiposPermitidosActivos($espacio);
@@ -195,27 +190,6 @@ class ReservaDisponibilidadService
         }
 
         return $this->respuesta(true, 'configuracion_disponible', 'El espacio tiene tipos y tarifas disponibles.');
-    }
-
-    private function mensajeBloqueo(Espacio $espacio, bool $tieneReserva, array $configuracion): ?string
-    {
-        if (!$espacio->activo) {
-            return 'El espacio no esta habilitado.';
-        }
-
-        if ($espacio->estado_actual === 'mantenimiento') {
-            return 'El espacio esta en mantenimiento.';
-        }
-
-        if ($tieneReserva) {
-            return 'El espacio tiene una reserva activa.';
-        }
-
-        if (!$configuracion['disponible']) {
-            return $configuracion['message'];
-        }
-
-        return null;
     }
 
     private function rangoReserva(Reserva $reserva): array

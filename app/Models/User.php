@@ -33,7 +33,17 @@ class User extends Authenticatable
      */
     protected $hidden = [
         'password',
+        'verification_code_hash',
+        'verification_code_expires_at',
+        'verification_code_attempts',
         'remember_token',
+        'two_factor_secret',
+        'two_factor_recovery_hashes',
+        'two_factor_last_step',
+        'email_change_hash',
+        'pending_email',
+        'email_change_expires_at',
+        'email_change_attempts',
     ];
 
     /**
@@ -45,8 +55,14 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'verification_code_expires_at' => 'datetime',
+            'email_change_expires_at' => 'datetime',
             'password' => 'hashed',
             'activo' => 'boolean',
+            'two_factor_secret' => 'encrypted',
+            'two_factor_recovery_hashes' => 'array',
+            'two_factor_confirmed_at' => 'datetime',
+            'two_factor_last_step' => 'integer',
         ];
     }
 
@@ -102,5 +118,15 @@ class User extends Authenticatable
     public function reembolsosProcesados()
     {
         return $this->hasMany(Reembolso::class, 'procesado_por');
+    }
+    public function revokeAccess(): void
+    {
+        $this->forceFill(['pending_email' => null, 'email_change_hash' => null,
+            'email_change_expires_at' => null, 'email_change_attempts' => 0])->save();
+        $this->tokens()->delete();
+        if (config('session.driver') === 'database') {
+            \Illuminate\Support\Facades\DB::connection(config('session.connection'))
+                ->table(config('session.table', 'sessions'))->where('user_id', $this->id)->delete();
+        }
     }
 }

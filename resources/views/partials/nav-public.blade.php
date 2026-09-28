@@ -1,14 +1,8 @@
 <nav class="public-navbar">
     <div class="container public-navbar-inner">
-        <a href="{{ route('public.home') }}" class="brand">
-            <div class="brand-logo">P</div>
-            <div>
-                <span class="brand-title">Parke’o</span>
-                <span class="brand-subtitle">Cochera inteligente</span>
-            </div>
-        </a>
+        <x-brand :href="route('public.home')"/>
 
-        <div class="public-menu">
+        <button type="button" class="public-menu-toggle" data-menu-toggle="public-navigation" aria-controls="public-navigation" aria-expanded="false"><x-icon name="menu"/> Menú</button><div id="public-navigation" class="public-menu"><button type="button" class="drawer-close" data-menu-close>Cerrar menú ×</button>
             <a href="{{ route('public.home') }}"
                 class="{{ request()->routeIs('public.home') ? 'active' : '' }}">
                 Inicio
@@ -34,7 +28,7 @@
 
             @if(auth()->user()->tieneRol('admin','operador','super_admin'))
             <a href="{{ route('admin.dashboard') }}">
-                Panel admin
+                Administración
             </a>
             @endif
 
@@ -42,7 +36,7 @@
 
             <form action="{{ route('logout') }}" method="POST" style="display:inline;">
                 @csrf
-                <button type="submit" class="btn btn-danger">
+                <button type="submit" class="btn btn-secondary">
                     Cerrar sesión
                 </button>
             </form>

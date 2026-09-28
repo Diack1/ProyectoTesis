@@ -1,182 +1,26 @@
 @extends('layouts.admin')
-
-@section('title', 'Reservas - Parke’o')
-@section('page-title', 'Administración de reservas')
-@section('page-subtitle', 'Consulta reservas, pagos y solicitudes de reembolso registradas en el sistema')
-
+@section('title','Reservas - Parke’o')
+@section('page-title','Reservas')
+@section('page-subtitle','Consulta la llegada y el pago antes de registrar la entrada.')
 @section('content')
-
-@if(session('success'))
-<div class="alert-box alert-success">
-    {{ session('success') }}
-</div>
+@include('partials.payment-feedback')
+@include('admin.reservas.tabs')
+<form class="filters card" method="get"><input type="hidden" name="vista" value="{{ request('vista','hoy') }}"><div class="form-group"><label for="buscar">Cliente, placa o reserva</label><input id="buscar" name="buscar" value="{{ request('buscar') }}" maxlength="100"></div><button class="btn btn-secondary">Buscar</button></form>
+<div class="reservation-cards">@forelse($reservas as $reserva)
+@php
+$ultimoPago = $reserva->pagos->sortByDesc('id')->first();
+$ultimoReembolso = $reserva->reembolsos->sortByDesc('id')->first();
+$pagada = $reserva->pagos->contains('estado','aprobado');
+@endphp
+<article class="reservation-item"><div><span class="badge">{{ $reserva->estado === 'pendiente_pago' && !$reserva->expires_at ? 'Pago en revisión' : ucfirst(str_replace('_',' ',$reserva->estado)) }}</span><h2>{{ $reserva->placa ?? 'Sin placa registrada' }} · {{ $reserva->espacio?->codigo }}</h2><p><strong>{{ $reserva->usuario?->name }}</strong></p><p>Llegada prevista: {{ $reserva->fecha_reserva->format('d/m/Y') }} · {{ substr($reserva->hora_inicio,0,5) }}</p>
+<details><summary>Ver detalles de la reserva</summary><p>{{ $reserva->codigo_reserva }}<br>{{ $reserva->usuario?->email }}<br>{{ $reserva->tipo_vehiculo_nombre }} · {{ $reserva->tarifa_nombre }}<br>{{ $reserva->duracion_minutos }} minutos contratados · S/ {{ number_format($reserva->monto_total,2) }}<br>Tolerancia de exceso: {{ $reserva->tolerancia_minutos }} min · Penalidad por fracción: S/ {{ number_format($reserva->penalidad_por_fraccion,2) }}</p><p>Pago: {{ $ultimoPago?->estado ?? 'Sin pago' }} · {{ $ultimoPago?->metodo_pago }}</p>@if($ultimoReembolso)<p>Reembolso: {{ $ultimoReembolso->estado }} · S/ {{ number_format($ultimoReembolso->monto,2) }}<br>{{ $ultimoReembolso->motivo }}</p>@endif</details></div>
+<div class="reservation-payment">
+@if($reserva->estadia)<a class="btn btn-secondary" href="{{ route('admin.estadias.show',$reserva->estadia) }}">Ver ticket</a>
+@elseif($reserva->estado==='confirmada' && $pagada && !$reserva->inasistencia_at)<a class="btn btn-primary" href="{{ route('admin.estadias.create',['reserva'=>$reserva->id]) }}">Registrar llegada</a>
+@elseif($reserva->estado==='pendiente_pago' && !$reserva->expires_at)<a class="btn btn-primary" href="{{ route('admin.pagos.index') }}">Revisar pago</a>
+@elseif($reserva->estado==='pendiente_pago')<p>Esperando el pago del cliente. La reserva todavía no está confirmada.</p>
 @endif
-
-@if(session('error'))
-<div class="alert-box alert-error">
-    {{ session('error') }}
-</div>
-@endif
-
-<div class="admin-page-card">
-    <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
-        <div>
-            <h2 class="section-title" style="margin-bottom:6px;">
-                Reservas registradas
-            </h2>
-
-            <p>
-                Desde este módulo el administrador puede revisar las reservas de todos los usuarios,
-                verificar pagos y atender solicitudes de reembolso.
-            </p>
-        </div>
-    </div>
-</div>
-
-<div class="reservation-summary">
-    <div class="reservation-summary-card">
-        <span>Total reservas</span>
-        <strong>{{ $reservas->total() ?? $reservas->count() }}</strong>
-    </div>
-
-    <div class="reservation-summary-card">
-        <span>Pendientes de pago</span>
-        <strong class="text-warning">
-            {{ $reservas->where('estado', 'pendiente_pago')->count() }}
-        </strong>
-    </div>
-
-    <div class="reservation-summary-card">
-        <span>Confirmadas</span>
-        <strong class="text-success">
-            {{ $reservas->where('estado', 'confirmada')->count() }}
-        </strong>
-    </div>
-
-    <div class="reservation-summary-card">
-        <span>Canceladas / Expiradas</span>
-        <strong class="text-danger">
-            {{ $reservas->whereIn('estado', ['cancelada', 'expirada'])->count() }}
-        </strong>
-    </div>
-</div>
-
-<div class="table-wrapper">
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>Código</th>
-                <th>Usuario</th>
-                <th>Espacio</th>
-                <th>Vehículo</th>
-                <th>Tarifa aplicada</th>
-                <th>Fecha</th>
-                <th>Horario</th>
-                <th>Estado</th>
-                <th>Monto</th>
-                <th>Condiciones</th>
-                <th>Pago</th>
-                <th>Reembolso</th>
-                <th>Acción</th>
-            </tr>
-        </thead>
-
-        <tbody>
-            @forelse($reservas as $reserva)
-            @php
-            $ultimoPago = $reserva->pagos->sortByDesc('created_at')->first();
-            $ultimoReembolso = $reserva->reembolsos->sortByDesc('created_at')->first();
-            @endphp
-
-            <tr>
-                <td>
-                    <strong>{{ $reserva->codigo_reserva }}</strong> <span>· Placa: {{ $reserva->placa ?? 'Sin placa registrada' }}</span>
-                </td>
-
-                <td>
-                    <strong>{{ $reserva->usuario->name ?? '-' }}</strong><br>
-                    <small class="text-muted">
-                        {{ $reserva->usuario->email ?? '-' }}
-                    </small>
-                </td>
-
-                <td>
-                    {{ $reserva->espacio->codigo ?? '-' }}
-                </td>
-
-                <td>
-                    {{ $reserva->tipo_vehiculo_nombre ?? '-' }}
-                </td>
-
-                <td>
-                    <strong>{{ $reserva->tarifa_nombre ?? '-' }}</strong><br>
-                    <small class="text-muted">
-                        {{ $reserva->tipo_tarifa ? str_replace('_', ' ', $reserva->tipo_tarifa) : '-' }}
-                    </small>
-                </td>
-
-                <td>
-                    {{ \Carbon\Carbon::parse($reserva->fecha_reserva)->format('d/m/Y') }}
-                </td>
-
-                <td>
-                    {{ substr($reserva->hora_inicio, 0, 5) }}
-                    -
-                    {{ substr($reserva->hora_fin, 0, 5) }}
-                </td>
-
-                <td>
-                    <span class="badge badge-{{ $reserva->estado }}">
-                        {{ str_replace('_', ' ', $reserva->estado) }}
-                    </span>
-                </td>
-
-                <td>
-                    <strong>S/ {{ number_format($reserva->monto_total, 2) }}</strong>
-                </td>
-
-                <td>
-                    <small class="text-muted">
-                        Tolerancia: {{ $reserva->tolerancia_minutos ?? 0 }} min<br>
-                        Penalidad: S/ {{ number_format($reserva->penalidad_por_fraccion ?? 0, 2) }}<br>
-                        Monto penalidad: S/ {{ number_format($reserva->monto_penalidad ?? 0, 2) }}
-                    </small>
-                </td>
-
-                <td>
-                    @if($ultimoPago)
-                    <span class="payment-status payment-{{ $ultimoPago->estado }}">
-                        {{ str_replace('_', ' ', $ultimoPago->estado) }}
-                    </span>
-
-                    <br>
-
-                    <small class="text-muted">
-                        {{ $ultimoPago->metodo_pago ?? '-' }}
-                    </small>
-                    @else
-                    <span class="text-muted">Sin pago</span>
-                    @endif
-                </td>
-
-                <td>
-                    @if($ultimoReembolso)
-                    <div class="refund-box">
-                        <strong>{{ str_replace('_', ' ', $ultimoReembolso->estado) }}</strong><br>
-                        Monto: S/ {{ number_format($ultimoReembolso->monto, 2) }}
-                    </div>
-                    @else
-                    <span class="text-muted">-</span>
-                    @endif
-                </td>
-
-                <td>
-                    @if($reserva->estadia)<p><a class="btn btn-primary btn-sm" href="{{ route('admin.estadias.show',$reserva->estadia) }}">Ver ticket</a></p>
-                        @elseif($reserva->estado === 'confirmada')<p><a class="btn btn-primary btn-sm" href="{{ route('admin.estadias.create',['reserva'=>$reserva->id]) }}">Registrar llegada</a></p>
-                        @endif
-                        @if($ultimoReembolso)<p>{{ $ultimoReembolso->motivo }}</p>@endif
-                        <div class="table-actions">
-                        @if($ultimoReembolso && $ultimoReembolso->estado === 'solicitado' && auth()->user()->tieneRol('admin','super_admin'))
+                        @if($ultimoReembolso && $ultimoReembolso->estado === 'solicitado' && auth()->user()->esSuperAdmin())
                         <form action="{{ route('admin.reembolsos.aprobar', $ultimoReembolso) }}" method="POST"
                             onsubmit="return confirm('¿Confirmas que ya devolviste el dinero al cliente?');">
                             @csrf
@@ -195,24 +39,10 @@
                             </button>
                         </form>
                         @else
-                        <span class="text-muted">-</span>
+
                         @endif
-                    </div>
-                </td>
-            </tr>
-            @empty
-            <tr>
-                <td colspan="13">
-                    No hay reservas registradas.
-                </td>
-            </tr>
-            @endforelse
-        </tbody>
-    </table>
-</div>
 
-<div style="margin-top:18px;">
-    {{ $reservas->links() }}
-</div>
-
+</div></article>
+@empty<div class="card">No hay reservas para esta consulta.</div>@endforelse</div>
+{{ $reservas->links() }}
 @endsection

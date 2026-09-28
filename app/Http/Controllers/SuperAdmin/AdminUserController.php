@@ -30,7 +30,7 @@ class AdminUserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
-            'role' => $request->user()->role === 'super_admin' ? 'required|in:admin,operador' : 'required|in:operador',
+            'role' => 'required|in:admin',
         ]);
 
         User::create([
@@ -57,6 +57,11 @@ class AdminUserController extends Controller
         $user->update([
             'activo' => ! $user->activo,
         ]);
+
+        if (! $user->activo) {
+            $user->forceFill(['remember_token' => null])->save();
+            $user->revokeAccess();
+        }
 
         return redirect()
             ->route('superadmin.dashboard')

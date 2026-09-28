@@ -215,8 +215,8 @@ class ParkingOperationsTest extends TestCase
         $this->get(route('reservas.index'))->assertOk()->assertSee('Te esperamos');
         $this->actingAs($this->operator)->get(route('admin.estadias.create', ['reserva' => $r->id]))->assertOk()->assertSee('Llegada con reserva');
         $this->travel(16)->minutes();
-        $this->actingAs(User::factory()->create(['role' => 'admin']));
-        $this->get(route('admin.reservas.index'))->assertOk()->assertSee('Inasistencia')->assertSee('Registrar devolución realizada');
+        $this->actingAs(User::factory()->create(['role' => 'super_admin']));
+        $this->get(route('admin.reservas.index',['vista'=>'historial']))->assertOk()->assertSee('Inasistencia')->assertSee('Registrar devolución realizada');
         $this->actingAs($r->usuario)->get(route('reservas.index'))->assertOk()->assertSee('espacio fue liberado');
     }
 
@@ -237,10 +237,11 @@ class ParkingOperationsTest extends TestCase
         $this->actingAs(User::factory()->create());
         $data = ['placa' => 'ABC123', 'vehiculo_tipo_id' => $this->type->id, 'fecha_reserva' => today()->toDateString(), 'hora_inicio' => '11:00', 'duracion_minutos' => 60];
         $this->get(route('reservas.create', $this->space))->assertOk();
-        $this->post(route('reservas.confirmar', $this->space), $data)->assertOk()->assertSee('Llegada prevista')->assertSee('12 minutos');
+        $this->post(route('reservas.confirmar', $this->space), $data)->assertOk()->assertSee('Llegada prevista')->assertSee('15 minutos');
         $this->post(route('reservas.store', $this->space), $data)->assertSessionHasNoErrors();
         $r = Reserva::firstOrFail();
-        $this->assertSame(12, $r->tolerancia_llegada_minutos);
+        $this->assertSame(15, $r->tolerancia_llegada_minutos);
+        $this->assertTrue($r->reserva_inmediata);
         $this->assertSame(30,$r->minutos_fraccion_snapshot);
     }
 }

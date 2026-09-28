@@ -1,0 +1,45 @@
+/* Shared dark controls, loaded after page styles. */
+:is(.public-refined,.admin-refined){--color-bg:#15222E;--color-card:#1B2A39;--color-text:#F8FAFC;--color-muted:#A9B8C8;--color-border:#2B4055;--color-primary:#F8FAFC;--color-accent:#1683FF;color:#F8FAFC;color-scheme:dark}
+:is(.public-refined,.admin-refined) .checkout-total{background:#102B43;border:1px solid #376585;border-radius:14px;padding:20px 24px;margin:22px 0}
+:is(.public-refined,.admin-refined) .checkout-total strong{color:#F8FAFC;font-size:40px;line-height:1.2;margin-top:8px;font-variant-numeric:tabular-nums}
+:is(.public-refined,.admin-refined) .checkout-total small{color:#C5D9EA;font-size:14px}
+.public-refined .reservation-list,.public-refined .reservation-row{background:#142436;border-color:#2B4055}
+.public-refined .reservation-label{color:#A9B8C8}.public-refined .reservation-value{color:#F8FAFC}.public-refined .reservation-total{color:#34D399}
+:is(.public-refined,.admin-refined) :is(.alert-info,.selected-reservation,.settled-note){background:#132F48;color:#BEDFFF;border:1px solid #345876}
+:is(.public-refined,.admin-refined) :is(.reservation-alert,.alert-warning){background:#362D19;color:#FCD774;border:1px solid #705C2C}
+.admin-refined :is(.admin-main,.admin-content,.admin-shell){background:#15222E}
+.admin-refined :is(.admin-sidebar,.admin-topbar){background:#091728}
+.admin-refined :is(.card,.stat-card,.metric,.parking-widget,.page-card,.table-container,.table-wrapper,.reservation-item,.admin-user-box,.reception-actions a,.quick-card,.space-dialog){background:#1B2A39;color:#F8FAFC;border-color:#2B4055}
+.admin-refined :is(h1,h2,h3,h4,label,.admin-user-name,.stat-value,.metric-value,.reservation-value){color:#F8FAFC}
+.admin-refined :is(.text-muted,.section-subtitle,.stat-label,.reservation-code,dt,.admin-user-role){color:#A9B8C8}
+.admin-refined :is(input,select,textarea){background:#091728;color:#F8FAFC;border:1px solid #476079;color-scheme:dark}
+.admin-refined input::placeholder,.admin-refined textarea::placeholder{color:#A9B8C8;opacity:1}
+.admin-refined :is(input,button,select):disabled{opacity:.55;cursor:not-allowed}
+.admin-refined :is(a,button,summary,input,select,textarea):focus-visible{outline:3px solid #8DC4FF;outline-offset:3px}
+.admin-refined :is(.btn-primary,.btn-success){background:#096CE5;color:#fff!important;border-color:#096CE5}
+.admin-refined .btn-primary:hover{background:#075BB9}
+.admin-refined .btn-secondary{background:#23394D;color:#F8FAFC!important;border-color:#476079}
+.admin-refined .btn-danger{background:#A8233C;color:#fff!important;border-color:#C23550}
+.admin-refined .btn-warning{background:#362D19;color:#FCD774!important;border-color:#705C2C}
+.admin-refined :is(table,td,tr){background:#142436;color:#F8FAFC;border-color:#2B4055}
+.admin-refined th{background:#091728;color:#BBD0E1;border-color:#2B4055}
+.admin-refined tbody tr:hover td{background:#20364A}
+.admin-refined .admin-menu a.active{background:#163653;color:#8DC4FF;box-shadow:inset 3px 0 #1683FF}
+.admin-refined :is(.admin-user-avatar,.notice-icon){background:#163653;color:#8DC4FF;border-color:#345876}
+.admin-refined #aviso-pagos{background:#132F48;color:#BEDFFF;border-color:#345876}
+.admin-refined #aviso-pagos[data-state=clear],.admin-refined :is(.alert-success,.badge-success,.badge-activo,.badge-libre,.badge-confirmada){background:#123B32;color:#34D399;border-color:#276653}
+.admin-refined #aviso-pagos[data-state=pending],.admin-refined :is(.badge-warning,.badge-reservado,.badge-pendiente,.badge-pendiente_pago){background:#362D19;color:#FCD774;border-color:#705C2C}
+.admin-refined #aviso-pagos[data-state=error],.admin-refined :is(.alert-error,.alert-danger,.badge-danger,.badge-ocupado,.badge-inactivo){background:#3C202B;color:#FDA4AF;border-color:#793647}
+.admin-refined .parking-lot{background:#091728;border-color:#476079}
+.admin-refined :is(.lot-office,.lot-services,.lot-gate,.parking-space){background:#23394D;color:#C5D9EA;border-color:#476079}
+.admin-refined .parking-space[data-state=libre]{background:#123B32;color:#34D399;border-color:#276653}
+.admin-refined .parking-space[data-state=reservado]{background:#362D19;color:#FCD774;border-color:#705C2C}
+.admin-refined .parking-space[data-state=ocupado]{background:#3C202B;color:#FDA4AF;border-color:#793647}
+.admin-refined :is(.lot-lane,.parking-scroll:after){color:#A9B8C8}
+.admin-refined .reception-actions a:first-child{background:#163653;border-color:#345876}
+.admin-refined .reception-actions a svg,.admin-refined .reception-actions a:first-child svg{background:#23394D;color:#8DC4FF}
+@media print{.admin-refined{color-scheme:light}}
+
+.admin-refined .admin-page-card p{color:#A9B8C8}
+.admin-refined .text-success{color:#34D399!important}
+.admin-refined .text-danger{color:#FDA4AF!important}

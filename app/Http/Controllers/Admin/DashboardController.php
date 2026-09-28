@@ -10,9 +10,9 @@ class DashboardController extends Controller
     public function index(ReservaService $reservas, ReservaDisponibilidadService $disponibilidad)
     {
         $reservas->procesarReservasAutomaticas();
-        $espacios = Espacio::with(['sensor','vehiculoTipos.tarifas',
-            'estadias' => fn ($q) => $q->activas(),
-            'reservas' => fn ($q) => $q->with('usuario')->whereIn('estado',['pendiente_pago','confirmada'])->whereNull('inasistencia_at')->whereDoesntHave('estadia'),
+        $espacios = Espacio::conEstadoOperativo()->with(['sensor','vehiculoTipos.tarifas',
+            'estadias' => fn ($q) => $q->with('reserva')->activas(),
+            'reservas' => fn ($q) => $q->with(['usuario', 'pagos'])->whereIn('estado',['pendiente_pago','confirmada'])->whereNull('inasistencia_at')->whereDoesntHave('estadia'),
         ])->where('activo',true)->orderBy('codigo')->get();
         $disponibilidadPorEspacio = $espacios->mapWithKeys(fn ($e) => [$e->id => $disponibilidad->estadoParaTarjeta($e)]);
         $libres = $espacios->where('estado_actual','libre')->count();

@@ -22,7 +22,11 @@ class PasswordController extends Controller
 
         $request->user()->update([
             'password' => Hash::make($validated['password']),
+            'remember_token' => \Illuminate\Support\Str::random(60),
         ]);
+
+        $request->user()->revokeAccess();
+        $request->session()->regenerate();
 
         return back()->with('status', 'password-updated');
     }
