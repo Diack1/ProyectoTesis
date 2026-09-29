@@ -7,6 +7,7 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,6 +24,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if (app()->environment('production')) {
+            URL::forceScheme('https');
+        }
         \Illuminate\Pagination\Paginator::defaultView('partials.pagination');
         \Illuminate\Pagination\Paginator::defaultSimpleView('partials.pagination');
         foreach ([\App\Models\User::class, \App\Models\ConfiguracionPago::class, \App\Models\Pago::class, \App\Models\Reembolso::class, \App\Models\Sensor::class] as $model) {
