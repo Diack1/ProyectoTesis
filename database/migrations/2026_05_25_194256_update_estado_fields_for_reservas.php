@@ -16,10 +16,16 @@ return new class extends Migration
             return;
         }
 
-        DB::statement("ALTER TABLE espacios MODIFY estado_actual ENUM('libre', 'ocupado', 'reservado', 'mantenimiento') DEFAULT 'libre'");
-        Schema::table('espacios', fn (Blueprint $t) => $t->string('estado_actual')->default('libre')->change());
+        Schema::table('espacios', function (Blueprint $table) {
+            $table->string('estado_actual')
+                ->default('libre')
+                ->change();
+        });
 
-        Schema::table('registros_ocupacion', fn (Blueprint $t) => $t->string('estado_detectado')->change());
+        Schema::table('registros_ocupacion', function (Blueprint $table) {
+            $table->string('estado_detectado')
+                ->change();
+        });
     }
 
     /**
@@ -31,12 +37,27 @@ return new class extends Migration
             return;
         }
 
-        DB::statement("UPDATE espacios SET estado_actual = 'libre' WHERE estado_actual IN ('reservado', 'mantenimiento')");
+        DB::statement("
+            UPDATE espacios
+            SET estado_actual = 'libre'
+            WHERE estado_actual IN ('reservado', 'mantenimiento')
+        ");
 
-        DB::statement("UPDATE registros_ocupacion SET estado_detectado = 'libre' WHERE estado_detectado IN ('reservado', 'mantenimiento')");
+        DB::statement("
+            UPDATE registros_ocupacion
+            SET estado_detectado = 'libre'
+            WHERE estado_detectado IN ('reservado', 'mantenimiento')
+        ");
 
-        Schema::table('espacios', fn (Blueprint $t) => $t->string('estado_actual')->default('libre')->change());
+        Schema::table('espacios', function (Blueprint $table) {
+            $table->string('estado_actual')
+                ->default('libre')
+                ->change();
+        });
 
-        Schema::table('registros_ocupacion', fn (Blueprint $t) => $t->string('estado_detectado')->change());
+        Schema::table('registros_ocupacion', function (Blueprint $table) {
+            $table->string('estado_detectado')
+                ->change();
+        });
     }
 };
