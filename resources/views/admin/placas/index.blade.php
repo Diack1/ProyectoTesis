@@ -10,11 +10,11 @@
 @include('admin.placas.camara')
 <section class="admin-page-card">
     <h2>1. Selecciona una fotografía</h2>
-    <p>Usa una foto nítida del vehículo, con la placa visible. Se procesa localmente en el equipo que ejecuta el sistema.</p>
-    @unless($disponible)<div class="alert alert-info">El motor de reconocimiento está pendiente de instalación. Consulta <code>vision/README.md</code>.</div>@endunless
+    <p>Usa una foto nítida del vehículo, con la placa visible. La fotografía se analiza en el servidor de Parke’o.</p>
+    @unless($disponible)<div class="alert alert-info" role="status">El reconocimiento de placas no está disponible en este servidor. El administrador debe completar su instalación. Mientras tanto, puedes escribir la placa y registrar la entrada manualmente.</div>@endunless
     <form action="{{ route('admin.placas.analizar') }}" method="post" enctype="multipart/form-data" id="form-placas">
         @csrf
-        <div class="form-group"><label for="imagen">Foto del vehículo</label><input type="file" id="imagen" name="imagen" accept="image/jpeg,image/png,image/webp" required aria-describedby="ayuda-imagen"><small id="ayuda-imagen">JPG, PNG o WebP · máximo 8 MB y 20 megapíxeles · hasta 6000 píxeles por lado.</small></div>
+        <div class="form-group"><label for="imagen">Foto del vehículo</label><input type="file" id="imagen" name="imagen" accept="image/jpeg,image/png,image/webp" required @disabled(!$disponible) aria-describedby="ayuda-imagen"><small id="ayuda-imagen">JPG, PNG o WebP · máximo 8 MB y 20 megapíxeles · hasta 6000 píxeles por lado.</small></div>
         <button class="btn btn-primary" @disabled(!$disponible)>Analizar fotografía</button>
         <p id="estado-analisis" role="status" hidden>Buscando placas y leyendo los caracteres. Puede tardar unos segundos…</p>
     </form>

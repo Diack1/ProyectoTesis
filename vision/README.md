@@ -34,6 +34,50 @@ Laravel usa automáticamente `vision/.venv/Scripts/python.exe` en Windows y `vis
 
 En Windows, `artisan serve` puede eliminar variables que Python necesita. En ese caso definir en `.env` **los valores reales de ese equipo** para `VISION_SYSTEM_ROOT` y `VISION_USER_PROFILE` (consultarlos en PowerShell con `$env:SystemRoot` y `$env:USERPROFILE`). Se configuraron para esta PC. Ejecutar `php artisan config:clear` después de cambiarlos. No copiar la ruta personal de otro equipo.
 
+## Despliegue Linux / Railway
+
+### Configuración incluida para Railpack
+
+La raíz contiene `railpack.json`, que mantiene el proveedor PHP y su instalación automática de Composer/Vite. Añade Python 3.12 y una etapa `vision` independiente para instalar dependencias, descargar los modelos con verificación de hashes y ejecutar `recognize.py --check`. Conserva el entorno virtual, modelos e intérprete de Python en la imagen final. Las bibliotecas nativas `libgomp1` y `libstdc++6` se incluyen en construcción y ejecución.
+
+En Railway:
+
+1. Mantener **Builder: Railpack** y **Custom Build Command vacío**. El archivo del repositorio define la etapa adicional.
+2. Si existe `RAILPACK_CONFIG_FILE`, debe apuntar a `railpack.json`. Revisar que no haya otro override de construcción que reemplace esta configuración.
+3. Si existe `VISION_PYTHON`, establecer `/app/vision/.venv/bin/python`; alternativamente eliminar esa variable para usar la ruta predeterminada de Laravel. No usar rutas Windows.
+4. Subir el código y desplegar el commit que incluye `railpack.json` y `vision:check`. Reiniciar el despliegue antiguo no incorpora archivos nuevos.
+5. En los registros de construcción, comprobar la etapa `vision` y la salida `ready: true`. Dentro del contenedor ya desplegado ejecutar `php artisan vision:check` y probar una fotografía desde el panel.
+
+La construcción debe detenerse si no puede instalar una dependencia o validar un modelo. No se debe ignorar ese fallo ni habilitar el botón artificialmente. Esta configuración requiere validación en el constructor Linux real; las pruebas Windows no sustituyen esa comprobación. La primera construcción descarga dependencias y modelos y puede tardar más que un despliegue solo PHP.
+
+Referencia: [configuración de Railpack](https://railpack.com/config/file/) y [etapas adicionales](https://railpack.com/guides/adding-steps/).
+
+### Instalación Linux equivalente
+
+Git excluye `vision/.venv` y `vision/models`: desplegar Laravel no instala el motor. El aviso de instalación pendiente significa que falta el ejecutable configurado o el manifiesto de modelos; no indica un rechazo de la foto.
+
+El entorno de construcción y la imagen final necesitan Python 3.12 y soporte de entornos virtuales. Añadir estos pasos a la construcción existente, conservando Composer y Vite:
+
+```sh
+python3.12 -m venv vision/.venv
+vision/.venv/bin/python -m pip install --no-cache-dir -r vision/requirements-lock.txt
+vision/.venv/bin/python vision/prepare_models.py
+vision/.venv/bin/python vision/recognize.py --check
+```
+
+Conservar el intérprete, sus bibliotecas y los modelos en la imagen final. No copiar el entorno virtual Windows a Linux ni instalar durante una petición web. Las versiones fijadas se comprobaron en Windows: la construcción Linux debe completarse y pasar la comprobación antes de considerar disponible el motor.
+
+En Linux puede omitirse `VISION_PYTHON` para utilizar la ruta predeterminada del proyecto. Si se define, usar una ruta absoluta del servidor, nunca una ruta de Windows. No copiar `VISION_SYSTEM_ROOT` ni `VISION_USER_PROFILE` del equipo local.
+
+Después del despliegue, ejecutar dentro del contenedor:
+
+```sh
+php artisan config:clear
+php artisan vision:check
+```
+
+El diagnóstico carga los modelos sin fotos ni descargas. Todavía se debe probar una imagen real y verificar memoria y tiempo de respuesta. Railpack, Nixpacks y Dockerfile requieren configuraciones distintas para incluir Python; revisar el constructor antes de modificarlo. Una instalación manual dentro del contenedor se puede perder al redesplegar.
+
 ## Datos y límites de la prueba
 
 - El original se guarda temporalmente en almacenamiento privado y se elimina al terminar el proceso, incluso si falla. No se añade a ningún dataset.

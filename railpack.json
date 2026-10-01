@@ -1,0 +1,30 @@
+{
+  "$schema": "https://schema.railpack.com",
+  "provider": "php",
+  "packages": {
+    "python": "3.12"
+  },
+  "buildAptPackages": ["...", "libgomp1", "libstdc++6"],
+  "steps": {
+    "vision": {
+      "inputs": [
+        { "step": "packages:mise" },
+        { "local": true, "include": ["vision"] }
+      ],
+      "commands": [
+        "python -m venv /app/vision/.venv",
+        "/app/vision/.venv/bin/python -m pip install --no-cache-dir -r vision/requirements-lock.txt",
+        "/app/vision/.venv/bin/python vision/prepare_models.py",
+        "/app/vision/.venv/bin/python vision/recognize.py --check"
+      ],
+      "deployOutputs": [
+        "/app/vision/.venv",
+        "/app/vision/models",
+        "/mise/installs/python"
+      ]
+    }
+  },
+  "deploy": {
+    "aptPackages": ["...", "libgomp1", "libstdc++6"]
+  }
+}
