@@ -18,9 +18,13 @@
         "/app/vision/.venv/bin/python vision/recognize.py --check"
       ],
       "deployOutputs": [
-        "/app/vision/.venv",
-        "/app/vision/models",
-        "/mise/installs/python"
+        {
+          "include": [
+            "/app/vision/.venv",
+            "/app/vision/models",
+            "/mise/installs/python"
+          ]
+        }
       ]
     }
   },
