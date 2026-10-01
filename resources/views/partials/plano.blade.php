@@ -1,10 +1,10 @@
 @php
     $administrativo = $administrativo ?? false;
 @endphp
-<section class="parking-widget {{ $administrativo ? 'is-list' : 'parking-public-layout' }}" data-parking @if(!$administrativo) data-refresh="{{ route('public.disponibilidad.estado', [], false) }}" @endif>
+<section class="parking-widget {{ $administrativo ? '' : 'parking-public-layout' }}" data-parking @if(!$administrativo) data-refresh="{{ route('public.disponibilidad.estado', [], false) }}" @endif>
     @if(!$administrativo)<script type="application/json" data-initial-quotes>@json($tarifasIniciales ?? [])</script>@endif
     <div class="parking-map-area">
-    <div class="parking-toolbar"><div><span class="eyebrow">VISTA SUPERIOR · PARKE’O</span><h2>{{ $administrativo ? 'Cada espacio, a la vista' : 'Elige tu espacio' }}</h2></div>@if($administrativo)<button type="button" class="btn btn-secondary" data-map-toggle aria-pressed="{{ $administrativo ? 'true' : 'false' }}">{{ $administrativo ? 'Ver plano 2D' : 'Ver en lista' }}</button>@endif</div>
+    <div class="parking-toolbar"><div><span class="eyebrow">VISTA SUPERIOR · PARKE’O</span><h2>{{ $administrativo ? 'Cada espacio, a la vista' : 'Elige tu espacio' }}</h2></div></div>
     <p class="text-muted">Pulsa un espacio para consultar su estado{{ $administrativo ? ' y gestionar la llegada o salida.' : ' y reservar si está libre.' }}</p>
     <div class="parking-legend"><span>🟢 Libre</span><span>🟠 Reservado</span><span>🔴 Ocupado</span><span>⚪ No disponible</span></div>
     <div class="parking-scroll"><div class="parking-lot">

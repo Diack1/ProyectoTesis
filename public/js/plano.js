@@ -78,11 +78,6 @@ document.querySelectorAll('[data-parking]').forEach(widget => {
                 : 'Este espacio no está disponible. Elige otro espacio libre.';
         }
     };
-    widget.querySelector('[data-map-toggle]')?.addEventListener('click', event => {
-        const active = widget.classList.toggle('is-list');
-        event.currentTarget.textContent = active ? 'Ver plano 2D' : 'Ver en lista';
-        event.currentTarget.setAttribute('aria-pressed', String(active));
-    });
     widget.addEventListener('click', event => {
         if (event.target.closest('[data-quote-retry]')) { loadQuote(); return; }
         const button = event.target.closest('[data-space]');

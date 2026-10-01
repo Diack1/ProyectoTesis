@@ -6,9 +6,13 @@ class CustomerVerificationCode extends Notification {
     public function __construct(public string $code) {}
     public function via(object $notifiable): array { return ['mail']; }
     public function toMail(object $notifiable): MailMessage {
-        return (new MailMessage)->subject('Parkeo: verifica tu correo')
-            ->line('Tu código de verificación es: '.$this->code)
-            ->line('Escríbelo en Parkeo para confirmar tu cuenta. Vence en 10 minutos y sirve una sola vez.')
-            ->line('No compartas este código. Si no creaste la cuenta, ignora este mensaje.');
+        return (new MailMessage)->subject('Parke’o: verifica tu correo')
+            ->view(['emails.access-code', 'emails.access-code-text'], [
+                'title' => 'Confirma tu correo',
+                'intro' => 'Introduce este código en Parke’o para verificar tu correo y activar tu cuenta.',
+                'code' => $this->code,
+                'minutes' => 10,
+                'notice' => 'No compartas este código. Si no creaste la cuenta, puedes ignorar este mensaje.',
+            ]);
     }
 }

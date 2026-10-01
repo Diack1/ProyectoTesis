@@ -13,12 +13,21 @@ class StaffAccessMail extends Notification
     {
         if ($this->isOwner) {
             return (new MailMessage)->subject('Parke’o: código de acceso del propietario')
-                ->line('Tu código de acceso es: '.$this->code)->line('Vence en 5 minutos y sirve una sola vez. No lo compartas.');
+                ->view(['emails.access-code', 'emails.access-code-text'], [
+                    'title' => 'Confirma tu acceso',
+                    'intro' => 'Introduce este código en Parke’o para acceder a tu cuenta de propietario.',
+                    'code' => $this->code,
+                    'minutes' => 5,
+                    'notice' => 'No compartas este código. Si no intentaste iniciar sesión, no lo utilices y revisa la seguridad de tu cuenta.',
+                ]);
         }
         return (new MailMessage)->subject('Parke’o: solicitud de acceso del personal')
-            ->line(($this->staffName ?? 'Un miembro del personal').' solicita entrar al panel.')
-            ->line('Código de autorización: '.$this->code)
-            ->line('Entrégalo únicamente a esa persona si reconoces su solicitud y deseas autorizarla.')
-            ->line('Vence en 5 minutos, sirve una sola vez y únicamente en la sesión que lo solicitó. Si no reconoces la solicitud, no compartas el código.');
+            ->view(['emails.access-code', 'emails.access-code-text'], [
+                'title' => 'Solicitud de acceso del personal',
+                'intro' => $this->staffName.' solicita entrar al panel. Entrégale este código únicamente si reconoces la solicitud y deseas autorizarla.',
+                'code' => $this->code,
+                'minutes' => 5,
+                'notice' => 'El código solo funciona en la sesión que lo solicitó. Si no reconoces la solicitud, no lo compartas.',
+            ]);
     }
 }
