@@ -14,6 +14,13 @@ class GoogleAuthController extends Controller
     public function redirect(Request $request)
     {
         abort_unless(config('services.google.client_id') && config('services.google.client_secret') && config('services.google.redirect'), 404);
+        $callback = parse_url(config('services.google.redirect'));
+        $port = $callback['port'] ?? (($callback['scheme'] ?? '') === 'https' ? 443 : 80);
+        if (($callback['host'] ?? '') !== $request->getHost()
+            || (!app()->environment('production') && $port !== $request->getPort())) {
+            return redirect()->route('login')->withErrors(['google' => 'El acceso con Google no está configurado para esta dirección de Parke’o. El administrador debe configurar la URL de retorno de este sitio. Puedes utilizar tu correo y contraseña.']);
+        }
+        $request->session()->forget('google_link');
         return Socialite::driver('google')->scopes(['openid', 'email', 'profile'])->redirect();
     }
 
@@ -26,6 +33,11 @@ class GoogleAuthController extends Controller
             abort_unless($identity->getId() && filter_var($identity->getEmail(), FILTER_VALIDATE_EMAIL)
                 && ($identity->user['email_verified'] ?? $identity->user['verified_email'] ?? false) === true, 403);
             $email = Str::lower($identity->getEmail());
+            $existing = User::whereRaw('LOWER(email) = ?', [$email])->first();
+            if ($existing && !$existing->esUsuario()) {
+                $request->session()->forget('google_link');
+                return redirect()->route('login')->withErrors(['google' => 'Las cuentas del personal y del propietario acceden con su correo y contraseña de Parke’o. El propietario también debe confirmar su código de acceso. Google está disponible para cuentas de clientes.']);
+            }
             $user = DB::transaction(function () use ($identity, $email) {
                 $user = User::where('google_id', $identity->getId())->lockForUpdate()->first();
                 if ($user) {

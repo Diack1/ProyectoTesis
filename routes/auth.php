@@ -9,10 +9,10 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
-    Route::get('auth/google', [\App\Http\Controllers\Auth\GoogleAuthController::class, 'redirect'])->middleware('throttle:10,1')->name('google.redirect');
-    Route::get('auth/google/callback', [\App\Http\Controllers\Auth\GoogleAuthController::class, 'callback'])->middleware('throttle:10,1')->name('google.callback');
+    Route::get('auth/google', [\App\Http\Controllers\Auth\GoogleAuthController::class, 'redirect'])->middleware('throttle:google-access')->name('google.redirect');
+    Route::get('auth/google/callback', [\App\Http\Controllers\Auth\GoogleAuthController::class, 'callback'])->middleware('throttle:google-access')->name('google.callback');
     Route::get('auth/google/link', [\App\Http\Controllers\Auth\GoogleAuthController::class, 'linkForm'])->name('google.link');
-    Route::post('auth/google/link', [\App\Http\Controllers\Auth\GoogleAuthController::class, 'link'])->middleware('throttle:5,1')->name('google.link.store');
+    Route::post('auth/google/link', [\App\Http\Controllers\Auth\GoogleAuthController::class, 'link'])->middleware('throttle:google-access')->name('google.link.store');
     Route::get('register', [RegisteredUserController::class, 'create'])
         ->name('register');
 

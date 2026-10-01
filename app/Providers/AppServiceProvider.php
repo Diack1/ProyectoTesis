@@ -55,6 +55,16 @@ class AppServiceProvider extends ServiceProvider
                 Limit::perMinute(30)->by('mfa-ip:'.$request->ip())->response($blocked),
             ];
         });
+        RateLimiter::for('google-access', function (Request $request) {
+            $link = $request->routeIs('google.link.store');
+            return Limit::perMinute($link ? 5 : 10)
+                ->by($request->route()->getName().'|'.$request->ip())
+                ->response(function (Request $request, array $headers) {
+                    $seconds = (int) ($headers['Retry-After'] ?? 60);
+                    $headers['Cache-Control'] = 'private, no-store';
+                    return response()->view('auth.google-wait', compact('seconds'), 429, $headers);
+                });
+        });
         RateLimiter::for('customer-verify', fn (Request $request) => Limit::perMinute(5)->by('customer-verify:'.$request->user()->id));
         RateLimiter::for('customer-code-send', fn (Request $request) => Limit::perMinute(5)->by('customer-code-send:'.$request->user()->id));
         RateLimiter::for('account-registration', fn (Request $request) => Limit::perHour(10)->by($request->ip()));
