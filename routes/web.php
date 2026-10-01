@@ -29,6 +29,8 @@ Route::get('/', [PublicController::class, 'home'])
 Route::get('/disponibilidad', [PublicController::class, 'disponibilidad'])
     ->name('public.disponibilidad');
 
+Route::get('/disponibilidad/cotizar/{espacio}', \App\Http\Controllers\PublicQuoteController::class)->middleware('throttle:60,1')->name('public.cotizar');
+
 Route::get('/disponibilidad/estado', [PublicController::class, 'estadoPlano'])->name('public.disponibilidad.estado');
 
 Route::get('/tarifas', [PublicController::class, 'tarifas'])
@@ -74,6 +76,8 @@ Route::middleware(['auth', 'role:user', \App\Http\Middleware\VerifiedCustomer::c
 
     Route::post('/reservas/confirmar/{espacio}', [ReservaController::class, 'confirmar'])
         ->name('reservas.confirmar');
+    Route::get('/reservas/confirmar/{espacio}', [ReservaController::class, 'confirmar'])
+        ->name('reservas.revisar');
 
     Route::post('/reservas/guardar/{espacio}', [ReservaController::class, 'store'])->middleware('throttle:booking-actions')
         ->name('reservas.store');

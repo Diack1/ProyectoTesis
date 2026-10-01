@@ -237,7 +237,8 @@ class ParkingOperationsTest extends TestCase
         $this->actingAs(User::factory()->create());
         $data = ['placa' => 'ABC123', 'vehiculo_tipo_id' => $this->type->id, 'fecha_reserva' => today()->toDateString(), 'hora_inicio' => '11:00', 'duracion_minutos' => 60];
         $this->get(route('reservas.create', $this->space))->assertOk();
-        $this->post(route('reservas.confirmar', $this->space), $data)->assertOk()->assertSee('Llegada prevista')->assertSee('15 minutos');
+        $this->post(route('reservas.confirmar', $this->space), $data)->assertStatus(303);
+        $this->get(route('reservas.revisar', $this->space))->assertOk()->assertSee('Llegada prevista')->assertSee('15 minutos');
         $this->post(route('reservas.store', $this->space), $data)->assertSessionHasNoErrors();
         $r = Reserva::firstOrFail();
         $this->assertSame(15, $r->tolerancia_llegada_minutos);

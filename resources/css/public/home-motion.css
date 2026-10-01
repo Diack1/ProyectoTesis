@@ -1,0 +1,19 @@
+/* Home-only enhancement. Content and real availability remain usable without JS. */
+body.public-hex-home .public-navbar{background:#0b111bef;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+body.public-hex-home .btn{transition:transform .2s ease,box-shadow .2s ease,background-color .2s ease}
+body.public-hex-home .btn .icon{transition:transform .2s ease}
+body.public-hex-home .hero-panel,body.public-hex-home .how-grid article{transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease}
+body.public-hex-home .hero-panel{animation:none}
+body.public-hex-home .availability-number [data-availability-count]{display:inline;font:inherit;color:inherit;font-variant-numeric:tabular-nums}
+@media(hover:hover) and (pointer:fine){
+ body.public-hex-home .btn:hover{transform:translateY(-2px);box-shadow:0 7px 24px #1683ff24}
+ body.public-hex-home .btn:hover .icon{transform:translateX(4px)}
+ body.public-hex-home .hero-panel:hover{transform:translateY(-3px);border-color:#4b87b5;box-shadow:0 12px 35px #1683ff12}
+ body.public-hex-home .how-grid article:hover{transform:translateY(-4px);border-color:#4b87b5;box-shadow:0 8px 25px #1683ff12}
+}
+body.public-hex-home .btn:active{transform:translateY(0) scale(.98)}
+
+@media(prefers-reduced-motion:reduce){
+ .hero-droplet{display:none}
+ body.public-hex-home .btn,body.public-hex-home .btn .icon,body.public-hex-home .hero-panel,body.public-hex-home .how-grid article{animation:none!important;transition:none!important;transform:none!important}
+}

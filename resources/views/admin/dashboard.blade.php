@@ -3,6 +3,7 @@
 @section('page-title','Todo listo para recibirlos')
 @section('page-subtitle','Espacios, llegadas y cobros en un solo lugar.')
 @section('content')
+@include('admin.dashboard-summary')
 <p class="dashboard-eyebrow">TU COCHERA, EN ORDEN</p><h2 class="dashboard-section-title">¿Qué necesitas hacer?</h2>
 <section class="reception-actions" aria-label="Acciones de recepción">
 <a href="{{ route('admin.estadias.create') }}"><x-icon name="car"/><strong>Registrar entrada</strong><span>Vehículo que llega al estacionamiento</span></a>

@@ -42,7 +42,11 @@ class PlanoTest extends TestCase
     {
         $this->travelTo(now()->startOfDay()->addHours(8));
         $space = $this->space();
-        $this->get(route('public.disponibilidad'))->assertOk()->assertSee('Ver en lista')->assertSee('data-available="1"', false);
+        $this->get(route('public.disponibilidad'))->assertOk()->assertDontSee('Ver en lista')->assertDontSee('data-zoom')->assertSee('quote-vehicle')->assertSee('data-available="1"', false)
+            ->assertSee('href="/reservas/crear/'.$space->id.'"', false)
+            ->assertSee('data-refresh="/disponibilidad/estado"', false)
+            ->assertSee('data-quote-url="/disponibilidad/cotizar/'.$space->id.'"', false)
+            ->assertHeader('Cache-Control', 'no-cache, private');
         $this->getJson(route('public.disponibilidad.estado'))->assertOk()->assertJsonPath('espacios.0.puede_reservar', true);
         $user = User::factory()->create(['name'=>'NombrePrivado']);
         Reserva::create(['user_id'=>$user->id,'espacio_id'=>$space->id,'codigo_reserva'=>'RES-PRIVADO','placa'=>'ABC123',

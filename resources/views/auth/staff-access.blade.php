@@ -10,7 +10,7 @@
 <p role="alert">Falta configurar el envío de correo del sistema. Todavía no se pueden enviar códigos ni solicitudes. No se ha enviado ningún correo. Primero debe completarse la conexión con Gmail en la PC del sistema.</p>
 @endif
 <form method="post" action="{{ route('staff-access.start') }}">@csrf
-<button class="btn-auth" type="submit" @disabled(!$ready)>{{ $owner ? 'Enviar código a mi correo' : 'Enviar código al superadministrador' }}</button></form>
+<button class="btn-auth" type="submit" data-code-send data-wait="{{ $retryAfter }}" data-ready="{{ $ready ? '1' : '0' }}" @disabled(!$ready || $retryAfter > 0)>Enviar código a mi correo</button><p data-code-wait role="status">@if($retryAfter > 0)Podrás solicitar otro código en {{ $retryAfter }} segundos. Puedes introducir el código recibido sin esperar.@endif</p></form>
 @if($entry)
 <p>Estado: {{ $entry->expires_at->isPast() ? 'Vencida' : (['pending'=>'Pendiente', 'approved'=>'Aprobada', 'rejected'=>'Rechazada', 'consumed'=>'Utilizada', 'superseded'=>'Reemplazada'][$entry->state] ?? 'No disponible') }}.</p>
 <p>Vence: {{ $entry->expires_at->format('H:i') }}.</p>
@@ -23,3 +23,6 @@
 <form method="post" action="{{ route('logout') }}" style="margin-top:1.5rem">@csrf<button class="btn-auth" type="submit">Cerrar sesión</button></form>
 </div>
 @endsection
+@push('scripts')
+<script src="/js/access-code.js?v={{ filemtime(public_path('js/access-code.js')) }}" defer></script>
+@endpush

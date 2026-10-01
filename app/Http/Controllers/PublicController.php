@@ -43,7 +43,9 @@ class PublicController extends Controller
         $reservas->procesarReservasAutomaticas();
         $espacios = $this->espaciosPlano();
         $disponibilidadPorEspacio = $espacios->mapWithKeys(fn ($e) => [$e->id => $disponibilidad->estadoParaTarjeta($e)]);
-        return response()->view('public.disponibilidad', compact('espacios', 'disponibilidadPorEspacio'))->header('Cache-Control', 'no-store');
+        $vehiculoTipos = VehiculoTipo::where('activo', true)->orderBy('nombre')->get();
+        $tarifasIniciales = \App\Services\TarifaResumen::opciones($vehiculoTipos);
+        return response()->view('public.disponibilidad', compact('espacios', 'disponibilidadPorEspacio', 'vehiculoTipos', 'tarifasIniciales'))->header('Cache-Control', 'no-store');
     }
 
     public function estadoPlano(ReservaService $reservas, ReservaDisponibilidadService $disponibilidad)

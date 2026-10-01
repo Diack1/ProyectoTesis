@@ -18,6 +18,7 @@
 @endif
 
 <div class="form-card">
+    <p>Usa el correo real del trabajador. Al iniciar sesión por primera vez deberá activarlo con un código enviado a ese correo. Después ingresará con su correo y contraseña.</p>
     <form action="{{ route('superadmin.admins.store') }}" method="POST">
         @csrf
 
@@ -46,7 +47,7 @@
         <div class="form-grid">
             <div class="form-group">
                 <label for="password">Contraseña</label>
-                <input type="password"
+                <input type="password" autocomplete="new-password" minlength="8"
                     name="password"
                     id="password"
                     class="form-control"
@@ -56,7 +57,7 @@
 
             <div class="form-group">
                 <label for="password_confirmation">Confirmar contraseña</label>
-                <input type="password"
+                <input type="password" autocomplete="new-password" minlength="8"
                     name="password_confirmation"
                     id="password_confirmation"
                     class="form-control"
@@ -72,7 +73,7 @@
             </select>
 
             <small class="form-help">
-                El operador monitorea espacios y revisa pagos. El administrador también configura el negocio.
+                Recepción gestiona entradas, salidas, reservas y pagos. Solo el dueño configura el negocio y administra las cuentas del personal.
             </small>
         </div>
 

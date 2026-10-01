@@ -13,7 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->web(append: [\App\Http\Middleware\ActiveAccount::class, \Illuminate\Session\Middleware\AuthenticateSession::class, \App\Http\Middleware\RequireStaffAccess::class, \App\Http\Middleware\SecurityTransaction::class]);
+        $middleware->web(append: [\App\Http\Middleware\ActiveAccount::class, \Illuminate\Session\Middleware\AuthenticateSession::class, \App\Http\Middleware\RequireStaffActivation::class, \App\Http\Middleware\RequireStaffAccess::class, \App\Http\Middleware\SecurityTransaction::class]);
         // Local port-forwarding proxies terminate HTTPS before reaching PHP.
         // Trust only loopback peers, not arbitrary clients on the network.
         $middleware->trustProxies(

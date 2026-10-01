@@ -53,7 +53,7 @@ class RegisteredUserController extends Controller
         catch (\Illuminate\Validation\ValidationException $e) {
             return redirect()->route('verification.notice')->withErrors($e->errors());
         } catch (\Symfony\Component\Mailer\Exception\TransportExceptionInterface $e) {
-            return redirect()->route('verification.notice')->withErrors(['code'=>'Tu cuenta está creada, pero no pudimos enviar el código. Solicítalo nuevamente.']);
+            return redirect()->route('verification.notice')->withErrors(['code'=>'Tu cuenta está creada. '.\App\Services\MailDeliveryIssue::message($e)]);
         }
         return redirect()->route('verification.notice')->with('status','Enviamos un código a tu correo. Revisa también spam.');
     }

@@ -10,7 +10,7 @@ class CustomerVerificationService {
         return hash_hmac('sha256', $user->id.'|'.$user->email.'|'.$code, config('app.key'));
     }
     public function send(User $user): void {
-        abort_unless($user->esUsuario() && $user->activo,403);
+        abort_unless($user->tieneRol('user', 'admin', 'operador') && $user->activo,403);
         if ($user->hasVerifiedEmail()) { return; }
         if (!app(StaffAccessService::class)->mailReady()) {
             throw ValidationException::withMessages(['code'=>'El envío de correo no está disponible. Tu cuenta está creada; podrás solicitar el código cuando se restablezca.']);
@@ -23,7 +23,7 @@ class CustomerVerificationService {
         DB::transaction(function() use($user) {
             $user=User::lockForUpdate()->findOrFail($user->id);
             if ($user->hasVerifiedEmail()) { return; }
-            abort_unless($user->esUsuario() && $user->activo,403);
+            abort_unless($user->tieneRol('user', 'admin', 'operador') && $user->activo,403);
             $code=(string)random_int(100000,999999);
             $user->forceFill(['verification_code_hash'=>$this->hash($user,$code),
                 'verification_code_expires_at'=>now()->addMinutes(10),'verification_code_attempts'=>0])->save();
@@ -33,7 +33,7 @@ class CustomerVerificationService {
     public function verify(User $user, string $code): bool {
         return DB::transaction(function() use($user,$code) {
             $user=User::lockForUpdate()->findOrFail($user->id);
-            if (!$user->esUsuario() || !$user->activo || $user->hasVerifiedEmail() || !$user->verification_code_hash
+            if (!$user->tieneRol('user', 'admin', 'operador') || !$user->activo || $user->hasVerifiedEmail() || !$user->verification_code_hash
                 || !$user->verification_code_expires_at?->isFuture() || $user->verification_code_attempts>=5) { return false; }
             $user->increment('verification_code_attempts');
             if (!hash_equals($user->verification_code_hash,$this->hash($user,$code))) { return false; }

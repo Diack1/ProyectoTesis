@@ -4,7 +4,7 @@
 
 @section('content')
 
-<section class="page-content">
+<section class="page-content reservations-portal">
     <div class="container">
 
         @if(session('success'))
@@ -19,7 +19,7 @@
         </div>
         @endif
 
-        <div class="page-card">
+        <div class="page-card reservations-heading">
             <div class="flex-between flex-wrap">
                 <div>
                     <span class="badge badge-info">Portal de usuario</span>
@@ -39,12 +39,18 @@
             </div>
         </div>
 
+        <nav class="reservation-filters" aria-label="Filtrar reservas">
+        @foreach(['todas'=>'Todas','activas'=>'En curso','finalizadas'=>'Finalizadas','canceladas'=>'Canceladas / vencidas'] as $key=>$label)
+            <a href="{{ route('reservas.index', ['estado'=>$key]) }}" class="{{ $filtro === $key ? 'active' : '' }}" @if($filtro === $key) aria-current="page" @endif><span>{{ $label }}</span><strong>{{ $conteos[$key] }}</strong></a>
+        @endforeach
+        </nav>
         @if($reservas->count() > 0)
         <div class="reservation-cards">
         @foreach($reservas as $reserva)
-        <article class="reservation-item">
+        <article class="reservation-item" data-status="{{ $reserva->estado }}">
         <div><span class="badge badge-{{ $reserva->estado }}">{{ $reserva->estado === 'pendiente_pago' && !$reserva->expires_at ? 'Pago en revisión' : ucfirst(str_replace('_',' ',$reserva->estado)) }}</span>
         <h2>{{ $reserva->placa ?? 'Sin placa registrada' }} · Espacio {{ $reserva->espacio->codigo ?? '-' }}</h2>
+        <p class="reservation-meta"><x-icon name="clock"/>{{ $reserva->fecha_reserva->format('d/m/Y') }} <span>·</span> {{ $reserva->tipo_vehiculo_nombre ?? 'Vehículo' }} <span>·</span> {{ \App\Services\TarifaResumen::tiempo((int)$reserva->duracion_minutos) }}</p>
         <details class="reservation-more"><summary>Ver detalles</summary><p class="reservation-code">{{ $reserva->codigo_reserva }}</p>
         <dl><div><dt>Fecha de llegada</dt><dd>{{ $reserva->fecha_reserva->format('d/m/Y') }}</dd></div>
         <div><dt>Llegada prevista</dt><dd>{{ $reserva->reserva_inmediata ? ($reserva->pagado_at ? 'Antes de '.$reserva->limite_llegada->format('H:i') : '15 min desde aprobación') : substr($reserva->hora_inicio,0,5) }}</dd></div>
@@ -61,7 +67,7 @@
                                 <div class="reservation-buttons">
                                 @if($reserva->estado === 'pendiente_pago')
                                 <a href="{{ route('pagos.show', $reserva) }}" class="btn btn-primary btn-sm">
-                                    Ver pago
+                                    {{ $reserva->expires_at ? 'Pagar reserva' : 'Ver estado del pago' }}
                                 </a>
 
                                 @if($reserva->expires_at)<form action="{{ route('reservas.cancelar', $reserva) }}" method="POST"
@@ -94,10 +100,10 @@
         </div>
         @else
         <div class="page-card">
-            <h2 style="margin-top:0;">Todavía no tienes reservas registradas</h2>
+            <h2 style="margin-top:0;">No hay reservas en esta categoría</h2>
 
             <p class="section-subtitle">
-                Puedes revisar la disponibilidad actual de espacios y seleccionar una tarjeta libre
+                Puedes revisar la disponibilidad actual de espacios y seleccionar un espacio libre
                 para iniciar una nueva reserva.
             </p>
 

@@ -11,6 +11,31 @@ class ReservaPlacaTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_reservation_filters_and_counts_only_include_the_current_customer(): void
+    {
+        $user = User::factory()->create();
+        $this->reservation(['user_id'=>$user->id, 'estado'=>'finalizada', 'placa'=>'OWN123']);
+        $this->reservation(['user_id'=>$user->id, 'estado'=>'cancelada', 'placa'=>'CANCEL1']);
+        $this->reservation(['estado'=>'finalizada', 'placa'=>'PRIVATE1']);
+        $this->actingAs($user)->get(route('reservas.index',['estado'=>'finalizadas']))
+            ->assertOk()->assertSee('OWN123')->assertDontSee('CANCEL1')->assertDontSee('PRIVATE1')
+            ->assertViewHas('conteos', fn ($counts) => $counts['todas'] === 2 && $counts['finalizadas'] === 1 && $counts['canceladas'] === 1);
+        $this->get(route('reservas.index',['estado'=>'canceladas']))->assertOk()->assertSee('CANCEL1')->assertDontSee('OWN123');
+    }
+
+    public function test_review_cannot_read_a_draft_belonging_to_another_user(): void
+    {
+        $space = Espacio::create(['codigo'=>'E01', 'estado_actual'=>'libre', 'activo'=>true]);
+        $owner = User::factory()->create();
+        $visitor = User::factory()->create();
+        $this->actingAs($visitor)->withSession(['reservation_review.'.$space->id => [
+            'user_id'=>$owner->id, 'expires_at'=>now()->addMinutes(30)->timestamp,
+            'data'=>['placa'=>'PRIVATE123'],
+        ]])->get(route('reservas.revisar', $space))->assertRedirect(route('reservas.create', $space))->assertDontSee('PRIVATE123');
+        $this->flushSession();
+        $this->get(route('reservas.revisar', $space))->assertRedirect(route('reservas.create', $space));
+    }
+
     public function test_web_requires_plate_at_both_steps_and_preserves_normalized_plate(): void
     {
         $this->travelTo(now()->startOfDay()->addHours(8));
@@ -28,9 +53,16 @@ class ReservaPlacaTest extends TestCase
         }
         $this->assertDatabaseCount('reservas', 0);
         $data['placa'] = ' abC-123 ';
-        $this->post(route('reservas.confirmar', $space), $data)->assertOk()
+        $this->post(route('reservas.confirmar', $space), $data)->assertStatus(303)->assertRedirect(route('reservas.revisar', $space));
+        $this->get(route('reservas.revisar', $space))->assertOk()
             ->assertSee('name="placa" value="ABC123"', false);
+        $this->get(route('reservas.revisar', $space))->assertOk();
+        $this->assertDatabaseCount('reservas', 0);
+        $this->travel(31)->minutes();
+        $this->get(route('reservas.revisar', $space))->assertRedirect(route('reservas.create', $space));
+        $this->post(route('reservas.confirmar', $space), $data)->assertStatus(303);
         $this->post(route('reservas.store', $space), $data)->assertSessionHasNoErrors();
+        $this->assertFalse(session()->has('reservation_review.'.$space->id));
         $r = Reserva::firstOrFail();
         $this->assertSame('ABC123', $r->placa);
         $this->assertSame('pendiente_pago', $r->estado);

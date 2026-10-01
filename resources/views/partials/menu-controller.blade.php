@@ -3,7 +3,8 @@
  let active = null, backdrop = null;
  const close = (restore = true) => {
   if (!active) return;
-  const {button, menu} = active;
+  const {button, menu, placeholder} = active;
+  placeholder.replaceWith(menu);
   menu.classList.remove('is-open'); button.setAttribute('aria-expanded', 'false');
   menu.removeAttribute('role'); menu.removeAttribute('aria-modal');
   document.body.classList.remove('drawer-open'); backdrop?.remove(); backdrop = null; active = null;
@@ -16,7 +17,9 @@
    close(false);
    const menu = document.getElementById(button.dataset.menuToggle);
    if (!menu) return;
-   active = {button, menu}; menu.classList.add('is-open'); button.setAttribute('aria-expanded', 'true');
+   const placeholder = document.createComment('menu-position');
+   menu.before(placeholder); document.body.append(menu);
+   active = {button, menu, placeholder}; menu.classList.add('is-open'); button.setAttribute('aria-expanded', 'true');
    menu.setAttribute('role', 'dialog'); menu.setAttribute('aria-modal', 'true');
    if (!menu.hasAttribute('aria-label')) menu.setAttribute('aria-label', 'Menú principal');
    document.body.classList.add('drawer-open');

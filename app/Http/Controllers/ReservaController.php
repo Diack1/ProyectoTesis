@@ -31,18 +31,27 @@ class ReservaController extends Controller
         return $placa;
     }
 
-    public function index(ReservaService $reservaService)
+    public function index(ReservaService $reservaService, Request $request)
     {
         $reservaService->procesarReservasAutomaticas();
 
-        $reservas = Reserva::with('espacio','estadia')
-            ->where('user_id', Auth::id())
+        $filtro = $request->validate(['estado' => 'nullable|in:todas,activas,finalizadas,canceladas'])['estado'] ?? 'todas';
+        $base = Reserva::where('user_id', Auth::id());
+        $groups = [
+            'activas' => ['pendiente', 'pendiente_pago', 'confirmada', 'reembolso_solicitado'],
+            'finalizadas' => ['finalizada', 'reembolso_aprobado', 'reembolso_rechazado'],
+            'canceladas' => ['cancelada', 'expirada'],
+        ];
+        $conteos = ['todas' => (clone $base)->count()];
+        foreach ($groups as $key => $states) $conteos[$key] = (clone $base)->whereIn('estado', $states)->count();
+        $reservas = $base->with('espacio','estadia')
+            ->when($filtro !== 'todas', fn ($q) => $q->whereIn('estado', $groups[$filtro]))
             ->orderByRaw("CASE WHEN estado IN ('pendiente_pago', 'confirmada', 'reembolso_solicitado') THEN 0 ELSE 1 END")
             ->orderBy('fecha_reserva', 'desc')
             ->orderBy('hora_inicio', 'desc')
-            ->paginate(10);
+            ->paginate(10)->withQueryString();
 
-        return view('reservas.index', compact('reservas'));
+        return view('reservas.index', compact('reservas', 'conteos', 'filtro'));
     }
 
     // SOLICITUD CREAR
@@ -77,15 +86,15 @@ class ReservaController extends Controller
         $fechaActual = now('America/Lima')->format('Y-m-d');
         $horaActual = now('America/Lima')->addMinutes(15)->format('H:i');
         $sensorActual = null;
-        $tarifasFrontend = $this->tarifasParaFormulario($vehiculoTipos);
 
+        $tarifasIniciales = \App\Services\TarifaResumen::opciones($vehiculoTipos);
         return view('reservas.create', compact(
+            'tarifasIniciales',
             'espacio',
             'vehiculoTipos',
             'fechaActual',
             'horaActual',
-            'sensorActual',
-            'tarifasFrontend'
+            'sensorActual'
         ));
     }
 
@@ -93,6 +102,13 @@ class ReservaController extends Controller
 
     public function confirmar(Request $request, Espacio $espacio, TarifaService $tarifaService)
     {
+        if ($request->isMethod('get')) {
+            $draft = $request->session()->get('reservation_review.'.$espacio->id);
+            if (!$draft || $draft['user_id'] !== $request->user()->id || $draft['expires_at'] < now()->timestamp) {
+                return redirect()->route('reservas.create', $espacio)->with('error', 'Vuelve a ingresar los datos para revisar tu reserva.');
+            }
+            $request->merge($draft['data']);
+        }
         $placa = $this->validarPlaca($request);
         if (! app(ReservaDisponibilidadService::class)->estadoParaTarjeta($espacio)['puede_reservar']) {
             return redirect()
@@ -140,6 +156,14 @@ class ReservaController extends Controller
                 ->withInput();
         }
 
+
+        if ($request->isMethod('post')) {
+            $request->session()->put('reservation_review.'.$espacio->id, [
+                'user_id' => $request->user()->id, 'expires_at' => now()->addMinutes(30)->timestamp,
+                'data' => ['placa' => $placa, 'vehiculo_tipo_id' => $vehiculoTipo->id, 'duracion_minutos' => $duracionMinutos],
+            ]);
+            return redirect()->route('reservas.revisar', $espacio, 303);
+        }
 
         return response()
             ->view('reservas.confirmacion', compact(
@@ -265,6 +289,7 @@ class ReservaController extends Controller
             return $reserva;
         });
 
+        $request->session()->forget('reservation_review.'.$espacio->id);
         return redirect()
             ->route('pagos.show', $reserva)
             ->with('success', 'Reserva generada correctamente. Consulta el plazo de pago indicado en tu reserva.');
@@ -375,32 +400,4 @@ class ReservaController extends Controller
             ->with('success', 'Solicitud de reembolso registrada correctamente. La administracion revisara tu caso.');
     }
 
-    private function tarifasParaFormulario($vehiculoTipos): array
-    {
-        return $vehiculoTipos
-            ->mapWithKeys(function ($tipo) {
-                $tarifas = $tipo->tarifas
-                    ->where('activo', true)
-                    ->sortByDesc('prioridad')
-                    ->values()
-                    ->map(fn ($tarifa) => [
-                        'id' => $tarifa->id,
-                        'nombre' => $tarifa->nombre,
-                        'tipo_tarifa' => $tarifa->tipo_tarifa,
-                        'monto_base' => (float) $tarifa->monto_base,
-                        'monto_por_hora' => (float) $tarifa->monto_por_hora,
-                        'monto_por_fraccion' => $tarifa->monto_por_fraccion !== null ? (float) $tarifa->monto_por_fraccion : null,
-                        'minutos_fraccion' => $tarifa->minutos_fraccion !== null ? (int) $tarifa->minutos_fraccion : null,
-                        'tiempo_minimo_minutos' => (int) $tarifa->tiempo_minimo_minutos,
-                        'tolerancia_minutos' => (int) $tarifa->tolerancia_minutos,
-                        'penalidad_por_fraccion' => (float) $tarifa->penalidad_por_fraccion,
-                        'hora_inicio' => $tarifa->hora_inicio ? substr($tarifa->hora_inicio, 0, 8) : null,
-                        'hora_fin' => $tarifa->hora_fin ? substr($tarifa->hora_fin, 0, 8) : null,
-                        'prioridad' => (int) $tarifa->prioridad,
-                    ]);
-
-                return [$tipo->id => $tarifas->all()];
-            })
-            ->all();
-    }
 }

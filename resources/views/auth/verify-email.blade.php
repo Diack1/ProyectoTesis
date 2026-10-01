@@ -3,7 +3,7 @@
 @section('content')
 <div class="auth-card" style="width:100%;overflow-wrap:anywhere">
 <h1>Verifica tu correo</h1>
-<p>Para activar las reservas, confirma el correo de tu cuenta: <strong>{{ auth()->user()->email }}</strong>.</p>
+<p>Activa tu cuenta una sola vez confirmando tu correo: <strong>{{ auth()->user()->email }}</strong>.</p>
 @if(session('status'))<p role="status">{{ session('status') }}</p>@endif
 @foreach($errors->all() as $error)<p role="alert">{{ $error }}</p>@endforeach
 <form method="post" action="{{ route('verification.verify') }}">@csrf

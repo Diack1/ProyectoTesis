@@ -9,11 +9,12 @@
 @if(auth()->user()->esSuperAdmin())
 
 <a href="{{ route('admin.reportes.index') }}" class="{{ request()->routeIs('admin.reportes.*')?'active':'' }}"><x-icon name="chart"/>Reportes</a>
-<details @if(request()->routeIs('admin.espacios.*','admin.tarifas.*','admin.pagos.configuracion*','admin.sensores.*','admin.seguridad','superadmin.*')) open @endif><summary>Configuración</summary>
-@foreach(['admin.espacios.index'=>'Espacios','admin.tarifas.index'=>'Tarifas','admin.pagos.configuracion'=>'Formas de pago','superadmin.dashboard'=>'Personal','admin.sensores.index'=>'Sensores','admin.seguridad'=>'Seguridad'] as $ruta=>$nombre)
+<a href="{{ route('superadmin.dashboard') }}" class="{{ request()->routeIs('superadmin.*')?'active':'' }}"><x-icon name="users"/>Personal</a>
+<details @if(request()->routeIs('admin.espacios.*','admin.tarifas.*','admin.pagos.configuracion*','admin.sensores.*','admin.seguridad')) open @endif><summary>Configuración</summary>
+@foreach(['admin.espacios.index'=>'Espacios','admin.tarifas.index'=>'Tarifas','admin.pagos.configuracion'=>'Formas de pago','admin.sensores.index'=>'Sensores','admin.seguridad'=>'Seguridad'] as $ruta=>$nombre)
 <a href="{{ route($ruta) }}" class="{{ request()->routeIs($ruta)?'active':'' }}">{{ $nombre }}</a>
 @endforeach
 </details>
 @endif
-<div class="menu-footer"><a href="{{ route(app(\App\Services\StaffAccessService::class)->entryRoute()) }}">Seguridad de mi cuenta</a><a href="{{ route('public.home') }}"><x-icon name="arrow"/>Ver página pública</a><form action="{{ route('logout') }}" method="POST">@csrf<button type="submit" class="danger"><x-icon name="exit"/>Cerrar sesión</button></form></div>
+<div class="menu-footer"><a href="{{ route('profile.edit') }}">Seguridad de mi cuenta</a><a href="{{ route('public.home') }}"><x-icon name="arrow"/>Ver página pública</a><form action="{{ route('logout') }}" method="POST">@csrf<button type="submit" class="danger"><x-icon name="exit"/>Cerrar sesión</button></form></div>
 </nav></aside>

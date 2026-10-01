@@ -95,3 +95,64 @@
 }
 @keyframes drawer-enter{from{transform:translateX(-100%)}to{transform:translateX(0)}}
 @media(prefers-reduced-motion:reduce){.public-refined .public-menu.is-open,.admin-refined .admin-menu.is-open{animation:none}}
+
+/* The trigger and drawer share the left edge across all roles. */
+@media(max-width:760px){
+ .public-refined .public-navbar-inner{justify-content:flex-start;gap:14px}
+ .public-refined .public-menu-toggle{order:-1;margin-left:0;margin-right:0;flex-shrink:0}
+ .admin-refined .admin-sidebar{justify-content:flex-start;gap:14px}
+ .admin-refined .admin-mobile-toggle{order:-1;margin-left:0;margin-right:0;flex-shrink:0}
+ .admin-refined .admin-brand{margin-right:auto}
+}
+
+/* Drawers are portalled to body so filtered headers cannot trap their stacking context. */
+@media(max-width:760px){
+ body.atmosphere .public-menu.is-open,body.atmosphere .admin-menu.is-open{background:#091728;opacity:1;isolation:isolate}
+ body.atmosphere .public-menu.is-open a{display:flex;padding:14px 16px;color:#edf4ff;text-decoration:none;border-radius:10px}
+ body.atmosphere .public-menu.is-open a.active{background:#20334c}
+ .public-refined .parking-lot,.admin-refined [data-parking]:not(.is-list) .parking-lot{min-width:0;width:100%;height:1060px;border-width:3px}
+ .public-refined .parking-scroll,.admin-refined .parking-scroll{overflow-x:hidden}
+ .public-refined .parking-space{text-decoration:none}
+ [data-parking]:not(.is-list) .parking-space{left:var(--mx,var(--x));top:var(--my,var(--y));width:29%;height:5.1%;min-height:44px}
+ [data-parking]:not(.is-list) .parking-space small{font-size:9px;line-height:1.15;text-align:center;overflow-wrap:anywhere}
+ [data-parking]:not(.is-list) .lot-office{left:3%;top:24%;width:29%;height:15%}
+ [data-parking]:not(.is-list) .lot-services{right:3%;bottom:2%;width:29%;height:7%}
+ [data-parking]:not(.is-list) .lot-lane{left:35%;width:29%;top:48%;font-size:10px;line-height:2;overflow-wrap:anywhere}
+ [data-parking]:not(.is-list) .lot-gate{left:3%;width:60%;font-size:10px;padding:12px 2px}
+ .public-refined .parking-scroll:after{display:none}
+ body.atmosphere .space-dialog{box-sizing:border-box;width:calc(100% - 24px);max-width:520px;max-height:calc(100dvh - 24px);margin:auto;padding:16px;overflow:auto;overscroll-behavior:contain}
+ .space-dialog .booking-preferences{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+ .space-dialog :is(select,.space-quote){width:100%;min-width:0;box-sizing:border-box}
+ .space-dialog [data-quote-note]{overflow-wrap:anywhere}
+ .admin-refined .admin-user-name{overflow-wrap:anywhere}.admin-refined .admin-user-box{max-width:100%}
+}
+@media(max-width:760px){[data-slot="1"]{--mx:3%;--my:2%}}
+@media(max-width:760px){[data-slot="2"]{--mx:35%;--my:2%}}
+@media(max-width:760px){[data-slot="3"]{--mx:67%;--my:2%}}
+@media(max-width:760px){[data-slot="4"]{--mx:3%;--my:8%}}
+@media(max-width:760px){[data-slot="5"]{--mx:35%;--my:8%}}
+@media(max-width:760px){[data-slot="6"]{--mx:67%;--my:8%}}
+@media(max-width:760px){[data-slot="7"]{--mx:3%;--my:14%}}
+@media(max-width:760px){[data-slot="8"]{--mx:35%;--my:14%}}
+@media(max-width:760px){[data-slot="9"]{--mx:67%;--my:14%}}
+@media(max-width:760px){[data-slot="10"]{--mx:67%;--my:24%}}
+@media(max-width:760px){[data-slot="11"]{--mx:67%;--my:30%}}
+@media(max-width:760px){[data-slot="12"]{--mx:67%;--my:36%}}
+@media(max-width:760px){[data-slot="13"]{--mx:67%;--my:42%}}
+@media(max-width:760px){[data-slot="14"]{--mx:67%;--my:48%}}
+@media(max-width:760px){[data-slot="15"]{--mx:67%;--my:54%}}
+@media(max-width:760px){[data-slot="16"]{--mx:67%;--my:60%}}
+@media(max-width:760px){[data-slot="17"]{--mx:67%;--my:66%}}
+@media(max-width:760px){[data-slot="18"]{--mx:67%;--my:72%}}
+@media(max-width:760px){[data-slot="19"]{--mx:67%;--my:78%}}
+@media(max-width:760px){[data-slot="20"]{--mx:67%;--my:84%}}
+@media(max-width:760px){[data-slot="21"]{--mx:3%;--my:42%}}
+@media(max-width:760px){[data-slot="22"]{--mx:3%;--my:48%}}
+@media(max-width:760px){[data-slot="23"]{--mx:3%;--my:54%}}
+@media(max-width:760px){[data-slot="24"]{--mx:3%;--my:60%}}
+@media(max-width:760px){[data-slot="25"]{--mx:3%;--my:66%}}
+@media(max-width:760px){[data-slot="26"]{--mx:3%;--my:72%}}
+@media(max-width:760px){[data-slot="27"]{--mx:3%;--my:78%}}
+@media(max-width:760px){[data-slot="28"]{--mx:35%;--my:26%}}
+@media(max-width:760px){[data-slot="29"]{--mx:35%;--my:32%}}
+@media(max-width:760px){[data-slot="30"]{--mx:35%;--my:38%}}

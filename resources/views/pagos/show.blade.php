@@ -33,7 +33,7 @@
 <div class="form-group"><label for="metodo_pago">Medio de pago</label><select id="metodo_pago" name="metodo_pago" class="form-control" required>
 @foreach(['yape','plin'] as $medio) @if($configuracion->{'qr_'.$medio})<option value="{{ $medio }}" @selected(old('metodo_pago')===$medio)>{{ strtoupper($medio) }}</option>@endif @endforeach
 </select></div>
-<div class="form-group"><label for="referencia_pago">Número de operación</label><input id="referencia_pago" name="referencia_pago" class="form-control" maxlength="80" value="{{ old('referencia_pago') }}"></div>
+<details class="payment-reference" @if(old('referencia_pago') || $errors->has('referencia_pago')) open @endif><summary>No tengo captura: ingresar número de operación</summary><div class="form-group"><label for="referencia_pago">Número de operación del comprobante</label><input id="referencia_pago" name="referencia_pago" class="form-control" maxlength="80" value="{{ old('referencia_pago') }}"><small>Si adjuntas una captura, puedes dejarlo vacío.</small></div></details>
 <div class="form-group"><label for="comprobante">Captura del pago (JPG, PNG o WebP, máximo 5 MB)</label><input id="comprobante" type="file" name="comprobante" accept="image/jpeg,image/png,image/webp"></div>
 <button class="btn btn-primary" type="submit">Enviar para revisión</button>
 </form>

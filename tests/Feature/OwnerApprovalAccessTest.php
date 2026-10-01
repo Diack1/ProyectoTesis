@@ -29,6 +29,20 @@ class OwnerApprovalAccessTest extends TestCase
         $this->post('/staff-access/verify', ['code'=>$code])->assertRedirect(route('admin.dashboard'));
     }
 
+    public function test_rejected_mail_credentials_do_not_grant_access_or_expose_details(): void
+    {
+        $owner = User::factory()->create(['role'=>'super_admin']);
+        \Illuminate\Support\Facades\Log::spy();
+        Notification::shouldReceive('send')->once()->andThrow(new \Symfony\Component\Mailer\Exception\TransportException('535 credentials rejected private-test-value'));
+        $this->actingAs($owner)->post('/staff-access/request')->assertSessionHasErrors('access');
+        $this->assertStringNotContainsString('private-test-value', session('errors')->first('access'));
+        $this->assertStringContainsString('credenciales', session('errors')->first('access'));
+        $this->assertDatabaseCount('staff_access_requests', 0);
+        $this->assertSame(0, \Illuminate\Support\Facades\RateLimiter::attempts('staff-code-send:'.$owner->id.':hour'));
+        $this->get('/admin')->assertRedirect(route('staff-access.show'));
+        \Illuminate\Support\Facades\Log::shouldHaveReceived('warning')->once()->with('access_mail_failed', ['reason'=>'authentication_rejected']);
+    }
+
     public function test_owner_email_code_is_required_and_totp_is_removed(): void
     {
         $owner = User::factory()->create(['role'=>'super_admin']);
@@ -44,22 +58,21 @@ class OwnerApprovalAccessTest extends TestCase
         $this->actingAs($owner)->get('/admin')->assertRedirect(route('staff-access.show'));
     }
 
-    public function test_staff_code_goes_only_to_owner_and_is_bound_to_session(): void
+    public function test_staff_activates_own_email_once_then_logs_in_without_owner_code(): void
     {
-        $owner = User::factory()->create(['role'=>'super_admin']);
-        $staff = User::factory()->create(['role'=>'admin']);
-        $this->post('/login',['email'=>$staff->email,'password'=>'password'])->assertRedirect(route('staff-access.show'));
-        $entry = StaffAccessRequest::first();
-        $nonce = session('staff_access_nonce');
-        $code = Notification::sent(new \Illuminate\Notifications\AnonymousNotifiable, StaffAccessMail::class)->last()->code;
-        Notification::assertSentOnDemand(StaffAccessMail::class, fn($mail,$channels,$recipient)=>$mail->code === $code && !$mail->isOwner && $recipient->routes['mail'] === $owner->email);
-        $this->get('/admin')->assertRedirect(route('staff-access.show'));
-        $this->withSession(['staff_access_nonce'=>'different'])->post('/staff-access/verify',['code'=>$code])->assertSessionHasErrors('access');
-        $this->withSession(['staff_access_nonce'=>$nonce])->post('/staff-access/verify',['code'=>$code])->assertRedirect(route('admin.dashboard'));
-        $this->assertSame('consumed',$entry->fresh()->state);
-        $this->assertNull($entry->fresh()->code_hash);
+        $staff = User::factory()->unverified()->create(['role'=>'admin']);
+        $this->post('/login',['email'=>$staff->email,'password'=>'password'])->assertRedirect(route('verification.notice'));
+        $this->get('/admin')->assertRedirect(route('verification.notice'));
+        $mail = Notification::sent($staff, \App\Notifications\CustomerVerificationCode::class)->last();
+        $this->assertNotNull($mail);
+        $this->post('/verify-email',['code'=>$mail->code])->assertRedirect(route('admin.dashboard'));
         $this->get('/admin')->assertOk();
-        $this->post('/staff-access/verify',['code'=>$code])->assertSessionHasErrors('access');
+        $this->post('/logout');
+        Notification::fake();
+        $this->post('/login',['email'=>$staff->email,'password'=>'password'])->assertRedirect(route('admin.dashboard'));
+        Notification::assertNothingSent();
+        $this->get('/admin')->assertOk();
+        $this->post('/staff-access/request')->assertForbidden();
     }
 
     public function test_expired_code_and_five_wrong_attempts_cannot_grant_access(): void
@@ -83,8 +96,7 @@ class OwnerApprovalAccessTest extends TestCase
     public function test_changed_owner_invalidates_pending_code(): void
     {
         $owner = User::factory()->create(['role'=>'super_admin']);
-        $staff = User::factory()->create(['role'=>'operador']);
-        $this->actingAs($staff)->post('/staff-access/request');
+        $this->actingAs($owner)->post('/staff-access/request');
         $code = Notification::sent(new \Illuminate\Notifications\AnonymousNotifiable, StaffAccessMail::class)->last()->code;
         $owner->update(['email'=>'changed@example.test']);
         $this->post('/staff-access/verify',['code'=>$code])->assertSessionHasErrors('access');
@@ -92,12 +104,14 @@ class OwnerApprovalAccessTest extends TestCase
 
     public function test_mail_is_limited_and_customer_cannot_request_staff_access(): void
     {
-        User::factory()->create(['role'=>'super_admin']);
+        $owner = User::factory()->create(['role'=>'super_admin']);
         $this->actingAs(User::factory()->create(['role'=>'user']))->get('/staff-access')->assertForbidden();
         $this->post('/staff-access/request')->assertForbidden();
         $this->flushSession();
-        $this->actingAs(User::factory()->create(['role'=>'admin']))->post('/staff-access/request')->assertRedirect();
-        $this->post('/staff-access/request')->assertStatus(429);
+        $this->actingAs($owner)->post('/staff-access/request')->assertRedirect();
+        $this->post('/staff-access/request')->assertRedirect(route('staff-access.show'))->assertSessionHasErrors('access');
+        $this->get('/staff-access')->assertOk()->assertSee('Podrás solicitar otro código');
+        $this->assertDatabaseCount('staff_access_requests', 1);
     }
 
     public function test_owner_email_transfer_disables_customer_and_keeps_owner_password(): void
@@ -118,9 +132,8 @@ class OwnerApprovalAccessTest extends TestCase
 
     public function test_old_approval_cannot_bypass_code(): void
     {
-        User::factory()->create(['role'=>'super_admin']);
-        $staff = User::factory()->create(['role'=>'admin']);
-        $this->actingAs($staff)->post('/staff-access/request');
+        $owner = User::factory()->create(['role'=>'super_admin']);
+        $this->actingAs($owner)->post('/staff-access/request');
         StaffAccessRequest::first()->update(['state'=>'approved','kind'=>'staff_approval']);
         $this->post('/staff-access/verify',['code'=>'123456'])->assertSessionHasErrors('access');
         $this->get('/admin')->assertRedirect(route('staff-access.show'));

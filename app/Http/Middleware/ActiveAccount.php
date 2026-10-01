@@ -21,6 +21,8 @@ class ActiveAccount
         $response = $next($request);
         if ($authenticated) {
             $response->headers->set('Cache-Control', 'private, no-store');
+        } elseif ($request->routeIs('public.home', 'public.disponibilidad', 'public.tarifas')) {
+            $response->headers->set('Cache-Control', 'no-cache, private');
         }
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('X-Frame-Options', 'SAMEORIGIN');

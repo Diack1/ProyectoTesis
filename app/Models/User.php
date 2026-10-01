@@ -33,6 +33,7 @@ class User extends Authenticatable
      */
     protected $hidden = [
         'password',
+        'google_id',
         'verification_code_hash',
         'verification_code_expires_at',
         'verification_code_attempts',

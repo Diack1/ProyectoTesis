@@ -57,10 +57,6 @@ class AppServiceProvider extends ServiceProvider
         });
         RateLimiter::for('customer-verify', fn (Request $request) => Limit::perMinute(5)->by('customer-verify:'.$request->user()->id));
         RateLimiter::for('customer-code-send', fn (Request $request) => Limit::perMinute(5)->by('customer-code-send:'.$request->user()->id));
-        RateLimiter::for('access-mail', fn (Request $request) => [
-            Limit::perMinute(1)->by('access-mail:'.$request->user()->id),
-            Limit::perHour(10)->by('access-mail-hour:'.$request->user()->id),
-        ]);
         RateLimiter::for('account-registration', fn (Request $request) => Limit::perHour(10)->by($request->ip()));
         RateLimiter::for('booking-actions', fn (Request $request) => Limit::perMinute(10)->by((string) ($request->user()?->id ?? $request->ip())));
         RateLimiter::for('payment-upload', fn (Request $request) => Limit::perMinute(5)->by((string) ($request->user()?->id ?? $request->ip())));

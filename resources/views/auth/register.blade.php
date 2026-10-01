@@ -21,6 +21,7 @@
     </div>
     @endif
 
+    @include('partials.google-login')
     <form method="POST" action="{{ route('register') }}">
         @csrf
 

@@ -35,13 +35,13 @@
 
     .reservation-label {
         color: var(--color-muted);
-        font-weight: 800;
+        font-weight: 600;
     }
 
     .reservation-value {
         color: var(--color-primary);
-        font-weight: 800;
-        text-align: right;
+        font-weight: 600;
+        text-align: left;
     }
 
     .reservation-total {
@@ -80,8 +80,9 @@
 @endpush
 
 @section('content')
+@php($resumen = \App\Services\TarifaResumen::presentar($calculo))
 <section class="page-content">
-    <div class="container reservation-wrapper">
+    <div class="container reservation-wrapper reservation-review">
 
         <div class="page-card">
 
@@ -116,7 +117,7 @@
 
                 <div class="reservation-row">
                     <span class="reservation-label">Tipo de tarifa</span>
-                    <span class="reservation-value">{{ $calculo['tarifa']->tipo_tarifa }}</span>
+                    <span class="reservation-value">{{ $resumen['precio_unitario'] }}</span>
                 </div>
 
 
@@ -130,13 +131,9 @@
 
                 <div class="reservation-row">
                     <span class="reservation-label">Duración</span>
-                    <span class="reservation-value">{{ $duracionMinutos / 60 }} hora(s)</span>
+                    <span class="reservation-value">{{ \App\Services\TarifaResumen::tiempo($duracionMinutos) }}</span>
                 </div>
 
-                <div class="reservation-row">
-                    <span class="reservation-label">Tarifa por hora</span>
-                    <span class="reservation-value">S/ {{ number_format($calculo['tarifa_hora'], 2) }}</span>
-                </div>
 
                 <div class="reservation-row">
                     <span class="reservation-label">Monto total</span>
@@ -145,24 +142,19 @@
                     </span>
                 </div>
 
-                <div class="reservation-row">
-                    <span class="reservation-label">Tiempo mínimo de cobro</span>
-                    <span class="reservation-value">{{ $calculo['minutos_cobro'] }} minutos</span>
+                <div class="reservation-row reservation-explanation">
+                    <span class="reservation-label">Cómo se calcula</span>
+                    <span class="reservation-value">{{ $resumen['detalle_precio'] }}</span>
                 </div>
 
-                <div class="reservation-row">
-                    <span class="reservation-label">Tolerancia de exceso</span>
-                    <span class="reservation-value">{{ $calculo['tolerancia_minutos'] }} minutos</span>
-                </div>
-
-                <div class="reservation-row">
-                    <span class="reservation-label">Penalidad por exceso</span>
-                    <span class="reservation-value">S/ {{ number_format($calculo['penalidad_por_fraccion'], 2) }}</span>
+                <div class="reservation-row reservation-explanation">
+                    <span class="reservation-label">Si te quedas más tiempo</span>
+                    <span class="reservation-value">{{ $resumen['exceso'] }}</span>
                 </div>
 
             </div>
 
-            <div class="alert alert-info">El tiempo contratado comienza con la detección del vehículo estacionado o con el ticket en un espacio manual. Te esperamos durante 15 minutos desde la aprobación del pago. Si no llegas, se libera el espacio y el pago queda para revisión y posible reembolso manual.</div><div class="reservation-alert">
+            <div class="alert alert-info">Tu tiempo de estacionamiento comienza al registrar tu ingreso. Una vez aprobado el pago, tienes 15 minutos para llegar. Si no llegas dentro de ese plazo, el espacio se libera y el personal revisará si corresponde un reembolso.</div><div class="reservation-alert">
                 Al confirmar, el espacio quedará reservado temporalmente durante el plazo indicado en la pantalla de pago.
             </div>
 
@@ -204,13 +196,9 @@
         }
     });
 
-    window.addEventListener('pageshow', function(event) {
-        const navigationEntries = performance.getEntriesByType('navigation');
-        const navigationType = navigationEntries.length > 0 ? navigationEntries[0].type : null;
-
-        if (event.persisted || navigationType === 'back_forward') {
-            window.location.replace("{{ route('reservas.index') }}");
-        }
+    window.addEventListener('pageshow', function() {
+        const button = document.getElementById('btnConfirmarReserva');
+        if (button) { button.disabled = false; button.textContent = 'Confirmar y continuar al pago'; }
     });
 </script>
 

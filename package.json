@@ -3,7 +3,7 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "vite build",
+        "build": "vite build && node --input-type=module -e \"import { rmSync } from 'node:fs'; rmSync('public/hot', { force: true });\"",
         "dev": "vite"
     },
     "devDependencies": {

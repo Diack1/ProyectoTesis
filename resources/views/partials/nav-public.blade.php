@@ -13,12 +13,7 @@
                 Disponibilidad
             </a>
 
-            <a href="{{ route('public.tarifas') }}"
-                class="{{ request()->routeIs('public.tarifas') ? 'active' : '' }}">
-                Tarifas
-            </a>
-
-            @auth
+@auth
             @if(auth()->user()->role === 'user')
             <a href="{{ route('reservas.index') }}"
                 class="{{ request()->routeIs('reservas.*') ? 'active' : '' }}">

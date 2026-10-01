@@ -1,0 +1,15 @@
+/* One fixed, noninteractive decoration behind both layouts. */
+body.atmosphere{isolation:isolate}
+body.atmosphere.public-hex{background-image:radial-gradient(ellipse at 65% 0,#15395888,transparent 75%);background-size:100% 100vh}
+.site-background{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;background:radial-gradient(ellipse at 65% 40%,#1683ff0b,transparent 70%)}
+.hero-droplet{position:absolute;left:var(--x);top:0;width:2px;height:var(--length);background:linear-gradient(transparent,#1683ff88,#8bc9ffcc);border-radius:100%;box-shadow:0 0 10px #1683ff66;animation:site-droplet-fall var(--duration) var(--delay) linear infinite;animation-play-state:paused;opacity:0}
+.site-background.is-running .hero-droplet{animation-play-state:running}
+@keyframes site-droplet-fall{from{transform:translateY(-220px);opacity:0}15%,80%{opacity:.6}to{transform:translateY(100vh);opacity:0}}
+@media(max-width:760px){.hero-droplet:nth-child(n+15){display:none}.site-background{opacity:.8}}
+@media(prefers-reduced-motion:reduce){.hero-droplet{display:none}}
+@media print{.site-background{display:none}}
+
+/* Keep the same backdrop across section boundaries, including the final section. */
+body.atmosphere.public-refined main>section.section,body.atmosphere.public-refined main>section.section:last-child{background:transparent}
+body.atmosphere.public-refined .public-footer{background:#0b111bcc}
+@media(max-width:760px){.site-background{opacity:1}.hero-droplet{width:2px;box-shadow:0 0 12px #1683ff88}}

@@ -11,6 +11,10 @@ class RequireStaffAccess
     public function handle(Request $request, Closure $next)
     {
         $user = $request->user();
+        if ($user?->tieneRol('admin', 'operador', 'super_admin')
+            && config('security.require_staff_mfa') && !$request->hasSession()) {
+            return response()->json(['message' => 'Este acceso requiere una sesión. Usa la API IoT para sensores.'], 403);
+        }
         $mfa = app(StaffAccessService::class);
         if (! $user || ! $mfa->required($user)) {
             return $next($request);

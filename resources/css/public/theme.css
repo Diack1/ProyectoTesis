@@ -4,3 +4,5 @@
 @import "../shared/mobile.css";
 @import "../shared/pagination.css";
 @import "../shared/atmosphere.css";
+
+@import "./booking-experience.css";

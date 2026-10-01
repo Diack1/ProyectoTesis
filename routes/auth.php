@@ -9,6 +9,10 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
+    Route::get('auth/google', [\App\Http\Controllers\Auth\GoogleAuthController::class, 'redirect'])->middleware('throttle:10,1')->name('google.redirect');
+    Route::get('auth/google/callback', [\App\Http\Controllers\Auth\GoogleAuthController::class, 'callback'])->middleware('throttle:10,1')->name('google.callback');
+    Route::get('auth/google/link', [\App\Http\Controllers\Auth\GoogleAuthController::class, 'linkForm'])->name('google.link');
+    Route::post('auth/google/link', [\App\Http\Controllers\Auth\GoogleAuthController::class, 'link'])->middleware('throttle:5,1')->name('google.link.store');
     Route::get('register', [RegisteredUserController::class, 'create'])
         ->name('register');
 
@@ -50,6 +54,7 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware(['auth'])->prefix('staff-access')->name('staff-access.')->group(function () {
     Route::get('/', [\App\Http\Controllers\Auth\StaffAccessController::class, 'show'])->name('show');
-    Route::post('/request', [\App\Http\Controllers\Auth\StaffAccessController::class, 'start'])->middleware('throttle:access-mail')->name('start');
+    Route::get('/request', fn () => redirect()->route('staff-access.show'));
+    Route::post('/request', [\App\Http\Controllers\Auth\StaffAccessController::class, 'start'])->name('start');
     Route::post('/verify', [\App\Http\Controllers\Auth\StaffAccessController::class, 'verify'])->middleware('throttle:mfa')->name('verify');
 });

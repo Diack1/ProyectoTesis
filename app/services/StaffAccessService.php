@@ -17,7 +17,7 @@ class StaffAccessService
 
     public function required(User $user): bool
     {
-        return $user->tieneRol('admin', 'super_admin', 'operador') && (bool)config('security.require_staff_mfa');
+        return $user->esSuperAdmin() && (bool)config('security.require_staff_mfa');
     }
 
     public function fingerprint(User $user): string
@@ -39,18 +39,20 @@ class StaffAccessService
 
     public function start(Request $request): StaffAccessRequest
     {
+        abort_unless($request->user()->esSuperAdmin(), 403);
         $owner = $this->owner();
         if (!$owner || !$this->mailReady()) {
             throw ValidationException::withMessages(['access'=>'El envío de correos de acceso aún no está configurado. No se ha enviado ninguna solicitud.']);
         }
         $key = 'staff-code-send:'.$request->user()->id;
         if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($key, 1) || \Illuminate\Support\Facades\RateLimiter::tooManyAttempts($key.':hour', 10)) {
-            throw ValidationException::withMessages(['access'=>'Alcanzaste el límite de envíos. Espera antes de pedir otro código.']);
+            throw ValidationException::withMessages(['access'=>'Espera '.$this->retryAfter($request->user()).' segundos antes de solicitar otro código. Si ya recibiste uno, puedes introducirlo abajo.']);
         }
         \Illuminate\Support\Facades\RateLimiter::hit($key, 60);
         \Illuminate\Support\Facades\RateLimiter::hit($key.':hour', 3600);
         $nonce = $request->session()->get('staff_access_nonce') ?? Str::random(64);
         $request->session()->put('staff_access_nonce', $nonce);
+        try {
         $entry = DB::transaction(function () use ($request, $owner, $nonce) {
             $user = User::lockForUpdate()->findOrFail($request->user()->id);
             abort_unless($user->activo && $user->tieneRol('super_admin', 'admin', 'operador'), 403);
@@ -66,8 +68,22 @@ class StaffAccessService
             Notification::route('mail', $owner->email)->notify(new StaffAccessMail($entry->id, $code, $user->name, $user->id === $owner->id));
             return $entry;
         });
+        } catch (\Symfony\Component\Mailer\Exception\TransportExceptionInterface $e) {
+            \Illuminate\Support\Facades\RateLimiter::decrement($key.':hour');
+            throw $e;
+        }
         $request->session()->put('staff_access_request', $entry->id);
         return $entry;
+    }
+
+    public function retryAfter(User $user): int
+    {
+        $key = 'staff-code-send:'.$user->id;
+        $limiter = \Illuminate\Support\Facades\RateLimiter::class;
+        return max(
+            $limiter::tooManyAttempts($key, 1) ? $limiter::availableIn($key) : 0,
+            $limiter::tooManyAttempts($key.':hour', 10) ? $limiter::availableIn($key.':hour') : 0
+        );
     }
 
     public function current(Request $request): ?StaffAccessRequest
@@ -91,6 +107,7 @@ class StaffAccessService
 
     public function consume(Request $request, ?string $code = null): bool
     {
+        abort_unless($request->user()->esSuperAdmin(), 403);
         return DB::transaction(function () use ($request, $code) {
             $user = User::lockForUpdate()->findOrFail($request->user()->id);
             $entry = StaffAccessRequest::lockForUpdate()->find($request->session()->get('staff_access_request'));

@@ -105,7 +105,7 @@
                     <select name="vehiculo_tipo_id" id="vehiculo_tipo_id" required>
                         <option value="">Seleccione tipo de vehículo</option>
                         @foreach($vehiculoTipos as $tipo)
-                        <option value="{{ $tipo->id }}" {{ old('vehiculo_tipo_id') == $tipo->id ? 'selected' : '' }}>
+                        <option value="{{ $tipo->id }}" {{ old('vehiculo_tipo_id', request()->query('vehiculo_tipo_id')) == $tipo->id ? 'selected' : '' }}>
                             {{ $tipo->nombre }}
                         </option>
                         @endforeach
@@ -123,10 +123,10 @@
                 <div class="form-group">
                     <label for="duracion_minutos">Duración</label>
                     <select name="duracion_minutos" id="duracion_minutos" required>
-                        <option value="60" {{ old('duracion_minutos') == 60 ? 'selected' : '' }}>1 hora</option>
-                        <option value="120" {{ old('duracion_minutos') == 120 ? 'selected' : '' }}>2 horas</option>
-                        <option value="180" {{ old('duracion_minutos') == 180 ? 'selected' : '' }}>3 horas</option>
-                        <option value="240" {{ old('duracion_minutos') == 240 ? 'selected' : '' }}>4 horas</option>
+                        <option value="60" {{ old('duracion_minutos', request()->query('duracion_minutos')) == 60 ? 'selected' : '' }}>1 hora</option>
+                        <option value="120" {{ old('duracion_minutos', request()->query('duracion_minutos')) == 120 ? 'selected' : '' }}>2 horas</option>
+                        <option value="180" {{ old('duracion_minutos', request()->query('duracion_minutos')) == 180 ? 'selected' : '' }}>3 horas</option>
+                        <option value="240" {{ old('duracion_minutos', request()->query('duracion_minutos')) == 240 ? 'selected' : '' }}>4 horas</option>
                     </select>
                 </div>
 
@@ -134,7 +134,7 @@
                     <p><strong>Tarifa:</strong> <span data-role="tarifa-nombre">Selecciona un tipo de vehiculo.</span></p>
                     <p><strong>Duración:</strong> <span data-role="tarifa-duracion">-</span></p>
                     <p><strong>Monto estimado:</strong> <span data-role="tarifa-monto">-</span></p>
-                    <p><strong>Tolerancia de exceso:</strong> <span data-role="tarifa-tolerancia">-</span></p>
+                    <p><strong>Si te quedas más tiempo:</strong> <span data-role="tarifa-tolerancia">-</span></p>
                     <p class="booking-note">
                         Verás el total confirmado antes de pagar.
                     </p>
@@ -156,129 +156,43 @@
 </section>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const horaInput = document.getElementById('hora_inicio');
-        const formNuevaReserva = document.getElementById('formNuevaReserva');
-        const btnNuevaReserva = document.getElementById('btnNuevaReserva');
-        const vehiculoTipoInput = document.getElementById('vehiculo_tipo_id');
-        const duracionInput = document.getElementById('duracion_minutos');
-        const resumenTarifa = document.getElementById('resumenTarifaReserva');
-        const tarifasPorTipo = @json($tarifasFrontend ?? []);
-
-        function horaDentroDeRango(horaActual, horaInicio, horaFin) {
-            if (!horaInicio || !horaFin) {
-                return false;
-            }
-
-            if (horaInicio <= horaFin) {
-                return horaActual >= horaInicio && horaActual <= horaFin;
-            }
-
-            return horaActual >= horaInicio || horaActual <= horaFin;
-        }
-
-        function tarifaAplicable(tarifas, hora, duracion) {
-            const nocturna = tarifas.find(function(tarifa) {
-                return tarifa.tipo_tarifa === 'nocturna'
-                    && horaDentroDeRango(hora + ':00', tarifa.hora_inicio, tarifa.hora_fin);
-            });
-
-            if (nocturna) {
-                return nocturna;
-            }
-
-            if (duracion >= 1440) {
-                const diaria = tarifas.find(function(tarifa) {
-                    return tarifa.tipo_tarifa === 'diaria';
-                });
-
-                if (diaria) {
-                    return diaria;
-                }
-            }
-
-            return tarifas.find(function(tarifa) {
-                return tarifa.tipo_tarifa === 'por_hora';
-            }) || tarifas.find(function(tarifa) {
-                return tarifa.tipo_tarifa === 'fraccion';
-            }) || tarifas[0];
-        }
-
-        function calcularMonto(tarifa, duracion) {
-            const minutosCobro = Math.max(duracion, Number(tarifa.tiempo_minimo_minutos || 60));
-
-            if (tarifa.tipo_tarifa === 'diaria') {
-                return Number(tarifa.monto_base || 0) > 0
-                    ? Number(tarifa.monto_base)
-                    : Number(tarifa.monto_por_hora || 0) * 24;
-            }
-
-            if (tarifa.tipo_tarifa === 'nocturna' && Number(tarifa.monto_base || 0) > 0) {
-                return Number(tarifa.monto_base);
-            }
-
-            if (tarifa.tipo_tarifa === 'fraccion' && tarifa.monto_por_fraccion && tarifa.minutos_fraccion) {
-                return Math.ceil(minutosCobro / Number(tarifa.minutos_fraccion)) * Number(tarifa.monto_por_fraccion);
-            }
-
-            const horas = Math.floor(minutosCobro / 60) || 1;
-            const minutosRestantes = minutosCobro % 60;
-            let total = horas * Number(tarifa.monto_por_hora || 0);
-
-            if (minutosRestantes > 0) {
-                total += tarifa.monto_por_fraccion && tarifa.minutos_fraccion
-                    ? Math.ceil(minutosRestantes / Number(tarifa.minutos_fraccion)) * Number(tarifa.monto_por_fraccion)
-                    : Number(tarifa.monto_por_hora || 0);
-            }
-
-            return total;
-        }
-
-        function actualizarResumenTarifa() {
-            if (!resumenTarifa || !vehiculoTipoInput || !duracionInput) {
-                return;
-            }
-
-            const tipoId = vehiculoTipoInput.value;
-            const tarifas = tarifasPorTipo[tipoId] || [];
-            const duracion = Number(duracionInput.value || 0);
-            const tarifa = tarifaAplicable(tarifas, horaInput.value || '00:00', duracion);
-
-            const nombre = resumenTarifa.querySelector('[data-role="tarifa-nombre"]');
-            const duracionTexto = resumenTarifa.querySelector('[data-role="tarifa-duracion"]');
-            const monto = resumenTarifa.querySelector('[data-role="tarifa-monto"]');
-            const tolerancia = resumenTarifa.querySelector('[data-role="tarifa-tolerancia"]');
-
-            if (!tarifa) {
-                nombre.textContent = 'Selecciona un tipo de vehiculo.';
-                duracionTexto.textContent = '-';
-                monto.textContent = '-';
-                tolerancia.textContent = '-';
-                return;
-            }
-
-            nombre.textContent = tarifa.nombre;
-            duracionTexto.textContent = (duracion / 60) + ' hora(s)';
-            monto.textContent = 'S/ ' + calcularMonto(tarifa, duracion).toFixed(2);
-            tolerancia.textContent = Number(tarifa.tolerancia_minutos || 0) + ' minutos';
-        }
-
-        [vehiculoTipoInput, duracionInput, horaInput].forEach(function(input) {
-            if (input) {
-                input.addEventListener('change', actualizarResumenTarifa);
-                input.addEventListener('input', actualizarResumenTarifa);
-            }
-        });
-
-        actualizarResumenTarifa();
-
-        if (formNuevaReserva && btnNuevaReserva) {
-            formNuevaReserva.addEventListener('submit', function() {
-                btnNuevaReserva.disabled = true;
-                btnNuevaReserva.innerText = 'Procesando...';
-            });
-        }
-    });
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('formNuevaReserva');
+    const button = document.getElementById('btnNuevaReserva');
+    const vehicle = document.getElementById('vehiculo_tipo_id');
+    const duration = document.getElementById('duracion_minutos');
+    const summary = document.getElementById('resumenTarifaReserva');
+    const prices = @json($tarifasIniciales);
+    let pending;
+    async function quote() {
+        pending?.abort();
+        const controller = new AbortController(); pending = controller;
+        const timeout = setTimeout(() => controller.abort(), 10000);
+        const name = summary.querySelector('[data-role="tarifa-nombre"]');
+        const amount = summary.querySelector('[data-role="tarifa-monto"]');
+        const preview = prices[vehicle.value]?.[duration.value];
+        name.textContent = preview?.precio_unitario || 'Consultando precio…';
+        amount.textContent = preview ? 'S/ ' + preview.total + ' (estimado)' : '—';
+        summary.querySelector('[data-role="tarifa-duracion"]').textContent = duration.options[duration.selectedIndex].text;
+        summary.querySelector('[data-role="tarifa-tolerancia"]').textContent = preview?.exceso || 'Por verificar';
+        try {
+            const params = new URLSearchParams({vehiculo_tipo_id:vehicle.value,duracion_minutos:duration.value});
+            const response = await fetch(@json(route('public.cotizar', $espacio, false))+'?'+params, {headers:{Accept:'application/json'},cache:'no-store',signal:controller.signal});
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || 'No se pudo consultar la tarifa.');
+            if (pending !== controller) return;
+            name.textContent = data.precio_unitario;
+            amount.textContent = 'S/ '+data.total;
+            summary.querySelector('[data-role="tarifa-duracion"]').textContent = duration.options[duration.selectedIndex].text;
+            summary.querySelector('[data-role="tarifa-tolerancia"]').textContent = data.exceso;
+        } catch (error) {
+            if (pending === controller && !preview) name.textContent = 'La consulta no respondió. Al continuar, el servidor comprobará la tarifa antes de confirmar.';
+        } finally { clearTimeout(timeout); }
+    }
+    vehicle.addEventListener('change', quote); duration.addEventListener('change', quote); quote();
+    form?.addEventListener('submit', () => { if (button) { button.disabled = true; button.textContent = 'Procesando…'; } });
+    window.addEventListener('pageshow', () => { if (button) { button.disabled = false; button.textContent = 'Revisar reserva'; } });
+});
 </script>
 
 @endsection

@@ -14,9 +14,11 @@
     @stack('styles')
     @vite('resources/css/public/theme.css')
 
+@vite('resources/js/site-background.js')
 </head>
 
 <body class="atmosphere public-refined public-hex {{ request()->routeIs('public.home') ? 'public-hex-home' : '' }}">
+    <x-backgrounds.hero-background/>
 
     @include('partials.nav-public')
 

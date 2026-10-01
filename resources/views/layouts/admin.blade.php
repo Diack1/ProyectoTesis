@@ -14,9 +14,11 @@
     @stack('styles')
     @vite('resources/css/admin/theme.css')
 
+@vite('resources/js/site-background.js')
 </head>
 
 <body class="atmosphere admin-refined {{ request()->routeIs('admin.dashboard') ? 'dashboard-page' : '' }}">
+    <x-backgrounds.hero-background/>
 
     <div class="admin-shell">
         @include('partials.nav-admin')
