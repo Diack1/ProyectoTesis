@@ -70,6 +70,36 @@ class ReservaPlacaTest extends TestCase
         $this->get(route('reservas.index'))->assertOk()->assertSee('ABC123');
     }
 
+    public function test_twelve_hours_quote_review_and_store_use_server_price(): void
+    {
+        $this->travelTo(now('America/Lima')->startOfDay()->addHours(8));
+        $type = VehiculoTipo::create(['nombre'=>'Auto', 'codigo'=>'auto', 'activo'=>true]);
+        Tarifa::create(['vehiculo_tipo_id'=>$type->id, 'nombre'=>'Hora', 'tipo_tarifa'=>'por_hora', 'monto_por_hora'=>5, 'activo'=>true]);
+        $space = Espacio::create(['codigo'=>'E12', 'estado_actual'=>'libre', 'activo'=>true]);
+        $space->vehiculoTipos()->attach($type);
+        $data = ['vehiculo_tipo_id'=>$type->id, 'duracion_minutos'=>720, 'placa'=>'ABC123'];
+        $this->getJson(route('public.cotizar', $space).'?'.http_build_query($data))
+            ->assertOk()->assertJsonPath('total', '60.00');
+        $prices = \App\Services\TarifaResumen::opciones([$type]);
+        $this->assertCount(12, $prices[$type->id]);
+        $this->assertSame('60.00', $prices[$type->id][720]['total']);
+        $this->actingAs(User::factory()->create());
+        $this->get(route('reservas.create', $space).'?'.http_build_query($data))->assertOk()->assertSee('12 horas');
+        foreach ([0, 61, 780] as $invalid) {
+            $bad = array_replace($data, ['duracion_minutos'=>$invalid]);
+            $this->getJson(route('public.cotizar', $space).'?'.http_build_query($bad))->assertUnprocessable();
+            foreach (['reservas.confirmar', 'reservas.store'] as $route) {
+                $this->post(route($route, $space), $bad)->assertSessionHasErrors('duracion_minutos');
+            }
+        }
+        $this->post(route('reservas.confirmar', $space), $data)->assertStatus(303);
+        $this->get(route('reservas.revisar', $space))->assertOk()->assertSee('12 horas');
+        $this->post(route('reservas.store', $space), $data)->assertSessionHasNoErrors();
+        $r = Reserva::firstOrFail();
+        $this->assertEquals(60, $r->monto_total);
+        $this->assertEquals(720, $r->duracion_minutos);
+    }
+
     private function reservation(array $changes = []): Reserva
     {
         $space = Espacio::create(['codigo' => 'E'.(Espacio::count() + 1), 'estado_actual' => 'libre', 'activo' => true]);

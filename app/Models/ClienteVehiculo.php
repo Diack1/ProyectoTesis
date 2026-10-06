@@ -17,4 +17,9 @@ class ClienteVehiculo extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+
+    public function visitas()
+    {
+        return $this->hasMany(Estadia::class, 'placa', 'placa')->whereNotNull('hora_salida');
+    }
 }

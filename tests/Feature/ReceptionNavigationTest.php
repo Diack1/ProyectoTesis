@@ -28,6 +28,17 @@ class ReceptionNavigationTest extends TestCase
         }
     }
 
+    public function test_owner_can_filter_staff_without_including_customers(): void
+    {
+        $owner = User::factory()->create(['role' => 'super_admin']);
+        $staff = User::factory()->create(['name' => 'Recepcion prueba', 'role' => 'admin', 'activo' => false]);
+        User::factory()->create(['name' => 'Recepcion cliente', 'role' => 'user', 'activo' => false]);
+        $this->actingAs($owner)->get(route('superadmin.dashboard', ['buscar' => 'Recepcion', 'estado' => 'inactivos']))
+            ->assertOk()->assertViewHas('admins', fn ($rows) => $rows->count() === 1 && $rows->first()->id === $staff->id)
+            ->assertViewHas('totalPersonal', 2);
+        $this->get(route('admin.reportes.index'))->assertOk()->assertSee('Historial de ocupación');
+    }
+
     public function test_owner_keeps_configuration_and_customer_cannot_open_staff_pages(): void
     {
         $this->actingAs(User::factory()->create(['role'=>'super_admin']));

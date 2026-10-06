@@ -19,9 +19,11 @@ class EstadiaController extends Controller
     public function index(Request $request, ReservaService $reservas)
     {
         $reservas->procesarReservasAutomaticas();
-        $request->validate(['buscar' => 'nullable|string|max:80', 'estado' => 'nullable|in:activas,historial', 'fecha' => 'nullable|date']);
+        $request->validate(['buscar' => 'nullable|string|max:80', 'estado' => 'nullable|in:activas,historial,salidas', 'fecha' => 'nullable|date']);
         $query = Estadia::with('espacio', 'vehiculoTipo', 'reserva');
-        if ($request->input('estado') !== 'historial') {
+        if ($request->input('estado') === 'salidas') {
+            $query->whereDate('hora_salida', today());
+        } elseif ($request->input('estado') !== 'historial') {
             $query->activas();
         }
         if ($request->filled('fecha')) {

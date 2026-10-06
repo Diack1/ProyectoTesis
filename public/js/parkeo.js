@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const d=await r.json();
     if(!Number.isInteger(d.cantidad)||d.cantidad<0)throw new Error();
     document.querySelectorAll('[data-payment-count]').forEach(b=>{b.hidden=!d.cantidad;b.textContent=d.cantidad;});
-    render(d.cantidad?'pending':'clear',d.cantidad?`${d.cantidad} ${d.cantidad===1?'pago por revisar':'pagos por revisar'}`:'Sin pagos pendientes de revisión',d.cantidad?'Comprueba los pagos recibidos y confirma las solicitudes.':'No hay solicitudes pendientes en la bandeja de pagos.');
+    render(d.cantidad?'pending':'clear',d.cantidad?`${d.cantidad} ${d.cantidad===1?'pago por revisar':'pagos por revisar'}`:'Sin comprobantes por revisar',d.cantidad?'Comprueba los pagos recibidos y confirma las solicitudes.':'No hay solicitudes pendientes en la bandeja de pagos.');
    }catch(_){
     document.querySelectorAll('[data-payment-count]').forEach(b=>{b.hidden=true;});
     render('error','No se pudo actualizar el estado de pagos','Abre la bandeja para consultar los pagos. Reintentaremos automáticamente.');

@@ -1,0 +1,30 @@
+.admin-mobile-account,.drawer-identity{display:none}
+.management-page [data-mobile-filter]>summary{display:none}
+@media(max-width:760px){
+ .admin-refined .admin-sidebar{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;gap:12px;align-items:center;padding:10px 16px;min-height:64px;border-bottom:1px solid #263c50}
+ .admin-refined .admin-sidebar .admin-mobile-toggle{grid-column:1;grid-row:1;width:44px;height:44px;padding:10px;font-size:0;border:0;background:transparent}
+ .admin-refined .admin-sidebar .admin-mobile-toggle svg{width:24px;height:24px}
+ .admin-refined .admin-brand{grid-column:2;grid-row:1}.admin-refined .admin-brand .parkeo-tagline,.admin-refined .admin-brand small,.admin-refined .admin-brand .brand-subtitle{display:none}
+ .admin-refined .admin-sidebar .admin-mobile-account{grid-column:3;grid-row:1;display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:#123b62;border:1px solid #285579;color:#89c1ff;font-weight:750;text-decoration:none}
+ .admin-refined .admin-topbar{padding:16px 16px 10px}.admin-refined .admin-topbar .admin-user-box{display:none}.admin-refined .admin-page-title{font-size:24px}.admin-refined .admin-page-subtitle{font-size:14px;line-height:1.45;margin-top:5px}
+ .admin-refined .admin-menu.is-open .drawer-identity{display:grid;gap:5px;padding:16px;border:1px solid #29465f;border-radius:12px;margin-bottom:14px;overflow-wrap:anywhere}.drawer-identity small{color:#afc7de}
+ .management-page .admin-content{padding-top:10px}
+ .management-page #aviso-pagos{padding:10px 12px;margin-bottom:14px;gap:9px;flex-wrap:nowrap;max-width:none}
+ .management-page .notice-icon{width:28px;height:28px}.management-page .notice-copy{flex:1}.management-page .notice-copy strong{font-size:12px;line-height:1.4}.management-page .notice-copy small{display:none}.management-page .notice-action{margin:0;font-size:11px}
+ .management-page .management-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:14px 0}
+ .management-page .management-stat{flex-direction:row;align-items:center;padding:12px;gap:10px}.management-page .management-stat:last-child{grid-column:1/-1}.management-page .management-stat>div{min-width:0}.management-page .management-stat span{font-size:12px;line-height:1.35}.management-page .management-stat strong{font-size:25px}.management-page .management-stat-icon{flex:0 0 32px}
+ .management-page .operation-links{gap:8px;margin-bottom:14px}.management-page .entry-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.management-page .entry-actions .btn:first-child{grid-column:1/-1}.management-page .entry-actions .btn{font-size:13px;padding:10px}
+ .management-page .admin-page-card,.management-page .card{padding:14px}.management-page .management-heading,.management-page .section-title{font-size:19px}
+ .management-page .mobile-records tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px 12px;padding:13px;align-items:start}
+ .management-page .mobile-records td{padding:4px 0;min-width:0;font-size:14px;line-height:1.45}
+ .management-page .mobile-records td[hidden]{display:none!important}
+ .management-page .mobile-records td:before{font-size:11px}
+ .management-page .mobile-records td[data-label="Acción"],.management-page .mobile-records td[data-label="Acciones"],.management-page .mobile-records td[colspan],.management-page .mobile-records .record-disclosure{grid-column:1/-1}
+ .management-page .mobile-records td[data-label="Acción"]:before,.management-page .mobile-records td[data-label="Acciones"]:before{display:none}
+ .management-page .record-disclosure{border-top:1px solid #243d52!important;margin-top:4px}.management-page .record-disclosure summary{color:#9bcaff;min-height:44px;font-size:13px}
+ .record-detail-field{padding:9px 0;overflow-wrap:anywhere}.record-detail-field>strong{display:block;font-size:12px;color:#adc2d9;margin-bottom:5px}
+ .management-page .reservation-payment{min-width:0;margin:4px 0}.management-page .reservation-payment .btn{width:100%}.management-page .plate-tag{padding:6px 9px}
+ .management-page [data-mobile-filter]>summary{display:block;font-size:14px;min-height:44px;padding:10px 0;cursor:pointer}.management-page [data-mobile-filter]>summary:after{content:' +';color:#86baff}.management-page [data-mobile-filter][open]>summary:after{content:' −'}
+ .management-page .report-filter-grid{grid-template-columns:minmax(0,1fr)}
+ .management-page input,.management-page select{font-size:16px}
+}

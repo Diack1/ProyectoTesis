@@ -1,7 +1,9 @@
 <aside class="admin-sidebar">
 <div class="admin-brand"><x-brand :href="route('admin.dashboard')" :subtitle="auth()->user()->esSuperAdmin() ? 'Administración general' : 'Recepción'"/></div>
 <button type="button" class="admin-mobile-toggle" data-menu-toggle="admin-navigation" aria-controls="admin-navigation" aria-expanded="false"><x-icon name="menu"/> Menú</button>
+<a class="admin-mobile-account" href="{{ route('profile.edit') }}" aria-label="Seguridad de mi cuenta">{{ mb_strtoupper(mb_substr(auth()->user()->name,0,1)) }}</a>
 <nav id="admin-navigation" class="admin-menu" aria-label="Administración"><button type="button" class="drawer-close" data-menu-close>Cerrar menú ×</button>
+<div class="drawer-identity"><strong>{{ auth()->user()->name }}</strong><small>{{ auth()->user()->esSuperAdmin() ? 'Dueño / encargado general' : 'Recepción' }}</small></div>
 <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard')?'active':'' }}"><x-icon name="grid"/>Inicio</a>
 <a href="{{ route('admin.estadias.index') }}" class="{{ request()->routeIs('admin.estadias.*','admin.placas.*','admin.monitoreo.*')?'active':'' }}"><x-icon name="car"/>{{ auth()->user()->esSuperAdmin() ? 'Operación' : 'Entradas y salidas' }}</a>
 <a href="{{ route('admin.reservas.index') }}" class="{{ request()->routeIs('admin.reservas.*','admin.pagos.index')?'active':'' }}"><x-icon name="clock"/>Reservas <span class="menu-count" data-payment-count hidden></span></a>

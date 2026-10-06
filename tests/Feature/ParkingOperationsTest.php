@@ -59,6 +59,21 @@ class ParkingOperationsTest extends TestCase
         return $r;
     }
 
+    public function test_departures_filter_uses_exit_date_and_vehicle_visits_exclude_active_tickets(): void
+    {
+        $e = $this->enter();
+        $e->update(['hora_ingreso' => now()->subDay(), 'hora_salida' => now(), 'placa_activa' => null, 'espacio_activo_id' => null]);
+        \App\Models\ClienteVehiculo::create(['placa' => 'ABC123', 'nombre' => 'Cliente de prueba', 'activo' => true, 'registrado_por' => $this->operator->id]);
+        $this->actingAs($this->operator)->get(route('admin.estadias.index', ['estado' => 'salidas']))
+            ->assertOk()->assertViewHas('estadias', fn ($rows) => $rows->count() === 1 && $rows->first()->id === $e->id);
+        $this->get(route('admin.estadias.index'))->assertOk()->assertViewHas('estadias', fn ($rows) => $rows->isEmpty());
+        $this->get(route('admin.clientes-vehiculos.index'))->assertOk()
+            ->assertViewHas('vehiculos', fn ($rows) => $rows->first()->visitas_count === 1);
+        $e->update(['hora_salida' => now()->subDay()]);
+        $this->get(route('admin.estadias.index', ['estado' => 'salidas']))->assertOk()
+            ->assertViewHas('estadias', fn ($rows) => $rows->isEmpty());
+    }
+
     public function test_walkin_ticket_cash_change_and_single_exit(): void
     {
         $this->actingAs($this->operator)->post(route('admin.estadias.store'), ['placa' => 'abc-123', 'espacio_id' => $this->space->id, 'vehiculo_tipo_id' => $this->type->id])->assertRedirect()->assertSessionHasNoErrors();

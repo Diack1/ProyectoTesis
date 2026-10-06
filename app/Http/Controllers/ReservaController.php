@@ -118,7 +118,7 @@ class ReservaController extends Controller
         }
 
         $request->validate(['vehiculo_tipo_id' => 'required|exists:vehiculo_tipos,id',
-            'duracion_minutos' => 'required|integer|in:60,120,180,240']);
+            'duracion_minutos' => 'required|integer|'.\App\Services\DuracionReserva::REGLA]);
 
         $vehiculoTipo = $espacio->vehiculoTipos()
             ->where('vehiculo_tipos.activo', true)
@@ -194,7 +194,7 @@ class ReservaController extends Controller
         }
 
         $request->validate(['vehiculo_tipo_id' => 'required|exists:vehiculo_tipos,id',
-            'duracion_minutos' => 'required|integer|in:60,120,180,240']);
+            'duracion_minutos' => 'required|integer|'.\App\Services\DuracionReserva::REGLA]);
 
         $vehiculoTipo = $espacio->vehiculoTipos()
             ->where('vehiculo_tipos.activo', true)

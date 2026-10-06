@@ -11,7 +11,7 @@ class TarifaResumen
         $instant = now('America/Lima')->startOfMinute();
         $service = app(TarifaService::class);
         foreach ($tipos as $tipo) {
-            foreach ([60, 120, 180, 240] as $minutes) {
+            foreach (DuracionReserva::minutos() as $minutes) {
                 try {
                     $calculo = $service->calcularMonto($tipo, $instant->copy(), $minutes);
                     $prices[$tipo->id][$minutes] = [...self::presentar($calculo),

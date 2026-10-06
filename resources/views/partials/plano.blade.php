@@ -62,7 +62,7 @@
     @if(!$administrativo)
     <div class="booking-preferences">
         <div><label for="quote-vehicle">Tu vehículo</label><select id="quote-vehicle">@foreach($vehiculoTipos as $tipo)<option value="{{ $tipo->id }}">{{ $tipo->nombre }}</option>@endforeach</select></div>
-        <div><label for="quote-duration">Tiempo de estacionamiento</label><select id="quote-duration">@foreach([60=>'1 hora',120=>'2 horas',180=>'3 horas',240=>'4 horas'] as $minutes=>$label)<option value="{{ $minutes }}">{{ $label }}</option>@endforeach</select></div>
+        <div><label for="quote-duration">Tiempo de estacionamiento</label>@include('partials.duration-picker', ['id'=>'quote-duration', 'name'=>'duracion_minutos', 'selected'=>60])</div>
     </div>
     @endif
     <div data-dialog-content><div class="space-empty"><x-icon name="pin"/><h2>Elige tu espacio</h2><p>Toca un espacio del plano para ver su tarifa y preparar tu reserva.</p></div></div></dialog>

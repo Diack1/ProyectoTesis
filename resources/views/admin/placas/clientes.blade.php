@@ -1,10 +1,11 @@
 @extends('layouts.admin')
-@section('page-title', 'Clientes')
+@section('page-title', 'Clientes y vehículos')
 @section('page-subtitle', 'Asocia una matrícula revisada con el cliente para reconocer próximas visitas.')
 @section('content')
 @include('admin.estadias.messages')
-<p><a class="btn btn-secondary" href="{{ route('admin.placas.index') }}">Volver a la cámara</a></p>
-<section class="admin-page-card">
+
+<div class="management-stats"><x-admin.stat label="Vehículos registrados" :value="$totalVehiculos" icon="car"/><x-admin.stat label="Asociaciones activas" :value="$vehiculosActivos" icon="users"/><x-admin.stat label="Vehículos nuevos este mes" :value="$nuevosMes" icon="plus"/></div>
+<details class="admin-page-card" @if($editar || $errors->any()) open @endif><summary>{{ $editar ? 'Editar asociación' : '+ Registrar vehículo de un cliente' }}</summary>
 <h2>{{ $editar ? 'Editar asociación' : 'Registrar vehículo de un cliente' }}</h2>
 <p>Confirma los datos con el cliente. La cámara busca esta asociación; no identifica a la persona que conduce. Un vehículo se indica como frecuente desde dos visitas finalizadas.</p>
 <form method="post" action="{{ $editar ? route('admin.clientes-vehiculos.update', $editar) : route('admin.clientes-vehiculos.store') }}">@csrf @if($editar) @method('PUT') @endif
@@ -17,10 +18,10 @@
 </div>
 <label class="checkbox-row"><input type="checkbox" name="revisado" value="1" required>He comprobado la placa y los datos del cliente.</label>
 <button class="btn btn-primary">Guardar asociación</button> @if($editar)<a href="{{ route('admin.clientes-vehiculos.index') }}">Cancelar edición</a>@endif
-</form></section>
+</form></details>
 <section class="admin-page-card"><h2>Vehículos registrados</h2>
-<form method="get" class="search-form"><input name="buscar" aria-label="Buscar por placa o nombre" value="{{ request('buscar') }}" placeholder="Placa, nombre o teléfono"><button class="btn btn-secondary">Buscar</button></form>
-<div class="table-responsive"><table><thead><tr><th>Placa</th><th>Cliente asociado</th><th>Teléfono</th><th>Estado</th><th>Acción</th></tr></thead><tbody>
-@forelse($vehiculos as $v)<tr><td>{{ $v->placa }}</td><td>{{ $v->usuario?->name ?? $v->nombre }}</td><td>{{ $v->telefono ?? '—' }}</td><td>{{ $v->activo ? 'Activa' : 'Inactiva' }}</td><td><a href="{{ route('admin.clientes-vehiculos.index', ['editar' => $v->id]) }}">Editar</a></td></tr>@empty<tr><td colspan="5">No hay vehículos registrados. Añade el primero para probar la identificación del cliente.</td></tr>@endforelse
+<form method="get" class="management-toolbar"><input name="buscar" aria-label="Buscar por placa, nombre, teléfono o correo" value="{{ request('buscar') }}" placeholder="Placa, nombre, teléfono o correo"><button class="btn btn-secondary">Buscar</button></form>
+<div class="table-responsive"><table class="data-table mobile-records" data-mobile-details="2,4"><thead><tr><th>Placa</th><th>Cliente asociado</th><th>Teléfono</th><th>Visitas finalizadas</th><th>Última visita finalizada</th><th>Estado</th><th>Acción</th></tr></thead><tbody>
+@forelse($vehiculos as $v)<tr><td data-label="Placa"><span class="plate-tag">{{ $v->placa }}</span></td><td data-label="Cliente asociado">{{ $v->usuario?->name ?? $v->nombre }}</td><td data-label="Teléfono">{{ $v->telefono ?? '—' }}</td><td data-label="Visitas finalizadas">{{ $v->visitas_count }} @if($v->visitas_count >= 2)<span class="badge badge-success">Frecuente</span>@endif</td><td data-label="Última visita finalizada">{{ $v->visitas_max_hora_ingreso ? \Carbon\Carbon::parse($v->visitas_max_hora_ingreso)->format('d/m/Y H:i') : 'Sin visitas finalizadas' }}</td><td data-label="Estado">{{ $v->activo ? 'Activa' : 'Inactiva' }}</td><td data-label="Acción"><a class="btn btn-secondary" href="{{ route('admin.clientes-vehiculos.index', ['editar' => $v->id]) }}">Editar</a></td></tr>@empty<tr><td colspan="7">No hay vehículos registrados. Añade el primero para probar la identificación del cliente.</td></tr>@endforelse
 </tbody></table></div>{{ $vehiculos->links() }}</section>
 @endsection

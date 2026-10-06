@@ -22,7 +22,7 @@
     <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
         <div>
             <h2 class="section-title" style="margin-bottom:6px;">
-                Reporte de ocupación
+                Historial de ocupación
             </h2>
 
             <p>
@@ -37,33 +37,8 @@
     </div>
 </div>
 
-<div class="section-block">
-    <h2 class="section-title">Resumen general</h2>
-
-    <div class="stats-grid-4">
-        <div class="stat-card">
-            <div class="stat-label">Total registros</div>
-            <div class="stat-value text-info">{{ $totalRegistros ?? 0 }}</div>
-        </div>
-
-        <div class="stat-card">
-            <div class="stat-label">Estados libres</div>
-            <div class="stat-value text-success">{{ $totalLibres ?? 0 }}</div>
-        </div>
-
-        <div class="stat-card">
-            <div class="stat-label">Estados ocupados</div>
-            <div class="stat-value text-danger">{{ $totalOcupados ?? 0 }}</div>
-        </div>
-
-        <div class="stat-card">
-            <div class="stat-label">Registros filtrados</div>
-            <div class="stat-value">{{ method_exists($registros, 'total') ? $registros->total() : $registros->count() }}</div>
-        </div>
-    </div>
-</div>
-
-<div class="report-filters">
+<div class="management-stats"><x-admin.stat label="Registros en el filtro" :value="$totalRegistros" icon="chart"/><x-admin.stat label="Registros de estado libre" :value="$totalLibres" icon="parking"/><x-admin.stat label="Registros de estado ocupado" :value="$totalOcupados" icon="car"/></div>
+<details class="report-filters" data-mobile-filter data-filtered="{{ request()->hasAny(['fecha_inicio','fecha_fin','estado','espacio_id']) ? 'true' : 'false' }}" open><summary>Filtros de movimientos @if(request()->hasAny(['fecha_inicio','fecha_fin','estado','espacio_id'])) · Aplicados @endif</summary>
     <form action="{{ route('admin.reportes.index') }}" method="GET">
         <div class="report-filter-grid">
             <div class="form-group" style="margin-bottom:0;">
@@ -118,11 +93,8 @@
                 </a>
             </div>
         </div>
-    </form>
-</div>
-
-<div class="table-wrapper">
-    <table class="data-table">
+    </form></details><div class="table-wrapper">
+    <table class="data-table mobile-records" data-mobile-details="1,3,4,6">
         <thead>
             <tr>
                 <th>Espacio</th>
@@ -138,28 +110,28 @@
         <tbody>
             @forelse($registros as $registro)
             <tr>
-                <td>
+                <td data-label="Espacio">
                     <strong>{{ $registro->espacio->codigo ?? '-' }}</strong><br>
                     <small class="text-muted">
                         {{ $registro->espacio->descripcion ?? '-' }}
                     </small>
                 </td>
 
-                <td>
+                <td data-label="Sensor">
                     {{ $registro->sensor->codigo_sensor ?? '-' }}
                 </td>
 
-                <td>
+                <td data-label="Estado detectado">
                     <span class="badge badge-{{ $registro->estado_detectado }}">
                         {{ str_replace('_', ' ', $registro->estado_detectado) }}
                     </span>
                 </td>
 
-                <td>
+                <td data-label="Distancia">
                     {{ $registro->distancia_cm !== null ? $registro->distancia_cm . ' cm' : '-' }}
                 </td>
 
-                <td>
+                <td data-label="Origen">
                     @if($registro->origen)
                     <span class="badge badge-{{ $registro->origen }}">
                         {{ str_replace('_', ' ', $registro->origen) }}
@@ -169,11 +141,11 @@
                     @endif
                 </td>
 
-                <td>
+                <td data-label="Fecha y hora">
                     {{ $registro->fecha_hora ? \Carbon\Carbon::parse($registro->fecha_hora)->format('d/m/Y H:i:s') : '-' }}
                 </td>
 
-                <td>
+                <td data-label="Registro">
                     {{ $registro->created_at ? $registro->created_at->format('d/m/Y H:i') : '-' }}
                 </td>
             </tr>

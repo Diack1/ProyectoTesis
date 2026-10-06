@@ -27,7 +27,7 @@ class StoreReservaRequest extends FormRequest
             ],
             'fecha_reserva' => ['required', 'date_format:Y-m-d', 'after_or_equal:' . $hoy, 'before_or_equal:' . $manana],
             'hora_inicio' => ['required', 'date_format:H:i'],
-            'duracion_minutos' => ['required', 'integer', 'in:60,120,180,240'],
+            'duracion_minutos' => ['required', 'integer', \App\Services\DuracionReserva::REGLA],
         ];
     }
 

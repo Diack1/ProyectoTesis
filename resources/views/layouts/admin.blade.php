@@ -10,6 +10,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <script src="/js/parkeo.js?v={{ filemtime(public_path('js/parkeo.js')) }}" defer></script>
+    <script src="/js/admin-mobile.js?v={{ filemtime(public_path('js/admin-mobile.js')) }}" defer></script>
     @vite('resources/css/admin/base.css')
     @stack('styles')
     @vite('resources/css/admin/theme.css')
@@ -17,7 +18,8 @@
 @vite('resources/js/site-background.js')
 </head>
 
-<body class="atmosphere admin-refined {{ request()->routeIs('admin.dashboard') ? 'dashboard-page' : '' }}">
+@php($managementPage = request()->routeIs('admin.estadias.index', 'admin.reservas.index', 'admin.clientes-vehiculos.index', 'superadmin.dashboard', 'admin.reportes.index'))
+<body class="{{ $managementPage ? 'management-page' : '' }} atmosphere admin-refined {{ request()->routeIs('admin.dashboard') ? 'dashboard-page' : '' }}">
     <x-backgrounds.hero-background/>
 
     <div class="admin-shell">
@@ -52,7 +54,7 @@
             </header>
 
             <section class="admin-content">
-                <a id="aviso-pagos" class="payment-notice" data-state="loading" href="{{ route('admin.pagos.index') }}" data-notifications="{{ route('admin.pagos.pendientes') }}" aria-live="polite"><span class="notice-icon"><x-icon name="wallet"/></span><span class="notice-copy"><strong data-notice-title>Consultando pagos</strong><small data-notice-detail>Comprobando solicitudes pendientes de revisión.</small></span><span class="notice-action">Ver pagos <span aria-hidden="true">→</span></span></a>
+                <a id="aviso-pagos" class="payment-notice {{ request()->routeIs('superadmin.dashboard', 'admin.reportes.index', 'admin.clientes-vehiculos.index') ? 'notice-compact' : '' }}" data-state="loading" href="{{ route('admin.pagos.index') }}" data-notifications="{{ route('admin.pagos.pendientes') }}" aria-live="polite"><span class="notice-icon"><x-icon name="wallet"/></span><span class="notice-copy"><strong data-notice-title>Consultando pagos</strong><small data-notice-detail>Comprobando solicitudes pendientes de revisión.</small></span><span class="notice-action">Ver pagos <span aria-hidden="true">→</span></span></a>
                 @yield('content')
             </section>
         </main>

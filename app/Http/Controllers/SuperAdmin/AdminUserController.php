@@ -9,14 +9,21 @@ use Illuminate\Support\Facades\Hash;
 
 class AdminUserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $request->validate(['buscar' => 'nullable|string|max:100', 'estado' => 'nullable|in:activos,inactivos']);
+        $personal = User::whereIn('role', ['admin', 'super_admin', 'operador']);
+        $totalPersonal = (clone $personal)->count();
+        $activos = (clone $personal)->where('activo', true)->count();
+        $administradores = (clone $personal)->where('role', 'admin')->count();
         $admins = User::whereIn('role', ['admin', 'super_admin', 'operador'])
+            ->when($request->filled('buscar'), fn ($q) => $q->where(fn ($q) => $q->where('name', 'like', '%'.$request->buscar.'%')->orWhere('email', 'like', '%'.$request->buscar.'%')))
+            ->when($request->filled('estado'), fn ($q) => $q->where('activo', $request->estado === 'activos'))
             ->orderBy('role', 'desc')
             ->orderBy('name')
-            ->paginate(10);
+            ->paginate(10)->withQueryString();
 
-        return view('superadmin.admins.index', compact('admins'));
+        return view('superadmin.admins.index', compact('admins', 'totalPersonal', 'activos', 'administradores'));
     }
 
     public function create()

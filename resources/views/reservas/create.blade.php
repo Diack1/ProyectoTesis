@@ -122,12 +122,7 @@
                 <div class="arrival-policy"><span class="badge badge-info">Reserva inmediata</span><h3>Tienes 15 minutos para llegar</h3><p>El plazo empieza cuando recepción apruebe tu pago. Verás la hora límite en Mis reservas.</p><input type="hidden" id="hora_inicio" value="{{ now('America/Lima')->format('H:i') }}"></div>
                 <div class="form-group">
                     <label for="duracion_minutos">Duración</label>
-                    <select name="duracion_minutos" id="duracion_minutos" required>
-                        <option value="60" {{ old('duracion_minutos', request()->query('duracion_minutos')) == 60 ? 'selected' : '' }}>1 hora</option>
-                        <option value="120" {{ old('duracion_minutos', request()->query('duracion_minutos')) == 120 ? 'selected' : '' }}>2 horas</option>
-                        <option value="180" {{ old('duracion_minutos', request()->query('duracion_minutos')) == 180 ? 'selected' : '' }}>3 horas</option>
-                        <option value="240" {{ old('duracion_minutos', request()->query('duracion_minutos')) == 240 ? 'selected' : '' }}>4 horas</option>
-                    </select>
+                    @include('partials.duration-picker', ['id'=>'duracion_minutos', 'name'=>'duracion_minutos', 'selected'=>old('duracion_minutos', request()->query('duracion_minutos', 60))])
                 </div>
 
                 <aside class="reservation-summary" id="resumenTarifaReserva"><h2>Tu reserva de un vistazo</h2><p><strong>Espacio:</strong> {{ $espacio->codigo }}</p><p><strong>Vehículo:</strong> <span data-booking-vehicle>Por elegir</span></p><p><strong>Placa:</strong> <span data-booking-plate>Por completar</span></p><p><strong>Llegada:</strong> <span>Dentro de los 15 minutos posteriores a la aprobación del pago</span></p>

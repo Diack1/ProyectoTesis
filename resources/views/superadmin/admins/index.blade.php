@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
 @section('title', 'Administradores - Parke’o')
-@section('page-title', 'Gestión del personal')
+@section('page-title', 'Personal')
 @section('page-subtitle', 'Crea, revisa y desactiva cuentas administrativas del sistema')
 
 @section('content')
@@ -43,8 +43,9 @@ $listaAdmins = $admins ?? $usuarios ?? collect();
     </div>
 </div>
 
-<div class="table-wrapper">
-    <table class="data-table">
+<div class="management-stats"><x-admin.stat label="Personal registrado" :value="$totalPersonal" icon="users"/><x-admin.stat label="Cuentas activas" :value="$activos" icon="check"/><x-admin.stat label="Administradores" :value="$administradores" icon="shield"/></div>
+<form class="management-toolbar" method="get"><div class="form-group"><label for="personal-buscar">Nombre o correo</label><input id="personal-buscar" name="buscar" maxlength="100" value="{{ request('buscar') }}" placeholder="Buscar personal"></div><div class="form-group"><label for="personal-estado">Estado</label><select id="personal-estado" name="estado"><option value="">Todos</option><option value="activos" @selected(request('estado')==='activos')>Activos</option><option value="inactivos" @selected(request('estado')==='inactivos')>Inactivos</option></select></div><button class="btn btn-primary">Buscar</button><a class="btn btn-secondary" href="{{ route('superadmin.dashboard') }}">Limpiar</a></form><div class="table-wrapper">
+    <table class="data-table mobile-records" data-mobile-details="1,4">
         <thead>
             <tr>
                 <th>Nombre</th>
@@ -59,21 +60,21 @@ $listaAdmins = $admins ?? $usuarios ?? collect();
         <tbody>
             @forelse($listaAdmins as $admin)
             <tr>
-                <td>
+                <td data-label="Nombre">
                     <strong>{{ $admin->name }}</strong>
                 </td>
 
-                <td>
+                <td data-label="Correo">
                     {{ $admin->email }}
                 </td>
 
-                <td>
+                <td data-label="Rol">
                     <span class="role-badge role-{{ $admin->role }}">
-                        {{ $admin->role === 'super_admin' ? 'Dueño / encargado general' : 'Recepción' }}
+                        {{ $admin->role === 'super_admin' ? 'Dueño / encargado general' : ($admin->role === 'admin' ? 'Administrador' : 'Operador') }}
                     </span>
                 </td>
 
-                <td>
+                <td data-label="Estado">
                     @if($admin->activo)
                     <span class="user-status-active">Activo</span>
                     @else
@@ -81,11 +82,11 @@ $listaAdmins = $admins ?? $usuarios ?? collect();
                     @endif
                 </td>
 
-                <td>
+                <td data-label="Fecha registro">
                     {{ $admin->created_at ? $admin->created_at->format('d/m/Y') : '-' }}
                 </td>
 
-                <td>
+                <td data-label="Acciones">
                     <div class="table-actions">
                         @if($admin->role === 'operador' || ($admin->role === 'admin' && auth()->user()->role === 'super_admin'))
                         <form action="{{ route('superadmin.admins.toggleActivo', $admin) }}" method="POST"

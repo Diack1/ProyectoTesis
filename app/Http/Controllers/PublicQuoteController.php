@@ -12,7 +12,7 @@ class PublicQuoteController extends Controller
     {
         $data = $request->validate([
             'vehiculo_tipo_id' => 'required|integer',
-            'duracion_minutos' => 'required|integer|in:60,120,180,240',
+            'duracion_minutos' => 'required|integer|'.\App\Services\DuracionReserva::REGLA,
         ]);
         abort_unless($espacio->activo, 404);
         $tipo = $espacio->vehiculoTipos()->where('vehiculo_tipos.activo', true)->find($data['vehiculo_tipo_id']);

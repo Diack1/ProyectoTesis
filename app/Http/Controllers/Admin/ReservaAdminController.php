@@ -55,12 +55,17 @@ class ReservaAdminController extends Controller
             ->withQueryString();
 
         $totalReservas = Reserva::count();
+        $porLlegar = Reserva::whereDoesntHave('estadia')->whereNull('inasistencia_at')->whereIn('estado', ['pendiente_pago', 'confirmada']);
+        $llegadasHoy = (clone $porLlegar)->whereDate('fecha_reserva', today())->count();
+        $proximas = (clone $porLlegar)->whereDate('fecha_reserva', '>', today())->count();
         $pendientesPago = Reserva::where('estado', 'pendiente_pago')->count();
         $confirmadas = Reserva::where('estado', 'confirmada')->count();
         $reembolsosSolicitados = Reserva::where('estado', 'reembolso_solicitado')->count();
 
         return view('admin.reservas.index', compact(
             'reservas',
+            'llegadasHoy',
+            'proximas',
             'totalReservas',
             'pendientesPago',
             'confirmadas',

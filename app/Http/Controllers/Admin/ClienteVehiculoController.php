@@ -16,9 +16,12 @@ class ClienteVehiculoController extends Controller
         $request->validate(['buscar' => 'nullable|string|max:100', 'editar' => 'nullable|integer']);
 
         return response()->view('admin.placas.clientes', [
-            'vehiculos' => ClienteVehiculo::with('usuario')->when($request->filled('buscar'), fn ($q) => $q->where(function ($q) use ($request) {
+            'totalVehiculos' => ClienteVehiculo::count(),
+            'vehiculosActivos' => ClienteVehiculo::where('activo', true)->count(),
+            'nuevosMes' => ClienteVehiculo::where('created_at', '>=', now()->startOfMonth())->count(),
+            'vehiculos' => ClienteVehiculo::with('usuario')->withCount('visitas')->withMax('visitas', 'hora_ingreso')->when($request->filled('buscar'), fn ($q) => $q->where(function ($q) use ($request) {
                 $q->where('placa', 'like', '%'.$request->buscar.'%')->orWhere('nombre', 'like', '%'.$request->buscar.'%')->orWhere('telefono', 'like', '%'.$request->buscar.'%')
-                    ->orWhereHas('usuario', fn ($u) => $u->where('name', 'like', '%'.$request->buscar.'%'));
+                    ->orWhereHas('usuario', fn ($u) => $u->where('name', 'like', '%'.$request->buscar.'%')->orWhere('email', 'like', '%'.$request->buscar.'%'));
             }))->orderBy('placa')->paginate(20)->withQueryString(),
             'editar' => $request->filled('editar') ? ClienteVehiculo::findOrFail($request->editar) : null,
         ])->header('Cache-Control', 'private, no-store');
