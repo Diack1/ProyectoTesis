@@ -31,9 +31,10 @@
             </p>
         </div>
 
-        <a href="{{ route('admin.reportes.exportarCsv', request()->query()) }}" class="btn btn-primary">
-            Exportar CSV
+        <a href="{{ route('admin.reportes.exportarExcel', request()->query()) }}" class="btn btn-primary">
+            Exportar Excel (.xlsx)
         </a>
+        <a href="{{ route('admin.reportes.exportarCsv', request()->query()) }}" class="btn btn-secondary">Descargar CSV</a>
     </div>
 </div>
 

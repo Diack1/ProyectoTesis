@@ -137,6 +137,9 @@ Route::middleware(['auth', 'role:admin,super_admin,operador'])
         Route::get('/reportes/exportar-csv', [ReporteController::class, 'exportarCsv'])
             ->name('reportes.exportarCsv')->middleware('role:super_admin');
 
+        Route::get('/reportes/exportar-excel', [ReporteController::class, 'exportarExcel'])
+            ->name('reportes.exportarExcel')->middleware('role:super_admin');
+
         Route::get('/reservas', [ReservaAdminController::class, 'index'])
             ->name('reservas.index');
 

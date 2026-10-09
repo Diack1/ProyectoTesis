@@ -11,44 +11,11 @@ class ReporteController extends Controller
 {
     public function index(Request $request)
     {
-        $query = RegistroOcupacion::with(['espacio', 'sensor'])
-            ->orderBy('fecha_hora', 'desc');
-
-        if ($request->filled('fecha_inicio')) {
-            $query->whereDate('fecha_hora', '>=', $request->fecha_inicio);
-        }
-
-        if ($request->filled('fecha_fin')) {
-            $query->whereDate('fecha_hora', '<=', $request->fecha_fin);
-        }
-
-        if ($request->filled('estado')) {
-            $query->where('estado_detectado', $request->estado);
-        }
-
-        if ($request->filled('espacio_id')) {
-            $query->where('espacio_id', $request->espacio_id);
-        }
+        $query = $this->consulta($request);
 
         $registros = $query->paginate(15)->withQueryString();
 
-        $resumenQuery = RegistroOcupacion::query();
-
-        if ($request->filled('fecha_inicio')) {
-            $resumenQuery->whereDate('fecha_hora', '>=', $request->fecha_inicio);
-        }
-
-        if ($request->filled('fecha_fin')) {
-            $resumenQuery->whereDate('fecha_hora', '<=', $request->fecha_fin);
-        }
-
-        if ($request->filled('estado')) {
-            $resumenQuery->where('estado_detectado', $request->estado);
-        }
-
-        if ($request->filled('espacio_id')) {
-            $resumenQuery->where('espacio_id', $request->espacio_id);
-        }
+        $resumenQuery = $this->consulta($request);
 
         $totalRegistros = (clone $resumenQuery)->count();
         $totalLibres = (clone $resumenQuery)->where('estado_detectado', 'libre')->count();
@@ -67,24 +34,7 @@ class ReporteController extends Controller
 
     public function exportarCsv(Request $request): StreamedResponse
     {
-        $query = RegistroOcupacion::with(['espacio', 'sensor'])
-            ->orderBy('fecha_hora', 'desc');
-
-        if ($request->filled('fecha_inicio')) {
-            $query->whereDate('fecha_hora', '>=', $request->fecha_inicio);
-        }
-
-        if ($request->filled('fecha_fin')) {
-            $query->whereDate('fecha_hora', '<=', $request->fecha_fin);
-        }
-
-        if ($request->filled('estado')) {
-            $query->where('estado_detectado', $request->estado);
-        }
-
-        if ($request->filled('espacio_id')) {
-            $query->where('espacio_id', $request->espacio_id);
-        }
+        $query = $this->consulta($request);
 
         $fileName = 'reporte_ocupacion_parkeo.csv';
 
@@ -97,6 +47,7 @@ class ReporteController extends Controller
             $handle = fopen('php://output', 'w');
 
             fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF));
+            fwrite($handle, "sep=;\r\n");
 
             fputcsv($handle, [
                 'ID',
@@ -127,6 +78,64 @@ class ReporteController extends Controller
             fclose($handle);
         }, 200, $headers);
     }
+    public function exportarExcel(Request $request, \App\Services\ReporteExcelService $excel): StreamedResponse
+    {
+        $query = $this->consulta($request);
+        $filtros = 'Desde: '.($request->fecha_inicio ?: 'Sin límite').' · Hasta: '.($request->fecha_fin ?: 'Sin límite')
+            .' · Estado: '.($request->estado ?: 'Todos').' · Espacio: '.($request->filled('espacio_id') ? Espacio::find($request->espacio_id)?->codigo : 'Todos');
+        // Finish the workbook before sending download headers so failures are logged normally.
+        $path = tempnam(sys_get_temp_dir(), 'parkeo-report-');
+        if ($path === false) {
+            throw new \RuntimeException('No se pudo crear el archivo temporal del reporte.');
+        }
+        try {
+            $excel->guardar($path, $query, $filtros);
+        } catch (\Throwable $e) {
+            @unlink($path);
+            throw $e;
+        }
+        return response()->streamDownload(function () use ($path) {
+            try {
+                readfile($path);
+            } finally {
+                @unlink($path);
+            }
+        }, 'Parkeo-ocupacion-'.now()->format('Y-m-d-His').'.xlsx', [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Cache-Control' => 'private, no-store',
+        ]);
+    }
+
+    private function consulta(Request $request): \Illuminate\Database\Eloquent\Builder
+    {
+        $request->validate([
+            'fecha_inicio' => 'nullable|date_format:Y-m-d',
+            'fecha_fin' => 'nullable|date_format:Y-m-d',
+            'estado' => 'nullable|in:libre,ocupado',
+            'espacio_id' => 'nullable|integer|exists:espacios,id',
+        ]);
+        $query = RegistroOcupacion::with(['espacio', 'sensor'])
+            ->orderBy('fecha_hora', 'desc');
+
+        if ($request->filled('fecha_inicio')) {
+            $query->whereDate('fecha_hora', '>=', $request->fecha_inicio);
+        }
+
+        if ($request->filled('fecha_fin')) {
+            $query->whereDate('fecha_hora', '<=', $request->fecha_fin);
+        }
+
+        if ($request->filled('estado')) {
+            $query->where('estado_detectado', $request->estado);
+        }
+
+        if ($request->filled('espacio_id')) {
+            $query->where('espacio_id', $request->espacio_id);
+        }
+
+        return $query->orderByDesc('id');
+    }
+
     public static function csvText(?string $value): string
     {
         $value ??= '';
