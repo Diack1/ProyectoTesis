@@ -11,6 +11,49 @@ class ReservaPlacaTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_continue_to_payment_is_pending_without_mail_and_repeated_submit_does_not_duplicate(): void
+    {
+        $type = VehiculoTipo::create(['nombre'=>'Auto', 'codigo'=>'auto', 'activo'=>true]);
+        Tarifa::create(['vehiculo_tipo_id'=>$type->id, 'nombre'=>'Hora', 'tipo_tarifa'=>'por_hora', 'monto_por_hora'=>5, 'activo'=>true]);
+        $space = Espacio::create(['codigo'=>'E01', 'estado_actual'=>'libre', 'activo'=>true, 'modo_monitoreo'=>'manual']);
+        $space->vehiculoTipos()->attach($type);
+        $user = User::factory()->create();
+        config(['mail.default'=>'resend', 'security.alert_email'=>'owner@example.test']);
+        \Illuminate\Support\Facades\Notification::fake();
+        $this->actingAs($user);
+        $data = ['placa'=>'ABC123', 'vehiculo_tipo_id'=>$type->id, 'duracion_minutos'=>60];
+        $this->post(route('reservas.store', $space), $data)->assertRedirect(route('pagos.show', 1))->assertSessionHasNoErrors();
+        $this->post(route('reservas.store', $space), $data)->assertRedirect(route('public.disponibilidad'));
+        $this->assertDatabaseCount('reservas', 1);
+        $this->assertDatabaseCount('pagos', 1);
+        $this->assertSame('pendiente_pago', Reserva::first()->estado);
+        $this->assertSame('pendiente', Pago::first()->estado);
+        $this->assertNull(Pago::first()->pagado_at);
+        \Illuminate\Support\Facades\Notification::assertNothingSent();
+    }
+
+    public function test_failed_pending_payment_insert_rolls_back_the_reservation(): void
+    {
+        $type = VehiculoTipo::create(['nombre'=>'Auto', 'codigo'=>'auto', 'activo'=>true]);
+        Tarifa::create(['vehiculo_tipo_id'=>$type->id, 'nombre'=>'Hora', 'tipo_tarifa'=>'por_hora', 'monto_por_hora'=>5, 'activo'=>true]);
+        $space = Espacio::create(['codigo'=>'E01', 'estado_actual'=>'libre', 'activo'=>true, 'modo_monitoreo'=>'manual']);
+        $space->vehiculoTipos()->attach($type);
+        $this->actingAs(User::factory()->create())->withoutExceptionHandling();
+        $event = 'eloquent.creating: '.Pago::class;
+        \Illuminate\Support\Facades\Event::listen($event, function () { throw new \RuntimeException('Simulated payment persistence failure'); });
+        try {
+            $this->post(route('reservas.store', $space), ['placa'=>'ABC123', 'vehiculo_tipo_id'=>$type->id, 'duracion_minutos'=>60]);
+            $this->fail('The persistence error must not be reported as a successful payment.');
+        } catch (\RuntimeException $e) {
+            $this->assertSame('Simulated payment persistence failure', $e->getMessage());
+        } finally {
+            \Illuminate\Support\Facades\Event::forget($event);
+        }
+        $this->assertDatabaseCount('reservas', 0);
+        $this->assertDatabaseCount('pagos', 0);
+        $this->assertSame('libre', $space->fresh()->estado_actual);
+    }
+
     public function test_reservation_filters_and_counts_only_include_the_current_customer(): void
     {
         $user = User::factory()->create();

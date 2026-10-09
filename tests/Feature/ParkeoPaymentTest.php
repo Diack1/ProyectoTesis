@@ -28,6 +28,21 @@ class ParkeoPaymentTest extends TestCase
         Storage::disk('local')->put('qr.png', 'test');
     }
 
+    public function test_payment_submission_and_approval_do_not_depend_on_resend(): void
+    {
+        $reserva = $this->reservation();
+        $operator = User::factory()->create(['role' => 'operador']);
+        config(['mail.default' => 'resend', 'security.alert_email' => 'owner@example.test']);
+        \Illuminate\Support\Facades\Notification::fake();
+        \Illuminate\Support\Facades\Mail::shouldReceive('send')->never();
+        $pago = $this->submit($reserva);
+        $this->actingAs($operator)->post(route('admin.pagos.revisar', $pago), ['decision' => 'aprobado'])
+            ->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertSame('aprobado', $pago->fresh()->estado);
+        $this->assertSame('confirmada', $reserva->fresh()->estado);
+        \Illuminate\Support\Facades\Notification::assertNothingSent();
+    }
+
     private function png(): UploadedFile
     {
         return UploadedFile::fake()->createWithContent('captura.png', base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a6ioAAAAASUVORK5CYII='));
