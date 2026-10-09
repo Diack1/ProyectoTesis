@@ -38,7 +38,7 @@ class ReservaAdminController extends Controller
             $buscar = $request->buscar;
 
             $query->where(function ($q) use ($buscar) {
-                $q->where('codigo_reserva', 'like', "%{$buscar}%")->orWhere('placa', 'like', "%{$buscar}%")
+                $q->buscarCodigo($buscar)->orWhere('placa', 'like', "%{$buscar}%")
                     ->orWhereHas('usuario', function ($userQuery) use ($buscar) {
                         $userQuery->where('name', 'like', "%{$buscar}%")
                             ->orWhere('email', 'like', "%{$buscar}%");

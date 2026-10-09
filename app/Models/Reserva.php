@@ -11,6 +11,21 @@ class Reserva extends Model
 
     public const ESTADOS_BLOQUEANTES = ['pendiente_pago', 'confirmada'];
 
+    public function getCodigoCortoAttribute(): string
+    {
+        return 'RSV-'.str_pad((string) $this->getKey(), 6, '0', STR_PAD_LEFT);
+    }
+
+    public function scopeBuscarCodigo(\Illuminate\Database\Eloquent\Builder $query, string $codigo): void
+    {
+        $query->where(function ($q) use ($codigo) {
+            $q->where('codigo_reserva', 'like', '%'.$codigo.'%');
+            if (preg_match('/\ARSV-([0-9]{1,18})\z/i', trim($codigo), $matches)) {
+                $q->orWhere($q->getModel()->getQualifiedKeyName(), (int) $matches[1]);
+            }
+        });
+    }
+
     protected $fillable = [
         'reserva_inmediata',
         'user_id', 'tolerancia_llegada_minutos', 'minutos_fraccion_snapshot', 'inasistencia_at',

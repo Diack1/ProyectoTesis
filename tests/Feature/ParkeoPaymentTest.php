@@ -43,6 +43,42 @@ class ParkeoPaymentTest extends TestCase
         \Illuminate\Support\Facades\Notification::assertNothingSent();
     }
 
+    public function test_payment_page_shows_configured_qr_upload_and_short_code(): void
+    {
+        $reserva = $this->reservation();
+        $this->actingAs($reserva->usuario)->get(route('pagos.show', $reserva))
+            ->assertOk()->assertSee($reserva->codigo_corto)->assertDontSee($reserva->codigo_reserva)
+            ->assertSee('payment-reservation-details')->assertSee(route('pagos.qr', 'yape'))
+            ->assertSee('name="comprobante"', false)->assertSee('Enviar para revisión');
+        $this->get(route('pagos.qr', 'yape'))->assertOk();
+        $this->post(route('pagos.enviar', $reserva), ['metodo_pago' => 'yape', 'comprobante' => $this->png()])
+            ->assertRedirect()->assertSessionHasNoErrors();
+        $pago = $reserva->pagos()->firstOrFail();
+        $this->assertSame('pendiente', $pago->estado);
+        Storage::disk('local')->assertExists($pago->comprobante);
+    }
+
+    public function test_missing_merchant_qr_does_not_offer_payment_upload(): void
+    {
+        ConfiguracionPago::query()->update(['qr_yape' => null, 'qr_plin' => null]);
+        $reserva = $this->reservation();
+        $this->actingAs($reserva->usuario)->get(route('pagos.show', $reserva))
+            ->assertOk()->assertSee('El negocio todavía no ha configurado su QR')
+            ->assertDontSee('name="comprobante"', false);
+    }
+
+    public function test_short_codes_are_unique_searchable_and_preserve_legacy_codes(): void
+    {
+        $first = $this->reservation();
+        $second = $this->reservation();
+        $original = $first->codigo_reserva;
+        $this->assertNotSame($first->codigo_corto, $second->codigo_corto);
+        $this->assertSame($first->id, Reserva::buscarCodigo(strtolower($first->codigo_corto))->sole()->id);
+        $this->assertSame($first->id, Reserva::buscarCodigo($original)->sole()->id);
+        $this->assertSame(0, Reserva::where('user_id', $second->user_id)->buscarCodigo($first->codigo_corto)->count());
+        $this->assertSame($original, $first->fresh()->codigo_reserva);
+    }
+
     private function png(): UploadedFile
     {
         return UploadedFile::fake()->createWithContent('captura.png', base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a6ioAAAAASUVORK5CYII='));

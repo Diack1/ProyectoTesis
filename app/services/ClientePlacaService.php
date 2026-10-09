@@ -25,7 +25,7 @@ class ClientePlacaService
             ->whereDate('fecha_reserva', '<=', $ahora->toDateString())
             ->orderBy('fecha_reserva')->orderBy('hora_inicio')->get()
             ->filter(fn ($r) => $r->limite_llegada->gte($ahora))->take(5)
-            ->map(fn ($r) => ['codigo' => $r->codigo_reserva, 'placa' => $r->placa,
+            ->map(fn ($r) => ['codigo' => $r->codigo_corto, 'placa' => $r->placa,
                 'cliente' => $r->usuario?->name, 'espacio' => $r->espacio?->codigo,
                 'llegada' => $r->fecha_reserva->format('d/m/Y').' '.substr($r->hora_inicio, 0, 5),
                 'url' => route('admin.estadias.create', ['reserva' => $r->id, 'placa' => $placa])])->values()->all();

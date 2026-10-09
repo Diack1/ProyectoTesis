@@ -165,7 +165,7 @@ class ReservaPlacaTest extends TestCase
         $operator = User::factory()->create(['role' => 'operador']);
         $this->actingAs($operator)->postJson(route('admin.placas.cliente'), ['placa' => 'abc-123'])
             ->assertOk()->assertJsonCount(1, 'coincidencia.reservas')
-            ->assertJsonPath('coincidencia.reservas.0.codigo', $r->codigo_reserva)
+            ->assertJsonPath('coincidencia.reservas.0.codigo', $r->codigo_corto)
             ->assertJsonPath('coincidencia.reservas.0.cliente', $r->usuario->name)
             ->assertJsonPath('coincidencia.cliente', null);
         ClienteVehiculo::create(['placa' => 'ABC123', 'user_id' => $r->user_id, 'nombre' => 'Cliente', 'registrado_por' => $operator->id]);
@@ -199,7 +199,7 @@ class ReservaPlacaTest extends TestCase
     {
         $this->travelTo(now()->startOfDay()->addMinutes(5));
         $r = $this->reservation(['fecha_reserva' => today()->subDay(), 'hora_inicio' => '23:50:00']);
-        $this->assertSame($r->codigo_reserva, app(ClientePlacaService::class)->buscar('ABC123')['reservas'][0]['codigo']);
+        $this->assertSame($r->codigo_corto, app(ClientePlacaService::class)->buscar('ABC123')['reservas'][0]['codigo']);
         $this->travel(1)->seconds();
         $this->assertSame([], app(ClientePlacaService::class)->buscar('ABC123')['reservas']);
     }

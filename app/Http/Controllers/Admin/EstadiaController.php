@@ -47,7 +47,7 @@ class EstadiaController extends Controller
         $query = Reserva::with('usuario', 'espacio')->where('estado', 'confirmada')->whereNull('inasistencia_at')->whereDoesntHave('estadia');
         if ($request->filled('buscar')) {
             $query->where(function ($q) use ($request) {
-                $q->where('codigo_reserva', 'like', '%'.$request->buscar.'%')->orWhereHas('usuario', fn ($u) => $u->where('name', 'like', '%'.$request->buscar.'%')->orWhere('email', 'like', '%'.$request->buscar.'%'));
+                $q->buscarCodigo($request->buscar)->orWhereHas('usuario', fn ($u) => $u->where('name', 'like', '%'.$request->buscar.'%')->orWhere('email', 'like', '%'.$request->buscar.'%'));
             });
         }
         $espacios = Espacio::conEstadoOperativo()->with('sensor', 'vehiculoTipos')->where('activo', true)->orderBy('codigo')->get()

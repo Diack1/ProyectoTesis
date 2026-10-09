@@ -5,7 +5,14 @@
 @include('partials.booking-steps',['step'=>3])
 <span class="eyebrow">RESERVA WEB · PAGO ANTICIPADO</span><h1>Pago de tu reserva</h1>
 @include('partials.payment-feedback')
-<p><strong>{{ $reserva->codigo_reserva }}</strong> <span>· Placa: {{ $reserva->placa ?? 'Sin placa registrada' }}</span> · Espacio {{ $reserva->espacio->codigo }} · {{ $reserva->fecha_reserva->format('d/m/Y') }} · {{ $reserva->reserva_inmediata ? 'Reserva inmediata' : 'Llegada '.substr($reserva->hora_inicio,0,5) }} · {{ $reserva->duracion_minutos }} min contratados</p>
+<dl class="payment-reservation-details">
+<div><dt>Reserva</dt><dd>{{ $reserva->codigo_corto }}</dd></div>
+<div><dt>Placa</dt><dd>{{ $reserva->placa ?? 'Sin placa registrada' }}</dd></div>
+<div><dt>Espacio</dt><dd>{{ $reserva->espacio->codigo }}</dd></div>
+<div><dt>Fecha</dt><dd>{{ $reserva->fecha_reserva->format('d/m/Y') }}</dd></div>
+<div><dt>Llegada</dt><dd>{{ $reserva->reserva_inmediata ? 'Reserva inmediata' : substr($reserva->hora_inicio,0,5) }}</dd></div>
+<div><dt>Tiempo contratado</dt><dd>{{ $reserva->duracion_minutos }} minutos</dd></div>
+</dl>
 @if($reserva->reserva_inmediata)
 <div class="arrival-policy">@if($reserva->estado === 'confirmada' && !$reserva->estadia)<strong>Llega antes de las {{ $reserva->limite_llegada->format('H:i') }} del {{ $reserva->limite_llegada->format('d/m/Y') }}</strong><p>Tu pago está aprobado. Dispones de 15 minutos desde la aprobación.</p>@elseif($reserva->estado === 'pendiente_pago')<strong>15 minutos para llegar desde la aprobación del pago</strong><p>El plazo aún no ha empezado. Consulta aquí el resultado de la revisión.</p>@endif</div>
 @endif
