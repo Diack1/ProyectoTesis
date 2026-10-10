@@ -17,7 +17,7 @@ class ReporteExcelService
     public function guardar(string $path, Builder $query, string $filtros): void
     {
         $options = new Options();
-        $options->DEFAULT_ROW_STYLE = (new Style())->setFontName('Calibri')->setFontSize(11)->setFontColor('20344A')->setShouldWrapText();
+        $options->DEFAULT_ROW_STYLE = (new Style())->setFontName('Calibri')->setFontSize(11)->setFontColor('20344A')->setCellVerticalAlignment('center')->setShouldWrapText();
         foreach ([10, 24, 16, 20, 20, 18, 30, 24] as $i => $width) {
             $options->setColumnWidth($width, $i + 1);
         }
@@ -35,7 +35,7 @@ class ReporteExcelService
             $writer->addRow($this->fila([$filtros], (new Style())->setBackgroundColor('EAF2FB')->setShouldWrapText(), 38));
             $writer->addRow($this->fila(['Historial de cambios de estado; no representa la ocupación actual.'], (new Style())->setFontColor('52677D'), 25));
             $writer->addRow(Row::fromValues([]));
-            $writer->addRow($this->fila(['ID', 'Fecha y hora', 'Espacio', 'Sensor', 'Estado detectado', 'Distancia (cm)', 'Origen', 'Fecha de registro'], (new Style())->setFontBold()->setFontColor('FFFFFF')->setBackgroundColor('1768AC')->setShouldWrapText(), 30));
+            $writer->addRow($this->fila(['ID', 'Fecha y hora', 'Espacio', 'Sensor', 'Estado detectado', 'Distancia (cm)', 'Origen', 'Fecha de registro'], (new Style())->setFontBold()->setFontColor('FFFFFF')->setBackgroundColor('1768AC')->setCellAlignment('center')->setShouldWrapText(), 30));
             $date = (new Style())->setFormat('dd/mm/yyyy hh:mm:ss');
             $number = (new Style())->setFormat('0.00');
             $rowNumber = 6;
