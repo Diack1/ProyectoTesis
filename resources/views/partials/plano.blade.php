@@ -7,19 +7,16 @@
     <div class="parking-toolbar"><div><span class="eyebrow">VISTA SUPERIOR · PARKE’O</span><h2>{{ $administrativo ? 'Cada espacio, a la vista' : 'Elige tu espacio' }}</h2></div></div>
     <p class="text-muted">Pulsa un espacio para consultar su estado{{ $administrativo ? ' y gestionar la llegada o salida.' : ' y reservar si está libre.' }}</p>
     <div class="parking-legend"><span>🟢 Libre</span><span>🟠 Reservado</span><span>🔴 Ocupado</span><span>⚪ No disponible</span></div>
-    <div class="parking-scroll"><div class="parking-lot">
-        <div class="lot-office">Oficina</div><div class="lot-services">Servicios</div><div class="lot-lane">↑<br>PASILLO DE CIRCULACIÓN<br>↓</div><div class="lot-gate">ENTRADA / SALIDA ↑</div>
+    <div class="parking-scroll"><div class="parking-lot parking-lot-techos">
+        <div class="lot-office">Oficina</div><div class="lot-services">Servicios</div><div class="lot-lane">↑<br>CIRCULACIÓN<br>↓</div><div class="lot-gate">ENTRADA / SALIDA ↑</div>
         @foreach($espacios as $espacio)
         @php
-            $n = preg_match('/^E(\d{2})$/', $espacio->codigo, $m) ? (int)$m[1] : 0;
-            $mapped = $n >= 1 && $n <= 30;
-            if ($n <= 9) { $x=4+($n-1)*10; $y=3; $w=9; $h=12; }
-            elseif ($n <= 20) { $x=80; $y=20+($n-10)*5.8; $w=17; $h=5.3; }
-            elseif ($n <= 27) { $x=3; $y=39+($n-21)*5.8; $w=17; $h=5.3; }
-            else { $x=25; $y=24+($n-28)*6; $w=17; $h=5.3; }
+            $n = \App\Services\PlanoEspacios::numero($espacio->codigo);
+            $mapped = $n >= 1 && $n <= 41;
+            [$x, $y, $w, $h] = \App\Services\PlanoEspacios::posicion($n);
             $estado = $disponibilidadPorEspacio[$espacio->id];
         @endphp
-        <{{ $administrativo ? 'button' : 'a' }} @if($administrativo) type="button" @else href="{{ route('reservas.create', $espacio, false) }}" role="button" @endif data-slot="{{ $n }}" class="parking-space {{ !$mapped ? 'unmapped' : '' }}" data-space="{{ $espacio->id }}" data-state="{{ $estado['estado_visual'] }}" data-available="{{ $estado['puede_reservar'] ? '1' : '0' }}" style="--x:{{ $x }}%;--y:{{ $y }}%;--w:{{ $w }}%;--h:{{ $h }}%" aria-label="{{ $espacio->codigo }}: {{ $estado['estado_texto'] }}" aria-haspopup="dialog"><strong>{{ $espacio->codigo }}</strong><small data-state-label>{{ $estado['estado_texto'] }}</small></{{ $administrativo ? 'button' : 'a' }}>
+        <{{ $administrativo ? 'button' : 'a' }} @if($administrativo) type="button" @else href="{{ route('reservas.create', $espacio, false) }}" role="button" @endif data-slot="{{ $n }}" class="parking-space {{ $n >= 27 && $n <= 41 ? 'space-central' : '' }} {{ !$mapped ? 'unmapped' : '' }}" data-space="{{ $espacio->id }}" data-state="{{ $estado['estado_visual'] }}" data-available="{{ $estado['puede_reservar'] ? '1' : '0' }}" style="--x:{{ $x }}%;--y:{{ $y }}%;--w:{{ $w }}%;--h:{{ $h }}%" aria-label="{{ $espacio->codigo }}: {{ $estado['estado_texto'] }}" aria-haspopup="dialog"><strong>{{ $espacio->codigo }}</strong><small data-state-label>{{ $estado['estado_texto'] }}</small></{{ $administrativo ? 'button' : 'a' }}>
         <template data-space-detail="{{ $espacio->id }}">
             <h2>Espacio {{ $espacio->codigo }}</h2><p><strong data-detail-state>{{ $estado['estado_texto'] }}</strong></p>
             <p>{{ $espacio->vehiculoTipos->pluck('nombre')->implode(' · ') ?: 'Consultar vehículos permitidos al personal' }}</p>
@@ -31,8 +28,9 @@
                 @php
                     $reserva = $espacio->reservas->first();
                 @endphp
-                @if($ticket)<p>Placa: <strong>{{ $ticket->placa }}</strong><br>Ingreso: {{ $ticket->hora_ingreso->format('d/m H:i') }}<br>Tiempo estacionado: {{ (int) $ticket->hora_ingreso->diffInMinutes(now()) }} min<br>Inicio del cobro: {{ $ticket->inicio_cobro?->format('H:i') ?? 'Pendiente de detección' }}<br>{{ $ticket->reserva?->usuario?->name }}</p><a class="btn btn-primary" href="{{ route('admin.estadias.show', $ticket) }}">Cobrar y registrar salida</a>
-                @elseif($reserva)<p>Reserva: {{ $reserva->codigo_corto }}<br>Placa: {{ $reserva->placa ?? 'Sin registrar' }}<br>{{ $reserva->usuario?->name }}<br>Llegada: {{ $reserva->fecha_reserva->format('d/m') }} {{ substr($reserva->hora_inicio,0,5) }}<br>{{ str_replace('_',' ',$reserva->estado) }}</p>@if($reserva->estado === 'confirmada' && $reserva->pagos->contains('estado','aprobado'))<a class="btn btn-primary" href="{{ route('admin.estadias.create',['reserva'=>$reserva->id]) }}">Registrar llegada</a>@elseif(!$reserva->expires_at)<a class="btn btn-primary" href="{{ route('admin.pagos.index') }}">Revisar pago</a>@else<p>Esperando el pago del cliente.</p>@endif
+                @if($asignacion = $espacio->abonoVigente()->with('abonado')->first())<p><strong>Asignado a abonado:</strong> {{ $asignacion->abonado->nombre }} · {{ $asignacion->fin->format('d/m/Y') }}<br>{{ $ticket && !$ticket->abono_id ? 'Ocupación temporal: reubicar antes de recibir al abonado.' : ($ticket ? 'Vehículo dentro' : 'Abonado ausente') }}</p><a class="btn btn-secondary" href="{{ route('admin.abonados.show',$asignacion->abonado_id) }}">Ver abonado</a>@endif
+                @if($ticket)<p>Placa: <strong>{{ $ticket->placa }}</strong><br>Ingreso: {{ $ticket->hora_ingreso->format('d/m H:i') }}<br>Tiempo estacionado: {{ (int) $ticket->hora_ingreso->diffInMinutes(now()) }} min<br>Inicio del cobro: {{ $ticket->inicio_cobro?->format('H:i') ?? 'Pendiente de detección' }}<br>{{ $ticket->reserva?->usuario?->name }}</p><a class="btn btn-primary" href="{{ route('admin.estadias.show', $ticket) }}">Ver ticket / reubicar / salida</a>
+                @elseif($reserva)<p>Reserva: {{ $reserva->codigo_corto }}<br>Placa: {{ $reserva->placa ?? 'Sin registrar' }}<br>{{ $reserva->usuario?->name }}<br>Llegada: {{ $reserva->fecha_reserva->format('d/m') }} {{ substr($reserva->hora_inicio,0,5) }}<br>{{ str_replace('_',' ',$reserva->estado) }}</p>@if(($reserva->pago_al_llegar && $reserva->estado === 'pendiente_pago') || ($reserva->estado === 'confirmada' && $reserva->pagos->contains('estado','aprobado')))<a class="btn btn-primary" href="{{ route('admin.estadias.create',['reserva'=>$reserva->id]) }}">Registrar llegada</a>@elseif(!$reserva->expires_at)<a class="btn btn-primary" href="{{ route('admin.pagos.index') }}">Revisar pago</a>@else<p>Esperando el pago del cliente.</p>@endif
                 @elseif($espacio->estado_actual === 'libre')<a class="btn btn-primary" href="{{ route('admin.estadias.create', ['espacio_id'=>$espacio->id]) }}">Registrar vehículo aquí</a>@endif
                 @if($espacio->modo_monitoreo === 'sensor')<p>{{ $espacio->sensor?->conexion_label ?? 'Sensor pendiente de instalar' }}</p>@endif
                 <p><a href="{{ route('admin.monitoreo.index') }}">Abrir control de espacios</a></p>
@@ -43,20 +41,17 @@
             @endif
         </template>
         @endforeach
-        @foreach(range(1,30) as $n)
-        @if(!$espacios->contains('codigo',sprintf('E%02d',$n)))
+        @foreach(range(1,41) as $n)
+        @if(!$espacios->contains(fn ($e) => \App\Services\PlanoEspacios::numero($e->codigo) === $n))
         @php
-            if ($n <= 9) { $x=4+($n-1)*10; $y=3; $w=9; $h=12; }
-            elseif ($n <= 20) { $x=80; $y=20+($n-10)*5.8; $w=17; $h=5.3; }
-            elseif ($n <= 27) { $x=3; $y=39+($n-21)*5.8; $w=17; $h=5.3; }
-            else { $x=25; $y=24+($n-28)*6; $w=17; $h=5.3; }
+            [$x, $y, $w, $h] = \App\Services\PlanoEspacios::posicion($n);
         @endphp
-        <button data-slot="{{ $n }}" class="parking-space" disabled style="--x:{{ $x }}%;--y:{{ $y }}%;--w:{{ $w }}%;--h:{{ $h }}%"><strong>{{ sprintf('E%02d',$n) }}</strong><small>No habilitado</small></button>
+        <button data-slot="{{ $n }}" class="parking-space {{ $n >= 27 ? 'space-central' : '' }}" disabled style="--x:{{ $x }}%;--y:{{ $y }}%;--w:{{ $w }}%;--h:{{ $h }}%"><strong>{{ 'T'.str_pad((string) $n, 2, '0', STR_PAD_LEFT) }}</strong><small>No habilitado</small></button>
         @endif
         @endforeach
     </div></div>
     <p class="text-muted" data-map-status>{{ $administrativo ? 'Estado al abrir la página. Actualiza para consultar cambios recientes.' : 'La disponibilidad se actualiza automáticamente.' }}</p>
-    <p class="text-muted"><small>Distribución de referencia para 30 espacios; numeración propuesta para revisar en la cochera.</small></p>
+    <p class="text-muted"><small>T = techo · 6 al fondo, 10 a la derecha, 7 a la izquierda y 15 centrales. El morado identifica la zona central; el texto indica su disponibilidad.</small></p>
     </div>
     <dialog class="space-dialog" aria-label="Detalle y precio del espacio"><form method="dialog"><button class="btn btn-secondary" aria-label="Cerrar detalle">Cerrar ×</button></form>
     @if(!$administrativo)

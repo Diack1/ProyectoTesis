@@ -126,33 +126,15 @@
  .space-dialog [data-quote-note]{overflow-wrap:anywhere}
  .admin-refined .admin-user-name{overflow-wrap:anywhere}.admin-refined .admin-user-box{max-width:100%}
 }
-@media(max-width:760px){[data-slot="1"]{--mx:3%;--my:2%}}
-@media(max-width:760px){[data-slot="2"]{--mx:35%;--my:2%}}
-@media(max-width:760px){[data-slot="3"]{--mx:67%;--my:2%}}
-@media(max-width:760px){[data-slot="4"]{--mx:3%;--my:8%}}
-@media(max-width:760px){[data-slot="5"]{--mx:35%;--my:8%}}
-@media(max-width:760px){[data-slot="6"]{--mx:67%;--my:8%}}
-@media(max-width:760px){[data-slot="7"]{--mx:3%;--my:14%}}
-@media(max-width:760px){[data-slot="8"]{--mx:35%;--my:14%}}
-@media(max-width:760px){[data-slot="9"]{--mx:67%;--my:14%}}
-@media(max-width:760px){[data-slot="10"]{--mx:67%;--my:24%}}
-@media(max-width:760px){[data-slot="11"]{--mx:67%;--my:30%}}
-@media(max-width:760px){[data-slot="12"]{--mx:67%;--my:36%}}
-@media(max-width:760px){[data-slot="13"]{--mx:67%;--my:42%}}
-@media(max-width:760px){[data-slot="14"]{--mx:67%;--my:48%}}
-@media(max-width:760px){[data-slot="15"]{--mx:67%;--my:54%}}
-@media(max-width:760px){[data-slot="16"]{--mx:67%;--my:60%}}
-@media(max-width:760px){[data-slot="17"]{--mx:67%;--my:66%}}
-@media(max-width:760px){[data-slot="18"]{--mx:67%;--my:72%}}
-@media(max-width:760px){[data-slot="19"]{--mx:67%;--my:78%}}
-@media(max-width:760px){[data-slot="20"]{--mx:67%;--my:84%}}
-@media(max-width:760px){[data-slot="21"]{--mx:3%;--my:42%}}
-@media(max-width:760px){[data-slot="22"]{--mx:3%;--my:48%}}
-@media(max-width:760px){[data-slot="23"]{--mx:3%;--my:54%}}
-@media(max-width:760px){[data-slot="24"]{--mx:3%;--my:60%}}
-@media(max-width:760px){[data-slot="25"]{--mx:3%;--my:66%}}
-@media(max-width:760px){[data-slot="26"]{--mx:3%;--my:72%}}
-@media(max-width:760px){[data-slot="27"]{--mx:3%;--my:78%}}
-@media(max-width:760px){[data-slot="28"]{--mx:35%;--my:26%}}
-@media(max-width:760px){[data-slot="29"]{--mx:35%;--my:32%}}
-@media(max-width:760px){[data-slot="30"]{--mx:35%;--my:38%}}
+
+/* Techo plan keeps physical zones intact on phones with horizontal panning. */
+[data-parking]:not(.is-list) .parking-lot-techos{min-width:680px;height:760px}
+[data-parking]:not(.is-list) .parking-lot-techos .parking-space{left:var(--x);top:var(--y);width:var(--w);height:var(--h);min-height:0}
+[data-parking]:not(.is-list) .parking-lot-techos .lot-office{left:2%;top:20%;width:19%;height:16%}
+[data-parking]:not(.is-list) .parking-lot-techos .lot-services{right:2%;bottom:2%;width:19%;height:12%}
+[data-parking]:not(.is-list) .parking-lot-techos .lot-lane{left:24%;top:83%;width:51%;font-size:11px;line-height:1.6}
+[data-parking]:not(.is-list) .parking-lot-techos .lot-gate{left:32%;width:38%}
+.public-refined .parking-scroll,.admin-refined .parking-scroll{overflow-x:auto}
+[data-parking] .parking-lot-techos .space-central{box-shadow:inset 0 0 0 2px #a78bfa}
+[data-parking] .parking-lot-techos .space-central[data-state=libre]{background:#30214e;color:#e4d6ff;border-color:#a78bfa}
+[data-parking] .parking-lot-techos .parking-space[data-state=abonado]{background:#25364c;color:#d9e9ff;border-color:#8eb8f0}

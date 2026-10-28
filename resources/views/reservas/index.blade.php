@@ -48,26 +48,27 @@
         <div class="reservation-cards">
         @foreach($reservas as $reserva)
         <article class="reservation-item" data-status="{{ $reserva->estado }}">
-        <div><span class="badge badge-{{ $reserva->estado }}">{{ $reserva->estado === 'pendiente_pago' && !$reserva->expires_at ? 'Pago en revisión' : ucfirst(str_replace('_',' ',$reserva->estado)) }}</span>
+        <div><span class="badge badge-{{ $reserva->estado }}">{{ $reserva->pago_al_llegar && $reserva->estado === 'pendiente_pago' ? 'Pago al llegar' : ($reserva->estado === 'pendiente_pago' && !$reserva->expires_at ? 'Pago en revisión' : ucfirst(str_replace('_',' ',$reserva->estado))) }}</span>
         <h2>{{ $reserva->placa ?? 'Sin placa registrada' }} · Espacio {{ $reserva->espacio->codigo ?? '-' }}</h2>
         <p class="reservation-meta"><x-icon name="clock"/>{{ $reserva->fecha_reserva->format('d/m/Y') }} <span>·</span> {{ $reserva->tipo_vehiculo_nombre ?? 'Vehículo' }} <span>·</span> {{ \App\Services\TarifaResumen::tiempo((int)$reserva->duracion_minutos) }}</p>
         <details class="reservation-more"><summary>Ver detalles</summary><p class="reservation-code">{{ $reserva->codigo_corto }}</p>
         <dl><div><dt>Fecha de llegada</dt><dd>{{ $reserva->fecha_reserva->format('d/m/Y') }}</dd></div>
-        <div><dt>Llegada prevista</dt><dd>{{ $reserva->reserva_inmediata ? ($reserva->pagado_at ? 'Antes de '.$reserva->limite_llegada->format('H:i') : '15 min desde aprobación') : substr($reserva->hora_inicio,0,5) }}</dd></div>
+        <div><dt>Llegada prevista</dt><dd>{{ $reserva->pago_al_llegar ? ($reserva->expires_at ? 'Antes de '.$reserva->expires_at->format('H:i') : 'Ingreso registrado') : ($reserva->reserva_inmediata ? ($reserva->pagado_at ? 'Antes de '.$reserva->limite_llegada->format('H:i') : '15 min desde aprobación') : substr($reserva->hora_inicio,0,5)) }}</dd></div>
         <div><dt>Tiempo contratado</dt><dd>{{ $reserva->duracion_minutos }} min</dd></div>
         <div><dt>Vehículo</dt><dd>{{ $reserva->tipo_vehiculo_nombre ?? '-' }}</dd></div>
         <div><dt>Tarifa aplicada</dt><dd>{{ $reserva->tarifa_nombre ?? '-' }}</dd></div></dl></details>
         </div><div class="reservation-payment"><div class="text-muted">Monto de la reserva</div><div class="amount">S/ {{ number_format($reserva->monto_total,2) }}</div>
-        @if($reserva->estado === 'pendiente_pago' && $reserva->expires_at)<p class="payment-deadline"><strong>Paga antes del</strong><br>{{ $reserva->expires_at->format('d/m/Y · H:i') }}</p>
+        @if($reserva->estado === 'pendiente_pago' && $reserva->expires_at)<p class="payment-deadline"><strong>{{ $reserva->pago_al_llegar ? 'Llega antes del' : 'Paga antes del' }}</strong><br>{{ $reserva->expires_at->format('d/m/Y · H:i') }}</p>
         @elseif($reserva->estado === 'pendiente_pago')<p class="payment-deadline">Recibimos tu comprobante. El personal está revisando el pago.</p>@endif
                             @if($reserva->inasistencia_at)<p>La tolerancia venció y el espacio fue liberado. El pago quedó para revisión y posible reembolso manual.</p>
                                 @elseif($reserva->estadia)<p>{{ $reserva->estadia->estado_label }} · Inicio: {{ $reserva->estadia->inicio_cobro?->format('H:i') ?? 'Esperando sensor' }}</p>
                                 @elseif($reserva->estado === 'confirmada')<p>Te esperamos hasta {{ $reserva->limite_llegada->format('H:i') }}.</p>
                                 @endif
                                 <div class="reservation-buttons">
+@if($reserva->pago_al_llegar && $reserva->estado !== 'pendiente_pago')<a class="btn btn-primary btn-sm" href="{{ route('reservas.pase', $reserva) }}">Ver reserva y tiempo</a>@endif
                                 @if($reserva->estado === 'pendiente_pago')
                                 <a href="{{ route('pagos.show', $reserva) }}" class="btn btn-primary btn-sm">
-                                    {{ $reserva->expires_at ? 'Pagar reserva' : 'Ver estado del pago' }}
+                                    {{ $reserva->pago_al_llegar ? 'Ver mi QR' : ($reserva->expires_at ? 'Pagar reserva' : 'Ver estado del pago') }}
                                 </a>
 
                                 @if($reserva->expires_at)<form action="{{ route('reservas.cancelar', $reserva) }}" method="POST"

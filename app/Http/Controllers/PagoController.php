@@ -18,6 +18,7 @@ class PagoController extends Controller
     public function show(Reserva $reserva, ReservaService $service)
     {
         abort_unless($reserva->user_id === Auth::id(), 403);
+        if ($reserva->pago_al_llegar) { return redirect()->route('reservas.pase', $reserva); }
         $service->expirarReservasPendientes();
         $reserva->refresh()->load('espacio', 'pagos');
 
@@ -28,6 +29,7 @@ class PagoController extends Controller
     public function enviar(Request $request, Reserva $reserva)
     {
         abort_unless($reserva->user_id === Auth::id(), 403);
+        abort_if($reserva->pago_al_llegar, 409, 'Esta reserva se paga al encargado al llegar.');
         $data = $request->validate(['metodo_pago' => 'required|in:yape,plin',
             'referencia_pago' => 'nullable|required_without:comprobante|string|max:80|regex:/^[A-Za-z0-9-]+$/',
             'comprobante' => 'nullable|required_without:referencia_pago|image|mimes:jpg,jpeg,png,webp|max:5120']);

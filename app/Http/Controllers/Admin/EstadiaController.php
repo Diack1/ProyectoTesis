@@ -44,7 +44,7 @@ class EstadiaController extends Controller
         $service->procesarReservasAutomaticas();
         $request->validate(['buscar' => 'nullable|string|max:80', 'reserva' => 'nullable|integer', 'placa' => 'nullable|string|regex:/\A[A-Z0-9]{5,10}\z/']);
         $reserva = $request->filled('reserva') ? Reserva::with('usuario', 'espacio', 'vehiculoTipo')->findOrFail($request->reserva) : null;
-        $query = Reserva::with('usuario', 'espacio')->where('estado', 'confirmada')->whereNull('inasistencia_at')->whereDoesntHave('estadia');
+        $query = Reserva::with('usuario', 'espacio')->where(fn ($q) => $q->where('estado', 'confirmada')->orWhere(fn ($q) => $q->where('pago_al_llegar', true)->where('estado', 'pendiente_pago')->where('expires_at', '>=', now())))->whereNull('inasistencia_at')->whereDoesntHave('estadia');
         if ($request->filled('buscar')) {
             $query->where(function ($q) use ($request) {
                 $q->buscarCodigo($request->buscar)->orWhereHas('usuario', fn ($u) => $u->where('name', 'like', '%'.$request->buscar.'%')->orWhere('email', 'like', '%'.$request->buscar.'%'));
@@ -54,14 +54,20 @@ class EstadiaController extends Controller
             ->filter(fn ($e) => $e->estado_actual === 'libre' || $e->id === $reserva?->espacio_id);
 
         return view('admin.estadias.create', ['reserva' => $reserva, 'reservas' => $query->orderBy('fecha_reserva')->limit(20)->get(),
-            'espacios' => $espacios, 'tipos' => VehiculoTipo::where('activo', true)->get()]);
+            'espacios' => $espacios, 'tipos' => VehiculoTipo::where('activo', true)->get(),
+            'abonos' => \App\Models\Abono::vigentes()->with('abonado','espacio')->get()]);
     }
 
     public function store(Request $request, EstadiaService $service)
     {
         $request->merge(['placa' => strtoupper(preg_replace('/[\s-]+/', '', (string) $request->placa))]);
         $data = $request->validate(['placa' => 'required|string|regex:/^[A-Z0-9]{5,10}$/', 'espacio_id' => 'required|integer|exists:espacios,id',
-            'vehiculo_tipo_id' => 'required|integer|exists:vehiculo_tipos,id', 'reserva_id' => 'nullable|integer|exists:reservas,id']);
+            'vehiculo_tipo_id' => 'required|integer|exists:vehiculo_tipos,id', 'reserva_id' => 'nullable|integer|exists:reservas,id', 'abono_id'=>'nullable|integer|exists:abonos,id',
+            'autoriza_movimiento'=>'sometimes|accepted','llave_recibida'=>'sometimes|accepted',
+            'ubicacion_llave'=>'nullable|required_if:llave_recibida,1|string|max:100', 'salida_prevista'=>'nullable|date|after:now',
+            'metodo_pago' => 'nullable|in:efectivo,yape,plin', 'pago_verificado' => 'sometimes|accepted',
+            'referencia_pago' => 'nullable|string|max:80|regex:/^[A-Za-z0-9-]+$/',
+            'efectivo_recibido' => 'nullable|numeric|min:0|max:999999|decimal:0,2']);
         $estadia = $service->ingresar($data, $request->user());
 
         return redirect()->route('admin.estadias.show', $estadia)->with('success', 'Ingreso registrado. Entrega el ticket al conductor.');
@@ -78,7 +84,7 @@ class EstadiaController extends Controller
             $cotizacion = Crypt::encryptString(json_encode(['id' => $estadia->id, 'inicio' => $estadia->inicio_cobro->toIso8601String(), 'corte' => $corte->toIso8601String()]));
         }
 
-        return view('admin.estadias.show', compact('estadia', 'liquidacion', 'cotizacion'));
+        return view('admin.estadias.show', compact('estadia', 'liquidacion', 'cotizacion') + ['destinos'=>Espacio::conEstadoOperativo()->where('activo',true)->whereDoesntHave('abonoVigente')->orderBy('codigo')->get()->filter(fn ($e)=>$e->estado_actual === 'libre' && $e->id !== $estadia->espacio_id)]);
     }
 
     public function ticket(Estadia $estadia)

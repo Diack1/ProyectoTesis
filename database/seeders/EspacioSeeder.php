@@ -16,7 +16,7 @@ class EspacioSeeder extends Seeder
             ->all();
 
         for ($i = 1; $i <= 5; $i++) {
-            $codigoEspacio = 'E' . str_pad($i, 2, '0', STR_PAD_LEFT);
+            $codigoEspacio = 'T'.str_pad((string) $i, 2, '0', STR_PAD_LEFT);
             $codigoSensor = 'SENSOR_' . str_pad($i, 2, '0', STR_PAD_LEFT);
 
             $espacio = Espacio::firstOrCreate(

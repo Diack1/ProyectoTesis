@@ -244,6 +244,7 @@ class ReservaController extends Controller
         ) {
             $espacio = Espacio::lockForUpdate()->findOrFail($espacio->id);
             abort_unless(app(ReservaDisponibilidadService::class)->estadoParaTarjeta($espacio)['puede_reservar'], 409, 'El espacio ya no está disponible.');
+            abort_if(\App\Models\Abono::where('espacio_id', $espacio->id)->where('inicio', '<', now()->addMinutes($duracionMinutos + 15))->where('fin', '>', now())->exists(), 409, 'El tiempo solicitado coincide con una asignación mensual. Elige otro espacio.');
             $codigoReserva = 'RES-'.now('America/Lima')->format('YmdHis').'-'.Str::upper(Str::random(8));
 
             $reserva = Reserva::create([
@@ -272,8 +273,8 @@ class ReservaController extends Controller
                 'tolerancia_llegada_minutos' => 15,
                 'minutos_fraccion_snapshot' => $tarifa->minutos_fraccion ?: 60,
                 'estado' => 'pendiente_pago',
-                'expires_at' => now('America/Lima')->addMinutes(ConfiguracionPago::actual()->minutos_pago),
-                'reserva_inmediata' => true,
+                'expires_at' => now('America/Lima')->addMinutes(15),
+                'reserva_inmediata' => true, 'pago_al_llegar' => true,
                 'observacion' => 'Reserva inmediata desde la plataforma pública.',
             ]);
 
@@ -292,7 +293,7 @@ class ReservaController extends Controller
         $request->session()->forget('reservation_review.'.$espacio->id);
         return redirect()
             ->route('pagos.show', $reserva)
-            ->with('success', 'Reserva generada correctamente. Consulta el plazo de pago indicado en tu reserva.');
+            ->with('success', 'Reserva generada. Muestra tu QR y paga al encargado al llegar, dentro de los próximos 15 minutos.');
     }
 
     // SOLICITUD CANCELAR

@@ -2,7 +2,7 @@
 @section('title', 'Pago de reserva - Parke’o')
 @section('content')
 <section class="page-content"><div class="container" style="max-width:850px"><div class="page-card">
-@include('partials.booking-steps',['step'=>3])
+@include('partials.booking-steps',['step'=>3, 'lastStep'=>'Pagar'])
 <span class="eyebrow">RESERVA WEB · PAGO ANTICIPADO</span><h1>Pago de tu reserva</h1>
 @include('partials.payment-feedback')
 <dl class="payment-reservation-details">

@@ -213,14 +213,14 @@ class ParkeoPaymentTest extends TestCase
         $this->actingAs($reserva->usuario)->get(route('pagos.show', $reserva))->assertOk()->assertSee('Enviar para revisión');
     }
 
-    public function test_seed_preserves_records_and_adds_thirty_spaces_without_fake_sensors(): void
+    public function test_seed_preserves_records_and_adds_41_roof_spaces_without_fake_sensors(): void
     {
         Espacio::create(['codigo' => 'E01', 'estado_actual' => 'ocupado', 'activo' => true]);
         $this->seed(ParkeoSeeder::class);
         $this->seed(ParkeoSeeder::class);
-        $this->assertSame(30, Espacio::count());
+        $this->assertSame(41, Espacio::count());
         $this->assertSame(15, Espacio::where('incluido_estudio', true)->count());
-        $this->assertDatabaseHas('espacios', ['codigo' => 'E01', 'estado_actual' => 'ocupado']);
+        $this->assertDatabaseHas('espacios', ['codigo' => 'T01', 'estado_actual' => 'ocupado']);
         $this->assertDatabaseCount('sensores', 0);
     }
 
@@ -248,7 +248,7 @@ class ParkeoPaymentTest extends TestCase
         $this->assertSame('ocupado', $other->espacio->fresh()->estado_actual);
     }
 
-    public function test_reservation_uses_current_tariff_and_configured_payment_deadline(): void
+    public function test_reservation_uses_current_tariff_and_fifteen_minute_arrival_deadline(): void
     {
         $this->travelTo(now()->startOfDay()->addHours(8));
         ConfiguracionPago::actual()->update(['minutos_pago' => 20]);
@@ -262,7 +262,7 @@ class ParkeoPaymentTest extends TestCase
             ->assertSessionHasNoErrors()->assertRedirect();
         $reserva = Reserva::firstOrFail();
         $this->assertSame('5.00', $reserva->monto_total);
-        $this->assertTrue($reserva->expires_at->equalTo(now()->addMinutes(20)));
+        $this->assertTrue($reserva->expires_at->equalTo(now()->addMinutes(15)));
         $this->assertSame('manual', $reserva->pagos()->firstOrFail()->metodo_pago);
         $this->assertSame('libre', $space->fresh()->getRawOriginal('estado_actual'));
         $this->assertSame('reservado', $space->fresh()->estado_actual);

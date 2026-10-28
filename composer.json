@@ -10,6 +10,7 @@
         "ext-dom": "*",
         "ext-xmlreader": "*",
         "ext-zip": "*",
+        "bacon/bacon-qr-code": "^3.0",
         "laravel/framework": "^12.0",
         "laravel/sanctum": "^4.0",
         "laravel/socialite": "^5.0",

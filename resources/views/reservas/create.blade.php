@@ -96,7 +96,7 @@
             $horaMinimaHoy = now('America/Lima')->addMinutes(15)->format('H:i');
             @endphp
 
-            <p class="booking-note">Paga por Yape o Plin y revisa la aprobación en tu cuenta. Reservamos tu espacio para una llegada inmediata.</p>
+            <p class="booking-note">Genera tu QR, muéstralo al encargado y paga al llegar. Reservamos tu espacio durante 15 minutos.</p>
 <form id="formNuevaReserva" data-server-now="{{ now()->getTimestampMs() }}" action="{{ route('reservas.confirmar', $espacio) }}" method="POST">
                 @csrf
 
@@ -119,13 +119,13 @@
                     @error('placa')<p class="text-danger">{{ $message }}</p>@enderror
                 </div>
 
-                <div class="arrival-policy"><span class="badge badge-info">Reserva inmediata</span><h3>Tienes 15 minutos para llegar</h3><p>El plazo empieza cuando recepción apruebe tu pago. Verás la hora límite en Mis reservas.</p><input type="hidden" id="hora_inicio" value="{{ now('America/Lima')->format('H:i') }}"></div>
+                <div class="arrival-policy"><span class="badge badge-info">Reserva inmediata</span><h3>Tienes 15 minutos para llegar</h3><p>El plazo empieza cuando generas tu reserva. Verás la hora límite en Mis reservas.</p><input type="hidden" id="hora_inicio" value="{{ now('America/Lima')->format('H:i') }}"></div>
                 <div class="form-group">
                     <label for="duracion_minutos">Duración</label>
                     @include('partials.duration-picker', ['id'=>'duracion_minutos', 'name'=>'duracion_minutos', 'selected'=>old('duracion_minutos', request()->query('duracion_minutos', 60))])
                 </div>
 
-                <aside class="reservation-summary" id="resumenTarifaReserva"><h2>Tu reserva de un vistazo</h2><p><strong>Espacio:</strong> {{ $espacio->codigo }}</p><p><strong>Vehículo:</strong> <span data-booking-vehicle>Por elegir</span></p><p><strong>Placa:</strong> <span data-booking-plate>Por completar</span></p><p><strong>Llegada:</strong> <span>Dentro de los 15 minutos posteriores a la aprobación del pago</span></p>
+                <aside class="reservation-summary" id="resumenTarifaReserva"><h2>Tu reserva de un vistazo</h2><p><strong>Espacio:</strong> {{ $espacio->codigo }}</p><p><strong>Vehículo:</strong> <span data-booking-vehicle>Por elegir</span></p><p><strong>Placa:</strong> <span data-booking-plate>Por completar</span></p><p><strong>Llegada:</strong> <span>Dentro de los 15 minutos desde que generas la reserva</span></p>
                     <p><strong>Tarifa:</strong> <span data-role="tarifa-nombre">Selecciona un tipo de vehiculo.</span></p>
                     <p><strong>Duración:</strong> <span data-role="tarifa-duracion">-</span></p>
                     <p><strong>Monto estimado:</strong> <span data-role="tarifa-monto">-</span></p>
@@ -133,7 +133,7 @@
                     <p class="booking-note">
                         Verás el total confirmado antes de pagar.
                     </p>
-                <p><strong>Plazo para enviar el pago:</strong> {{ \App\Models\ConfiguracionPago::actual()->minutos_pago }} min desde la confirmación.</p><p><strong>Tolerancia de llegada:</strong> 15 min desde la aprobación del pago.</p><details><summary>Sobre tu llegada y cancelación</summary><p>El tiempo comienza cuando te estacionas en un espacio con sensor o al emitir el ticket en un espacio manual. Si no llegas dentro de la tolerancia, se libera el espacio y tu pago queda para revisión y posible reembolso manual.</p></details></aside>
+                <p><strong>Pago:</strong> al llegar, con el encargado.</p><p><strong>Plazo de llegada:</strong> 15 min desde que generas la reserva.</p><details><summary>Sobre tu llegada y cancelación</summary><p>El tiempo comienza cuando te estacionas en un espacio con sensor o al emitir el ticket en un espacio manual. Si no llegas dentro de la tolerancia, se libera el espacio y no se registra ningún cobro.</p></details></aside>
                 <div class="reservation-actions">
                     <button type="submit" id="btnNuevaReserva" class="btn btn-primary">
                         Continuar a confirmación

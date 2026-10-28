@@ -23,6 +23,30 @@ class LiquidacionService
             throw ValidationException::withMessages(['salida' => 'La hora de corte no puede ser anterior al inicio.']);
         }
         $minutos = max(1, (int) ceil($estadia->inicio_cobro->diffInSeconds($hasta) / 60));
+        if ($estadia->abono_id) {
+            $abono = $estadia->abono;
+            $cursor = $abono->fin->copy();
+            $intervalos = [];
+            // Charge only uncovered intervals, even when a late renewal follows a gap.
+            foreach (\App\Models\Abono::where('abonado_id',$abono->abonado_id)->where('espacio_id',$abono->espacio_id)
+                ->where('inicio','>=',$abono->fin)->whereHas('pago',fn ($q)=>$q->where('estado','aprobado'))->orderBy('inicio')->get() as $periodo) {
+                if ($cursor->gte($hasta)) { break; }
+                if ($periodo->inicio->gt($cursor)) { $intervalos[] = [$cursor->copy(), $periodo->inicio->lt($hasta) ? $periodo->inicio : $hasta]; }
+                if ($periodo->fin->gt($cursor)) { $cursor = $periodo->fin->copy(); }
+            }
+            if ($cursor->lt($hasta)) { $intervalos[] = [$cursor, $hasta]; }
+            if (!$intervalos) {
+                return ['minutos'=>$minutos,'total_centavos'=>0,'adelanto_centavos'=>0,'exceso_centavos'=>0,'saldo_centavos'=>0,'detalle'=>'Estancia cubierta por el abono mensual pagado.','hasta'=>$hasta];
+            }
+            $total = 0;
+            foreach ($intervalos as [$desde, $fin]) {
+                $extra = clone $estadia;
+                $extra->abono_id = null; $extra->reserva_id = null; $extra->inicio_cobro = $desde; $extra->monto_adelantado = 0;
+                $total += $this->calcular($extra, $fin)['saldo_centavos'];
+            }
+            return ['minutos'=>$minutos,'total_centavos'=>$total,'adelanto_centavos'=>0,'exceso_centavos'=>$total,'saldo_centavos'=>$total,
+                'detalle'=>'Cobro por hora de los intervalos sin abono desde '.$abono->fin->format('d/m/Y H:i').', según la tarifa regular registrada al ingresar.','hasta'=>$hasta];
+        }
         $t = $estadia->tarifa_snapshot;
         $tolerancia = max(0, (int) ($t['tolerancia_minutos'] ?? 0));
         $adelanto = self::centavos($estadia->monto_adelantado);

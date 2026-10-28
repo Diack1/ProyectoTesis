@@ -9,6 +9,7 @@ class VehiculoTipoSeeder extends Seeder
 {
     public function run(): void
     {
+        VehiculoTipo::firstOrCreate(['codigo' => 'camioneta'], ['nombre' => 'Camioneta', 'activo' => true]);
         VehiculoTipo::updateOrCreate(
             ['codigo' => 'auto'],
             [

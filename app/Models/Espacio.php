@@ -15,6 +15,8 @@ class Espacio extends Model
         'activo', 'incluido_estudio', 'modo_monitoreo',
     ];
 
+    public function abonoVigente() { return $this->hasOne(Abono::class)->vigentes(); }
+
     public function estadias()
     {
         return $this->hasMany(Estadia::class);
@@ -24,9 +26,10 @@ class Espacio extends Model
     public function scopeConEstadoOperativo($query)
     {
         return $query->withExists([
+            'abonoVigente as tiene_abono_vigente',
             'estadias as tiene_estadia_activa' => fn ($q) => $q->activas(),
             'reservas as tiene_reserva_bloqueante' => fn ($q) => $q
-                ->whereIn('estado', ['pendiente_pago', 'confirmada'])->whereNull('inasistencia_at'),
+                ->whereIn('estado', ['pendiente_pago', 'confirmada'])->whereDoesntHave('estadia')->whereNull('inasistencia_at'),
         ]);
     }
 
@@ -38,7 +41,7 @@ class Espacio extends Model
         if ($value === 'libre' && $this->modo_monitoreo === 'sensor' && $this->sensor?->integracion_iot && ! $this->sensor->lectura_vigente) {
             return 'sin_senal';
         }
-        if ($value === 'libre' && ($this->attributes['tiene_reserva_bloqueante'] ?? $this->reservas()->whereIn('estado', ['pendiente_pago', 'confirmada'])->whereNull('inasistencia_at')->exists())) {
+        if ($value === 'libre' && ($this->attributes['tiene_reserva_bloqueante'] ?? $this->reservas()->whereIn('estado', ['pendiente_pago', 'confirmada'])->whereDoesntHave('estadia')->whereNull('inasistencia_at')->exists())) {
             return 'reservado';
         }
 

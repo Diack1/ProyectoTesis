@@ -109,7 +109,7 @@ class ReservaPlacaTest extends TestCase
         $r = Reserva::firstOrFail();
         $this->assertSame('ABC123', $r->placa);
         $this->assertSame('pendiente_pago', $r->estado);
-        $this->get(route('pagos.show', $r))->assertOk()->assertSee('ABC123');
+        $this->get(route('reservas.pase', $r))->assertOk()->assertSee('ABC123');
         $this->get(route('reservas.index'))->assertOk()->assertSee('ABC123');
     }
 

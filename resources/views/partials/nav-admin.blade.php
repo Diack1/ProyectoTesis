@@ -7,6 +7,7 @@
 <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard')?'active':'' }}"><x-icon name="grid"/>Inicio</a>
 <a href="{{ route('admin.estadias.index') }}" class="{{ request()->routeIs('admin.estadias.*','admin.placas.*','admin.monitoreo.*')?'active':'' }}"><x-icon name="car"/>{{ auth()->user()->esSuperAdmin() ? 'Operación' : 'Entradas y salidas' }}</a>
 <a href="{{ route('admin.reservas.index') }}" class="{{ request()->routeIs('admin.reservas.*','admin.pagos.index')?'active':'' }}"><x-icon name="clock"/>Reservas <span class="menu-count" data-payment-count hidden></span></a>
+<a href="{{ route('admin.abonados.index') }}" class="{{ request()->routeIs('admin.abonados.*')?'active':'' }}"><x-icon name="users"/>Abonados</a>
 <a href="{{ route('admin.clientes-vehiculos.index') }}" class="{{ request()->routeIs('admin.clientes-vehiculos.*')?'active':'' }}"><x-icon name="users"/>Clientes</a>
 @if(auth()->user()->esSuperAdmin())
 

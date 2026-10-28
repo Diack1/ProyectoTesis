@@ -90,11 +90,11 @@
                 @include('partials.booking-steps',['step'=>2])
                 <h1 class="section-title mt-1">Confirmar reserva</h1>
                 <p class="section-subtitle">
-                    Revisa tus datos y el total. Después podrás enviar tu pago por Yape o Plin.
+                    Revisa tus datos y el total. Recibirás tu QR para mostrar al encargado y pagar al llegar.
                 </p>
             </div>
 
-            <div class="arrival-policy"><h3>Reserva para llegar ahora</h3><p>Tras aprobar tu pago, tendrás 15 minutos para llegar. Consulta la hora límite en Mis reservas.</p></div><div class="reservation-list">
+            <div class="arrival-policy"><h3>Reserva para llegar ahora</h3><p>Al generar tu reserva, tendrás 15 minutos para llegar y pagar al encargado. Consulta la hora límite en Mis reservas.</p></div><div class="reservation-list">
                 <div class="reservation-row">
                     <span class="reservation-label">Placa del vehículo</span>
                     <span class="reservation-value">{{ $placa }}</span>
@@ -124,7 +124,7 @@
 
                 <div class="reservation-row">
                     <span class="reservation-label">Llegada prevista</span>
-                    <span class="reservation-value">15 minutos desde la aprobación del pago</span>
+                    <span class="reservation-value">15 minutos desde que generas la reserva</span>
                 </div>
 
 
@@ -154,8 +154,8 @@
 
             </div>
 
-            <div class="alert alert-info">Tu tiempo de estacionamiento comienza al registrar tu ingreso. Una vez aprobado el pago, tienes 15 minutos para llegar. Si no llegas dentro de ese plazo, el espacio se libera y el personal revisará si corresponde un reembolso.</div><div class="reservation-alert">
-                Al confirmar, el espacio quedará reservado temporalmente durante el plazo indicado en la pantalla de pago.
+            <div class="alert alert-info">Tu tiempo de estacionamiento comienza al registrar tu ingreso. Tienes 15 minutos desde que generas la reserva para llegar y pagar. Si no llegas a tiempo, se libera el espacio sin registrar un cobro.</div><div class="reservation-alert">
+                Al confirmar, el espacio quedará reservado temporalmente durante 15 minutos. El QR identifica la reserva y no acredita un pago.
             </div>
 
             <form id="formConfirmarReserva" action="{{ route('reservas.store', $espacio) }}" method="POST" autocomplete="off">
@@ -169,7 +169,7 @@
 
                 <div class="reservation-actions">
                     <button type="submit" id="btnConfirmarReserva" class="btn btn-primary">
-                        Confirmar y continuar al pago
+                        Generar reserva y QR
                     </button>
 
                     <a href="{{ route('reservas.create', $espacio) }}" class="btn btn-secondary">
@@ -198,7 +198,7 @@
 
     window.addEventListener('pageshow', function() {
         const button = document.getElementById('btnConfirmarReserva');
-        if (button) { button.disabled = false; button.textContent = 'Confirmar y continuar al pago'; }
+        if (button) { button.disabled = false; button.textContent = 'Generar reserva y QR'; }
     });
 </script>
 

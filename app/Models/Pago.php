@@ -9,7 +9,7 @@ class Pago extends Model
     protected $table = 'pagos';
 
     protected $fillable = [
-        'reserva_id', 'estadia_id',
+        'reserva_id', 'estadia_id', 'abono_id',
         'user_id',
         'codigo_pago',
         'metodo_pago',

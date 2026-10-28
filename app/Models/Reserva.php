@@ -27,7 +27,7 @@ class Reserva extends Model
     }
 
     protected $fillable = [
-        'reserva_inmediata',
+        'reserva_inmediata', 'pago_al_llegar',
         'user_id', 'tolerancia_llegada_minutos', 'minutos_fraccion_snapshot', 'inasistencia_at',
         'espacio_id',
         'codigo_reserva',
@@ -57,7 +57,7 @@ class Reserva extends Model
     protected function casts(): array
     {
         return [
-            'reserva_inmediata' => 'boolean',
+            'reserva_inmediata' => 'boolean', 'pago_al_llegar' => 'boolean',
             'fecha_reserva' => 'date', 'inasistencia_at' => 'datetime',
             'expires_at' => 'datetime',
             'pagado_at' => 'datetime',
@@ -77,6 +77,7 @@ class Reserva extends Model
 
     public function getLimiteLlegadaAttribute(): Carbon
     {
+        if ($this->pago_al_llegar && $this->expires_at) { return $this->expires_at->copy(); }
         if ($this->reserva_inmediata && $this->pagado_at) {
             return $this->pagado_at->copy()->addMinutes($this->tolerancia_llegada_minutos ?? 15);
         }

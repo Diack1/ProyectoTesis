@@ -36,16 +36,29 @@ class EstadiaService
                 if ($espacio->modo_monitoreo === 'sensor' && $espacio->sensor?->integracion_iot && ! $espacio->sensor->lectura_vigente) {
                     throw ValidationException::withMessages(['espacio_id' => 'No hay una lectura confiable reciente. Revisa el sensor o usa control manual.']);
                 }
+                $asignacion = $espacio->abonoVigente()->with('abonado')->first();
+                $abono = null;
+                if (!empty($data['abono_id'])) {
+                    if (!$asignacion || $asignacion->id != $data['abono_id'] || !in_array($data['placa'], $asignacion->abonado->placas, true) || $reserva) {
+                        throw ValidationException::withMessages(['abono_id'=>'El abono debe estar pagado, vigente y corresponder al espacio y placa.']);
+                    }
+                    $abono = $asignacion;
+                } elseif (\App\Models\Abono::where('espacio_id',$espacio->id)->where('fin','>',now())->exists() && (empty($data['autoriza_movimiento']) || empty($data['llave_recibida']) || empty($data['ubicacion_llave']))) {
+                    throw ValidationException::withMessages(['ubicacion_llave'=>'Este espacio pertenece a un abonado: registra autorización, llave recibida y su ubicación.']);
+                }
                 if ($reserva) {
-                    if ($reserva->estado !== 'confirmada' || $reserva->inasistencia_at || ! $reserva->pagoAprobado()->exists()
+                    $cobrarLlegada = $reserva->pago_al_llegar && $reserva->estado === 'pendiente_pago';
+                    if (($cobrarLlegada && (! $reserva->expires_at || now()->gt($reserva->expires_at) || $reserva->pagoAprobado()->exists()))
+                      || (! $cobrarLlegada && ($reserva->estado !== 'confirmada' || ! $reserva->pagoAprobado()->exists()))
+                      || $reserva->inasistencia_at || ($reserva->pago_al_llegar && $reserva->placa !== $data['placa'])
                       || $reserva->espacio_id !== $espacio->id || $reserva->vehiculo_tipo_id != (int) $data['vehiculo_tipo_id'] || $reserva->estadia()->exists()) {
-                        throw ValidationException::withMessages(['reserva_id' => 'La reserva debe estar pagada, vigente y corresponder al espacio y vehículo seleccionados.']);
+                        throw ValidationException::withMessages(['reserva_id' => 'La reserva debe estar vigente, corresponder a la placa, espacio y tipo de vehículo, y admitir el cobro o tener un pago aprobado.']);
                     }
                     if (now()->gt($reserva->limite_llegada)) {
                         throw ValidationException::withMessages(['reserva_id' => 'La tolerancia de llegada terminó. La administración debe resolver la reserva.']);
                     }
                 }
-                if ($espacio->reservas()->whereIn('estado', ['pendiente_pago', 'confirmada'])->whereNull('inasistencia_at')
+                if ($espacio->reservas()->whereIn('estado', ['pendiente_pago', 'confirmada'])->whereNull('inasistencia_at')->whereDoesntHave('estadia')
                     ->when($reserva, fn ($q) => $q->where('id', '!=', $reserva->id))->exists()) {
                     throw ValidationException::withMessages(['espacio_id' => 'Este espacio está comprometido con otra reserva.']);
                 }
@@ -70,7 +83,12 @@ class EstadiaService
                     $snapshot = $calculo['tarifa']->only(['nombre', 'tipo_tarifa', 'monto_por_hora', 'monto_base', 'monto_por_fraccion',
                         'minutos_fraccion', 'tiempo_minimo_minutos', 'tolerancia_minutos', 'penalidad_por_fraccion', 'hora_inicio', 'hora_fin']);
                 }
+                if ($reserva && $cobrarLlegada) {
+                    app(CobroLlegadaService::class)->registrar($reserva, $data, $operador);
+                }
                 $estadia = Estadia::create([
+                    'abono_id'=>$abono?->id, 'autoriza_movimiento'=>!empty($data['autoriza_movimiento']),
+                    'llave_recibida'=>!empty($data['llave_recibida']), 'ubicacion_llave'=>$data['ubicacion_llave'] ?? null, 'salida_prevista'=>$data['salida_prevista'] ?? null,
                     'codigo_ticket' => 'PK-'.now()->format('ymd').'-'.Str::upper(Str::random(8)),
                     'placa' => $data['placa'], 'placa_activa' => $data['placa'], 'espacio_id' => $espacio->id, 'espacio_activo_id' => $espacio->id,
                     'vehiculo_tipo_id' => $tipo->id, 'reserva_id' => $reserva?->id, 'operador_ingreso_id' => $operador->id,
@@ -112,6 +130,7 @@ class EstadiaService
                 $espacio = Espacio::lockForUpdate()->findOrFail($estadia->espacio_id);
                 $reserva = $estadia->reserva_id ? Reserva::lockForUpdate()->findOrFail($estadia->reserva_id) : null;
                 $estadia = Estadia::lockForUpdate()->findOrFail($estadia->id);
+                if ($estadia->espacio_id !== $espacio->id) { throw ValidationException::withMessages(['salida'=>'El vehículo fue reubicado. Actualiza el ticket.']); }
                 if ($estadia->hora_salida) {
                     throw ValidationException::withMessages(['salida' => 'Este ticket ya tiene salida registrada.']);
                 }

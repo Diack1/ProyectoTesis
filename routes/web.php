@@ -84,6 +84,8 @@ Route::middleware(['auth', 'role:user', \App\Http\Middleware\VerifiedCustomer::c
 
     Route::get('/reservas/{reserva}/pago', [PagoController::class, 'show'])
         ->name('pagos.show');
+    Route::get('/reservas/{reserva}/pase', [\App\Http\Controllers\ReservaPaseController::class, 'show'])->name('reservas.pase');
+    Route::get('/reservas/{reserva}/tiempo', [\App\Http\Controllers\ReservaPaseController::class, 'tiempo'])->name('reservas.tiempo');
 
     Route::post('/reservas/{reserva}/pago', [PagoController::class, 'enviar'])->middleware('throttle:payment-upload')->name('pagos.enviar');
 
@@ -225,7 +227,13 @@ Route::get('/dashboard', function (Request $request) {
 })->middleware(['auth', 'role:user,admin,super_admin,operador'])->name('dashboard');
 
 Route::middleware(['auth', 'role:admin,super_admin,operador'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/abonados', [\App\Http\Controllers\Admin\AbonadoController::class, 'index'])->name('abonados.index');
+    Route::post('/abonados', [\App\Http\Controllers\Admin\AbonadoController::class, 'store'])->name('abonados.store');
+    Route::get('/abonados/{abonado}', [\App\Http\Controllers\Admin\AbonadoController::class, 'show'])->name('abonados.show');
+    Route::get('/abonados/{abonado}/qr', [\App\Http\Controllers\Admin\AbonadoController::class, 'qr'])->middleware('signed')->name('abonados.qr');
+    Route::post('/estadias/{estadia}/reubicar', [\App\Http\Controllers\Admin\AbonadoController::class, 'mover'])->name('estadias.reubicar');
     Route::get('/estadias', [\App\Http\Controllers\Admin\EstadiaController::class, 'index'])->name('estadias.index');
+    Route::get('/reservas/{reserva}/escanear', [\App\Http\Controllers\ReservaPaseController::class, 'escanear'])->middleware('signed')->name('reservas.escanear');
     Route::get('/estadias/ingreso', [\App\Http\Controllers\Admin\EstadiaController::class, 'create'])->name('estadias.create');
     Route::post('/estadias', [\App\Http\Controllers\Admin\EstadiaController::class, 'store'])->name('estadias.store');
     Route::get('/estadias/{estadia}', [\App\Http\Controllers\Admin\EstadiaController::class, 'show'])->name('estadias.show');

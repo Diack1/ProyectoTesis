@@ -123,6 +123,7 @@ class ReservaDisponibilidadService
     public function estadoParaTarjeta(Espacio $espacio, ?array $sensorExterno = null): array
     {
         $estado = $espacio->estado_actual;
+        if ($estado === 'libre' && ($espacio->tiene_abono_vigente ?? $espacio->abonoVigente()->exists())) { $estado = 'abonado'; }
         $configuracion = $this->verificarConfiguracionReserva($espacio);
         if ($espacio->modo_monitoreo === 'sensor' && $estado === 'libre'
             && (!$espacio->sensor?->integracion_iot || !$espacio->sensor->lectura_vigente)) {
@@ -133,7 +134,7 @@ class ReservaDisponibilidadService
         }
         $puede = $espacio->activo && $estado === 'libre';
         return ['estado_visual' => $estado, 'estado_texto' => match ($estado) {
-            'libre' => 'Libre', 'ocupado' => 'Ocupado', 'reservado' => 'Reservado',
+            'abonado' => 'Asignado a abonado', 'libre' => 'Libre', 'ocupado' => 'Ocupado', 'reservado' => 'Reservado',
             'mantenimiento' => 'Mantenimiento', 'sin_tarifa', 'sin_tipos' => 'No habilitado',
             default => 'Sin señal',
         }, 'puede_reservar' => $puede, 'logicamente_disponible' => $puede,
@@ -160,7 +161,7 @@ class ReservaDisponibilidadService
 
     public function queryReservasBloqueantes(int $espacioId)
     {
-        return Reserva::where('espacio_id', $espacioId)
+        return Reserva::where('espacio_id', $espacioId)->whereDoesntHave('estadia')
             ->whereIn('estado', Reserva::ESTADOS_BLOQUEANTES);
     }
 

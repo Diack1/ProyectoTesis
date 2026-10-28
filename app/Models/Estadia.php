@@ -11,12 +11,15 @@ class Estadia extends Model
     protected function casts(): array
     {
         return [
+            'autoriza_movimiento'=>'boolean', 'llave_recibida'=>'boolean', 'salida_prevista'=>'datetime',
             'hora_ingreso' => 'datetime', 'inicio_cobro' => 'datetime', 'hora_salida' => 'datetime', 'liquidado_hasta' => 'datetime',
             'tarifa_snapshot' => 'array', 'monto_adelantado' => 'decimal:2', 'monto_total' => 'decimal:2', 'monto_exceso' => 'decimal:2',
             'saldo_cobrado' => 'decimal:2', 'efectivo_recibido' => 'decimal:2', 'vuelto' => 'decimal:2',
         ];
     }
 
+    public function abono() { return $this->belongsTo(Abono::class); }
+    public function reubicaciones() { return $this->hasMany(Reubicacion::class); }
     public function espacio()
     {
         return $this->belongsTo(Espacio::class);

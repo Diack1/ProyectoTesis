@@ -18,9 +18,9 @@ class PublicController extends Controller
             ->get();
 
         $totalEspacios = $espacios->count();
-        $espaciosLibres = $espacios->where('estado_actual', 'libre')->count();
+        $espaciosLibres = $espacios->filter(fn ($e) => $e->estado_actual === 'libre' && !$e->tiene_abono_vigente)->count();
         $espaciosOcupados = $espacios->where('estado_actual', 'ocupado')->count();
-        $espaciosReservados = $espacios->where('estado_actual', 'reservado')->count();
+        $espaciosReservados = $espacios->filter(fn ($e) => $e->estado_actual === 'reservado' || ($e->estado_actual === 'libre' && $e->tiene_abono_vigente))->count();
         $espaciosMantenimiento = $espacios->where('estado_actual', 'mantenimiento')->count();
 
         return view('public.home', compact(
