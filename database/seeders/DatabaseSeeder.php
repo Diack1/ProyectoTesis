@@ -14,5 +14,9 @@ class DatabaseSeeder extends Seeder
             TarifaAvanzadaSeeder::class,
             SuperAdminSeeder::class,
         ]);
+
+        if (filled(config('app.initial_admin_password'))) {
+            $this->call(InitialAdminSeeder::class);
+        }
     }
 }

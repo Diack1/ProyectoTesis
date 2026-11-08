@@ -99,6 +99,9 @@ return [
 
     'key' => env('APP_KEY'),
 
+    'initial_admin_email' => env('PARKEO_INITIAL_ADMIN_EMAIL', 'frett.tec2@gmail.com'),
+    'initial_admin_password' => env('PARKEO_INITIAL_ADMIN_PASSWORD'),
+
     'previous_keys' => [
         ...array_filter(
             explode(',', (string) env('APP_PREVIOUS_KEYS', ''))

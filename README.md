@@ -32,7 +32,7 @@ Usar Node 22.12+ compatible con Vite. La revisión de organización está en
 
 1. Instalar dependencias: `composer install` y `npm ci`.
 2. Copiar `.env.example` a `.env`, configurar la base de datos y ejecutar `php artisan key:generate` para una instalación nueva.
-3. Ejecutar `php artisan migrate`. En una base nueva, revisar los seeders antes de cargarlos; no ejecutarlos indiscriminadamente sobre un respaldo con datos.
+3. En una base nueva, asignar `PARKEO_INITIAL_ADMIN_PASSWORD` en el `.env` privado (12 caracteres como mínimo, con mayúsculas, minúsculas, números y símbolos). El correo inicial se configura con `PARKEO_INITIAL_ADMIN_EMAIL`. Ejecutar `php artisan migrate --seed`: se crea esa cuenta administradora y se puede ingresar con la contraseña configurada. En una base con datos, ejecutar solo `php artisan migrate`; no cargar los seeders indiscriminadamente. La contraseña no se publica en Git ni se restablece al repetir el seeder.
 4. Ejecutar `npm run build` y `php artisan serve`. Abrir `http://127.0.0.1:8000`.
 5. Configurar QR y tarifas desde el panel. Seguir `vision/README.md` para modelos y entorno de reconocimiento; `docs/camara-entrada.md` para pruebas de cámara.
 6. Configurar el planificador de Laravel para procesar los vencimientos (`php artisan schedule:work` en desarrollo).
