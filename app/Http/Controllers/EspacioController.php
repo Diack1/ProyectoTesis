@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Espacio;
+use App\Models\Estadia;
+use App\Models\ConfiguracionPago;
 use App\Models\VehiculoTipo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -12,7 +14,25 @@ class EspacioController extends Controller
 {
     public function index()
     {
-        return view('espacios.index', ['espacios' => Espacio::conEstadoOperativo()->with('sensor', 'vehiculoTipos')->orderBy('codigo')->paginate(30)]);
+        return view('espacios.index', ['espacios' => Espacio::conEstadoOperativo()->with('sensor', 'vehiculoTipos')->orderBy('codigo')->paginate(30),
+            'cantidadCasilleros' => ConfiguracionPago::actual()->cantidad_casilleros ?? 12]);
+    }
+
+    public function actualizarCasilleros(Request $request)
+    {
+        $data = $request->validate(['cantidad_casilleros' => 'required|integer|min:1|max:200']);
+        DB::transaction(function () use ($data) {
+            $configuracion = ConfiguracionPago::query()->lockForUpdate()->first()
+                ?? ConfiguracionPago::create([])->refresh();
+            $ocupados = Estadia::activas()->where('llave_recibida', true)->whereNotNull('ubicacion_llave')
+                ->pluck('ubicacion_llave');
+            if ($ocupados->contains(fn ($nombre) => preg_match('/^Casillero ([1-9][0-9]*)$/', $nombre, $numero)
+                && (int) $numero[1] > (int) $data['cantidad_casilleros'])) {
+                throw ValidationException::withMessages(['cantidad_casilleros' => 'Hay llaves en casilleros superiores a la nueva cantidad. Devuélvelas antes de reducirla.']);
+            }
+            $configuracion->fill($data)->save();
+        });
+        return back()->with('success', 'Cantidad de casilleros actualizada.');
     }
 
     public function create()

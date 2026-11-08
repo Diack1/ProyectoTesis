@@ -58,7 +58,7 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route(app(\App\Services\StaffAccessService::class)->entryRoute());
         }
 
-        if ($user->tieneRol('admin', 'operador') && !$user->hasVerifiedEmail()) {
+        if ($user->tieneRol('junior', 'admin', 'operador') && !$user->hasVerifiedEmail()) {
             try { app(\App\Services\CustomerVerificationService::class)->send($user); }
             catch (\Illuminate\Validation\ValidationException $e) { return redirect()->route('verification.notice')->withErrors($e->errors()); }
             catch (\Symfony\Component\Mailer\Exception\TransportExceptionInterface $e) { return redirect()->route('verification.notice')->withErrors(['code'=>\App\Services\MailDeliveryIssue::message($e)]); }
@@ -69,7 +69,7 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('admin.dashboard');
         }
 
-        if (in_array($user->role, ['admin', 'operador'])) {
+        if (in_array($user->role, ['junior', 'admin', 'operador'])) {
             return redirect()->route('admin.dashboard');
         }
 

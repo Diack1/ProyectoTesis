@@ -22,6 +22,7 @@ class PagoLlegadaTest extends TestCase
         $this->travelTo(now()->startOfDay()->addHours(9));
         $this->cliente = User::factory()->create();
         $this->staff = User::factory()->create(['role' => 'operador']);
+        \App\Models\CajaApertura::create(['nombre'=>'Caja 01','monto_inicial'=>0,'operador_id'=>$this->staff->id,'inicio_at'=>now(),'abierta_unica'=>1]);
         $tipo = VehiculoTipo::create(['nombre' => 'Auto', 'codigo' => 'auto', 'activo' => true]);
         Tarifa::create(['vehiculo_tipo_id' => $tipo->id, 'nombre' => 'Hora', 'tipo_tarifa' => 'por_hora', 'monto_por_hora' => 5,
             'tolerancia_minutos' => 5, 'penalidad_por_fraccion' => 5, 'minutos_fraccion' => 60, 'activo' => true]);
@@ -90,15 +91,21 @@ class PagoLlegadaTest extends TestCase
         $this->assertSame(0, Pago::where('estado', 'aprobado')->count());
     }
 
-    public function test_electronic_payment_requires_unique_reference(): void
+    public function test_electronic_payment_keeps_optional_reference_unique(): void
     {
         $this->actingAs($this->staff);
         $data = array_replace($this->entrada, ['metodo_pago' => 'yape']);
-        $this->post(route('admin.estadias.store'), $data)->assertSessionHasErrors('referencia_pago');
         Pago::create(['codigo_pago' => 'OTHER', 'monto' => 5, 'metodo_pago' => 'yape', 'estado' => 'aprobado', 'operacion_unica' => 'yape:DUP123']);
         $this->post(route('admin.estadias.store'), $data + ['referencia_pago' => 'dup123'])->assertSessionHasErrors('referencia_pago');
         $this->post(route('admin.estadias.store'), $data + ['referencia_pago' => 'NEW123'])->assertSessionHasNoErrors();
         $this->assertSame('yape:NEW123', $this->reserva->pagoAprobado->operacion_unica);
+    }
+
+    public function test_yape_arrival_does_not_require_transfer_code(): void
+    {
+        $this->actingAs($this->staff)->post(route('admin.estadias.store'),
+            array_replace($this->entrada, ['metodo_pago' => 'yape']))->assertSessionHasNoErrors();
+        $this->assertNull($this->reserva->pagoAprobado->operacion_unica);
     }
 
     public function test_counter_and_overtime_five_minute_boundaries_and_final_stop(): void

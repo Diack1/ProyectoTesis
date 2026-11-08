@@ -27,8 +27,7 @@ class StaffAccessService
 
     public function owner(): ?User
     {
-        $owners = User::where('role', 'super_admin')->where('activo', true)->limit(2)->get();
-        return $owners->count() === 1 ? $owners->first() : null;
+        return User::where('role', 'super_admin')->where('activo', true)->orderBy('id')->first();
     }
 
     public function mailReady(): bool

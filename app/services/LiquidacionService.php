@@ -64,7 +64,13 @@ class LiquidacionService
             $importeFraccion = self::centavos($t['monto_por_fraccion'] ?? 0);
             $base = self::centavos($t['monto_base'] ?? 0);
             $tipo = $t['tipo_tarifa'] ?? 'por_hora';
-            if ($tipo === 'diaria') {
+            if ($tipo === 'bloque_horas' || ($tipo === 'por_hora' && isset($t['bloque_minutos']) && $minutos >= (int)$t['bloque_minutos'])) {
+                $bloqueMinutos = (int)($t['bloque_minutos'] ?? $t['tiempo_minimo_minutos'] ?? 60);
+                $bloqueMonto = self::centavos($t['bloque_monto'] ?? $t['monto_base'] ?? 0);
+                $total = $bloqueMonto + (int)ceil(max(0,$cobrables-$bloqueMinutos)/$fraccion)*$importeFraccion;
+            } elseif ($tipo === 'por_hora' && !empty($t['cobro_intervalos'])) {
+                $total = $hora + (int)ceil(max(0,$cobrables-60)/$fraccion)*$importeFraccion;
+            } elseif ($tipo === 'diaria') {
                 $total = (int) ceil($cobrables / 1440) * ($base > 0 ? $base : $hora * 24);
             } elseif ($tipo === 'nocturna' && $base > 0) {
                 $inicio = Carbon::parse($t['hora_inicio'] ?? '20:00');

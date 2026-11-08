@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 class CustomerVerificationController extends Controller {
     public function show(Request $request) {
-        if ($request->user()->hasVerifiedEmail() || !$request->user()->tieneRol('user', 'admin', 'operador')) { return redirect()->route('dashboard'); }
+        if ($request->user()->hasVerifiedEmail() || !$request->user()->tieneRol('user', 'junior', 'admin', 'operador')) { return redirect()->route('dashboard'); }
         return response()->view('auth.verify-email')->header('Cache-Control','private, no-store');
     }
     public function send(Request $request, CustomerVerificationService $service) {

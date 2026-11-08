@@ -12,6 +12,6 @@ class ConfiguracionPago extends Model
 
     public static function actual(): self
     {
-        return static::first() ?? new static(['minutos_pago' => 10, 'tolerancia_llegada' => 15]);
+        return static::first() ?? new static(['minutos_pago' => 10, 'tolerancia_llegada' => 15, 'cantidad_casilleros' => 12]);
     }
 }

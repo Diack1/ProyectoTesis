@@ -21,7 +21,7 @@
             </a>
             @endif
 
-            @if(auth()->user()->tieneRol('admin','operador','super_admin'))
+            @if(auth()->user()->tieneRol('junior','admin','operador','super_admin'))
             <a href="{{ route('admin.dashboard') }}">
                 Administración
             </a>

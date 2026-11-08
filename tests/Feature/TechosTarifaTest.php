@@ -107,7 +107,8 @@ class TechosTarifaTest extends TestCase
         $space = Espacio::where('codigo', 'T41')->firstOrFail();
         $this->actingAs(\App\Models\User::factory()->create())->get(route('reservas.create', $space))->assertOk();
         $operator = \App\Models\User::factory()->create(['role' => 'operador']);
-        $stay = app(\App\Services\EstadiaService::class)->ingresar(['placa' => 'ABC123', 'espacio_id' => $space->id, 'vehiculo_tipo_id' => $type->id], $operator);
+        $stay = app(\App\Services\EstadiaService::class)->ingresar(['placa' => 'ABC123', 'espacio_id' => $space->id,
+            'vehiculo_tipo_id' => $type->id, 'tarifa_id' => Tarifa::where('vehiculo_tipo_id',$type->id)->value('id')], $operator);
         $this->assertNotNull($stay->inicio_cobro);
         $this->assertSame('manual', $stay->fuente_inicio);
         $this->assertSame('ocupado', $space->fresh()->estado_actual);

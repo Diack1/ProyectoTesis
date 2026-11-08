@@ -1,12 +1,13 @@
 @php
     $administrativo = $administrativo ?? false;
 @endphp
-<section class="parking-widget {{ $administrativo ? '' : 'parking-public-layout' }}" data-parking @if(!$administrativo) data-refresh="{{ route('public.disponibilidad.estado', [], false) }}" @endif>
+<section class="parking-widget {{ $administrativo ? '' : 'parking-public-layout' }}" data-parking @if($administrativo) data-admin-refresh="{{ route('admin.mapa.estado') }}" @else data-refresh="{{ route('public.disponibilidad.estado', [], false) }}" @endif>
     @if(!$administrativo)<script type="application/json" data-initial-quotes>@json($tarifasIniciales ?? [])</script>@endif
     <div class="parking-map-area">
     <div class="parking-toolbar"><div><span class="eyebrow">VISTA SUPERIOR · PARKE’O</span><h2>{{ $administrativo ? 'Cada espacio, a la vista' : 'Elige tu espacio' }}</h2></div></div>
     <p class="text-muted">Pulsa un espacio para consultar su estado{{ $administrativo ? ' y gestionar la llegada o salida.' : ' y reservar si está libre.' }}</p>
-    <div class="parking-legend"><span>🟢 Libre</span><span>🟠 Reservado</span><span>🔴 Ocupado</span><span>⚪ No disponible</span></div>
+    @if($administrativo)<div class="parking-legend"><span data-legend-state="libre">Libre</span><span data-legend-state="ocupado">Ocupado</span><span data-legend-state="abonado">Abonado</span><span data-legend-state="excedido">Tiempo excedido</span><span data-legend-state="reservado">Reservado</span></div>
+    @else<div class="parking-legend"><span>🟢 Libre</span><span>🟠 Reservado</span><span>🔴 Ocupado</span><span>⚪ No disponible</span></div>@endif
     <div class="parking-scroll"><div class="parking-lot parking-lot-techos">
         <div class="lot-office">Oficina</div><div class="lot-services">Servicios</div><div class="lot-lane">↑<br>CIRCULACIÓN<br>↓</div><div class="lot-gate">ENTRADA / SALIDA ↑</div>
         @foreach($espacios as $espacio)
@@ -16,7 +17,7 @@
             [$x, $y, $w, $h] = \App\Services\PlanoEspacios::posicion($n);
             $estado = $disponibilidadPorEspacio[$espacio->id];
         @endphp
-        <{{ $administrativo ? 'button' : 'a' }} @if($administrativo) type="button" @else href="{{ route('reservas.create', $espacio, false) }}" role="button" @endif data-slot="{{ $n }}" class="parking-space {{ $n >= 27 && $n <= 41 ? 'space-central' : '' }} {{ !$mapped ? 'unmapped' : '' }}" data-space="{{ $espacio->id }}" data-state="{{ $estado['estado_visual'] }}" data-available="{{ $estado['puede_reservar'] ? '1' : '0' }}" style="--x:{{ $x }}%;--y:{{ $y }}%;--w:{{ $w }}%;--h:{{ $h }}%" aria-label="{{ $espacio->codigo }}: {{ $estado['estado_texto'] }}" aria-haspopup="dialog"><strong>{{ $espacio->codigo }}</strong><small data-state-label>{{ $estado['estado_texto'] }}</small></{{ $administrativo ? 'button' : 'a' }}>
+        <a href="{{ $administrativo ? route('admin.espacios.operar', $espacio) : route('reservas.create', $espacio, false) }}" data-slot="{{ $n }}" class="parking-space {{ $n >= 27 && $n <= 41 ? 'space-central' : '' }} {{ !$mapped ? 'unmapped' : '' }}" data-space="{{ $espacio->id }}" data-state="{{ $estado['estado_visual'] }}" data-available="{{ $estado['puede_reservar'] ? '1' : '0' }}" style="--x:{{ $x }}%;--y:{{ $y }}%;--w:{{ $w }}%;--h:{{ $h }}%" aria-label="{{ $espacio->codigo }}: {{ $estado['estado_texto'] }}" @if(!$administrativo) aria-haspopup="dialog" @endif><strong>{{ $espacio->codigo }}</strong><small data-state-label>{{ $estado['estado_texto'] }}</small></a>
         <template data-space-detail="{{ $espacio->id }}">
             <h2>Espacio {{ $espacio->codigo }}</h2><p><strong data-detail-state>{{ $estado['estado_texto'] }}</strong></p>
             <p>{{ $espacio->vehiculoTipos->pluck('nombre')->implode(' · ') ?: 'Consultar vehículos permitidos al personal' }}</p>
@@ -50,9 +51,10 @@
         @endif
         @endforeach
     </div></div>
-    <p class="text-muted" data-map-status>{{ $administrativo ? 'Estado al abrir la página. Actualiza para consultar cambios recientes.' : 'La disponibilidad se actualiza automáticamente.' }}</p>
+    <p class="text-muted" data-map-status>{{ $administrativo ? 'El mapa se actualiza automáticamente.' : 'La disponibilidad se actualiza automáticamente.' }}</p>
     <p class="text-muted"><small>T = techo · 6 al fondo, 10 a la derecha, 7 a la izquierda y 15 centrales. El morado identifica la zona central; el texto indica su disponibilidad.</small></p>
     </div>
+    @if(!$administrativo)
     <dialog class="space-dialog" aria-label="Detalle y precio del espacio"><form method="dialog"><button class="btn btn-secondary" aria-label="Cerrar detalle">Cerrar ×</button></form>
     @if(!$administrativo)
     <div class="booking-preferences">
@@ -61,10 +63,13 @@
     </div>
     @endif
     <div data-dialog-content><div class="space-empty"><x-icon name="pin"/><h2>Elige tu espacio</h2><p>Toca un espacio del plano para ver su tarifa y preparar tu reserva.</p></div></div></dialog>
+    @endif
 </section>
 
+@if(!$administrativo)
 @once
 @push('scripts')
 <script src="/js/plano.js?v={{ filemtime(public_path('js/plano.js')) }}"></script>
 @endpush
 @endonce
+@endif

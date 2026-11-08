@@ -1,0 +1,26 @@
+/* Shared spacing and hierarchy for the existing administrative modules. */
+.admin-refined .admin-main .admin-content{max-width:none}
+.admin-refined .card{border-radius:14px;border:1px solid var(--panel-line);box-shadow:none}
+.admin-refined :is(.btn,.admin-menu a,.admin-menu button){transition:background .15s,border-color .15s,box-shadow .15s}
+.admin-refined .btn{border-radius:9px;min-height:40px;padding:9px 14px;font-size:13px;font-weight:650}
+.admin-refined :is(input,select,textarea){border-radius:9px}
+.admin-refined .data-table th{font-size:12px;font-weight:700;white-space:nowrap}
+.admin-refined .data-table td{font-size:13px}
+.admin-refined .data-table th,.admin-refined .data-table td{padding:10px 12px}
+.admin-refined .form-group label{font-size:13px;font-weight:650}
+.map-intro{display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap;margin:0 0 14px}
+.map-intro h2{font-size:21px;margin:4px 0}.map-intro p{font-size:13px;color:var(--panel-muted);margin:0}
+.dashboard-page .parking-widget{padding:18px;margin-bottom:14px}
+.dashboard-page .parking-map-area>.text-muted:last-child{display:none}
+.dashboard-page .parking-toolbar{margin-bottom:4px}.dashboard-page .parking-toolbar h2{font-size:16px}
+.dashboard-page .parking-space{box-shadow:none;transition:transform .15s,border-color .15s,box-shadow .15s;text-decoration:none}
+.dashboard-page .parking-space:hover{transform:translateY(-2px);border-color:var(--panel-gold);box-shadow:0 4px 14px #0003}
+.dashboard-page .parking-space[data-state=libre]{border-color:#4b9f77}.dashboard-page .parking-space[data-state=ocupado]{border-color:#c46d7a}.dashboard-page .parking-space[data-state=reservado]{border-color:#c19c54}
+.dashboard-shortcuts{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 22px}.dashboard-shortcuts a{display:inline-flex;gap:8px;align-items:center;padding:9px 13px;min-height:40px;border:1px solid var(--panel-line);border-radius:9px;color:var(--panel-ink);background:var(--panel-surface);text-decoration:none;font-size:13px;font-weight:650}.dashboard-shortcuts a:hover{border-color:var(--panel-gold)}.dashboard-shortcuts svg{width:17px;height:17px}
+.upcoming-arrivals{padding:18px!important}.upcoming-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}.upcoming-list a{display:grid;gap:4px;padding:11px;border:1px solid var(--panel-line);border-radius:9px;text-decoration:none;color:var(--panel-ink)}.upcoming-list span,.upcoming-list small{color:var(--panel-muted);font-size:12px}
+.admin-refined .admin-menu details>summary{display:flex;align-items:center;gap:10px;cursor:pointer}.admin-refined .admin-menu details>summary svg{width:18px;height:18px}
+.sidebar-quick-actions{display:grid;gap:7px;padding-bottom:12px;border-bottom:1px solid var(--panel-line);margin-bottom:8px}
+.admin-refined .admin-menu .sidebar-quick-actions a{display:flex;align-items:center;gap:10px;min-height:44px;padding:9px 12px;border:1px solid var(--panel-line);border-radius:9px;background:var(--panel-bg);color:var(--panel-ink);font-size:13px;font-weight:650;text-decoration:none}
+.admin-refined .admin-menu .sidebar-quick-actions a:hover{border-color:var(--panel-gold)}
+.sidebar-quick-actions svg{width:18px;height:18px}
+@media(max-width:760px){.map-intro .btn{width:100%;justify-content:center}.dashboard-shortcuts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.dashboard-shortcuts a{min-width:0}}

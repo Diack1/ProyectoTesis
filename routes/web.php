@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\ConfiguracionPagoController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\InformeController;
 use App\Http\Controllers\Admin\PagoRevisionController;
 use App\Http\Controllers\Admin\ReservaAdminController;
 use App\Http\Controllers\Admin\TarifaAdminController;
@@ -102,12 +103,15 @@ Route::middleware(['auth', 'role:user', \App\Http\Middleware\VerifiedCustomer::c
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth', 'role:admin,super_admin,operador'])
+Route::middleware(['auth', 'role:junior,admin,super_admin,operador'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
         Route::get('/', [DashboardController::class, 'index'])
             ->name('dashboard');
+        Route::get('/mapa/estado', [DashboardController::class, 'estadoMapa'])
+            ->name('mapa.estado');
+        Route::get('/resumen', [DashboardController::class, 'resumen'])->name('resumen.index');
 
         Route::get('/monitoreo', [MonitoreoController::class, 'index'])
             ->name('monitoreo.index');
@@ -117,6 +121,8 @@ Route::middleware(['auth', 'role:admin,super_admin,operador'])
 
         Route::get('/espacios', [EspacioController::class, 'index'])
             ->name('espacios.index')->middleware('role:super_admin');
+        Route::put('/espacios/casilleros', [EspacioController::class, 'actualizarCasilleros'])
+            ->name('espacios.casilleros.update')->middleware('role:super_admin');
 
         Route::get('/espacios/crear', [EspacioController::class, 'create'])
             ->name('espacios.create')->middleware('role:super_admin');
@@ -141,6 +147,15 @@ Route::middleware(['auth', 'role:admin,super_admin,operador'])
 
         Route::get('/reportes/exportar-excel', [ReporteController::class, 'exportarExcel'])
             ->name('reportes.exportarExcel')->middleware('role:super_admin');
+
+        Route::middleware('role:super_admin')->prefix('informes')->name('informes.')->group(function () {
+            Route::get('/', [InformeController::class, 'index'])->name('index');
+            Route::get('/ventas', [InformeController::class, 'ventas'])->name('ventas');
+            Route::get('/ventas/exportar', [InformeController::class, 'exportarVentas'])->name('ventas.exportar');
+            Route::get('/tickets', [InformeController::class, 'tickets'])->name('tickets');
+            Route::get('/descuentos', [InformeController::class, 'descuentos'])->name('descuentos');
+            Route::get('/boletas-anuladas', [InformeController::class, 'anuladas'])->name('anuladas');
+        });
 
         Route::get('/reservas', [ReservaAdminController::class, 'index'])
             ->name('reservas.index');
@@ -194,6 +209,9 @@ Route::middleware(['auth', 'role:super_admin'])
 
         Route::patch('/administradores/{user}/estado', [AdminUserController::class, 'toggleActivo'])
             ->name('admins.toggleActivo');
+        Route::get('/administradores/{user}/editar', [AdminUserController::class, 'edit'])->name('admins.edit');
+        Route::put('/administradores/{user}', [AdminUserController::class, 'update'])->name('admins.update');
+        Route::put('/administradores/{user}/password', [AdminUserController::class, 'resetPassword'])->name('admins.password');
     });
 
 /*
@@ -204,11 +222,11 @@ Route::middleware(['auth', 'role:super_admin'])
 
 require __DIR__.'/auth.php';
 
-Route::middleware(['auth', 'role:user,admin,super_admin,operador'])->group(function () {
+Route::middleware(['auth', 'role:user,junior,admin,super_admin,operador'])->group(function () {
     Route::get('/pagos/{pago}/comprobante', [PagoController::class, 'comprobante'])->name('pagos.comprobante');
     Route::get('/cobro/qr/{metodo}', [ConfiguracionPagoController::class, 'qr'])->name('pagos.qr');
 });
-Route::middleware(['auth', 'role:admin,super_admin,operador'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'role:junior,admin,super_admin,operador'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/pagos', [PagoRevisionController::class, 'index'])->name('pagos.index');
     Route::get('/pagos/pendientes', [PagoRevisionController::class, 'pendientes'])->name('pagos.pendientes');
     Route::post('/pagos/{pago}/revision', [PagoRevisionController::class, 'revisar'])->name('pagos.revisar');
@@ -221,14 +239,23 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('admin')->name('admin.')
 Route::get('/dashboard', function (Request $request) {
     return redirect()->route(match ($request->user()->role) {
         'super_admin' => 'admin.dashboard',
-        'admin', 'operador' => 'admin.dashboard',
+        'junior', 'admin', 'operador' => 'admin.dashboard',
         default => 'reservas.index',
     });
-})->middleware(['auth', 'role:user,admin,super_admin,operador'])->name('dashboard');
+})->middleware(['auth', 'role:user,junior,admin,super_admin,operador'])->name('dashboard');
 
-Route::middleware(['auth', 'role:admin,super_admin,operador'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'role:junior,admin,super_admin,operador'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/abonados', [\App\Http\Controllers\Admin\AbonadoController::class, 'index'])->name('abonados.index');
+    Route::get('/abonados/crear', [\App\Http\Controllers\Admin\AbonadoController::class, 'create'])->name('abonados.create');
+    Route::post('/abonados/preparar', [\App\Http\Controllers\Admin\AbonadoController::class, 'preparar'])->name('abonados.preparar');
+    Route::get('/abonados/cobro', [\App\Http\Controllers\Admin\AbonadoController::class, 'cobro'])->name('abonados.cobro');
+    Route::post('/abonados/cobro/cancelar', [\App\Http\Controllers\Admin\AbonadoController::class, 'cancelarCobro'])->name('abonados.cobro.cancelar');
     Route::post('/abonados', [\App\Http\Controllers\Admin\AbonadoController::class, 'store'])->name('abonados.store');
+    Route::get('/abonados/periodos/{abono}/comprobante', [\App\Http\Controllers\Admin\AbonadoController::class, 'comprobante'])->name('abonados.comprobante');
+    Route::get('/abonados/periodos/{abono}/pagado', [\App\Http\Controllers\Admin\AbonadoController::class, 'pagado'])->name('abonados.pagado');
+    Route::get('/abonados/buscar-dni', [\App\Http\Controllers\Admin\AbonadoController::class, 'buscarDni'])->name('abonados.buscar-dni');
+    Route::get('/abonados/{abonado}/editar', [\App\Http\Controllers\Admin\AbonadoController::class, 'edit'])->name('abonados.edit');
+    Route::put('/abonados/{abonado}', [\App\Http\Controllers\Admin\AbonadoController::class, 'update'])->name('abonados.update');
     Route::get('/abonados/{abonado}', [\App\Http\Controllers\Admin\AbonadoController::class, 'show'])->name('abonados.show');
     Route::get('/abonados/{abonado}/qr', [\App\Http\Controllers\Admin\AbonadoController::class, 'qr'])->middleware('signed')->name('abonados.qr');
     Route::post('/estadias/{estadia}/reubicar', [\App\Http\Controllers\Admin\AbonadoController::class, 'mover'])->name('estadias.reubicar');
@@ -237,12 +264,34 @@ Route::middleware(['auth', 'role:admin,super_admin,operador'])->prefix('admin')-
     Route::get('/estadias/ingreso', [\App\Http\Controllers\Admin\EstadiaController::class, 'create'])->name('estadias.create');
     Route::post('/estadias', [\App\Http\Controllers\Admin\EstadiaController::class, 'store'])->name('estadias.store');
     Route::get('/estadias/{estadia}', [\App\Http\Controllers\Admin\EstadiaController::class, 'show'])->name('estadias.show');
+    Route::get('/operacion/espacios/{espacio}', [\App\Http\Controllers\Admin\EspacioOperacionController::class, 'show'])->name('espacios.operar');
+    Route::post('/estadias/{estadia}/corregir', [\App\Http\Controllers\Admin\EspacioOperacionController::class, 'corregir'])->name('estadias.corregir');
+    Route::post('/clientes-cobro', [\App\Http\Controllers\Admin\EstadiaController::class, 'guardarCliente'])->name('clientes-cobro.store');
+    Route::get('/caja', [\App\Http\Controllers\Admin\CajaController::class, 'index'])->name('caja.index');
+    Route::get('/impresoras', [\App\Http\Controllers\Admin\ImpresoraController::class, 'index'])->middleware('role:super_admin')->name('impresoras.index');
+    Route::post('/impresoras', [\App\Http\Controllers\Admin\ImpresoraController::class, 'guardar'])->middleware('role:super_admin')->name('impresoras.store');
+    Route::put('/impresoras/{impresora}', [\App\Http\Controllers\Admin\ImpresoraController::class, 'guardar'])->middleware('role:super_admin')->name('impresoras.update');
+    Route::post('/impresoras/{impresora}/predeterminar', [\App\Http\Controllers\Admin\ImpresoraController::class, 'predeterminar'])->middleware('role:super_admin')->name('impresoras.default');
+    Route::delete('/impresoras/{impresora}', [\App\Http\Controllers\Admin\ImpresoraController::class, 'eliminar'])->middleware('role:super_admin')->name('impresoras.destroy');
+    Route::post('/impresoras/{impresora}/prueba', [\App\Http\Controllers\Admin\ImpresoraController::class, 'prueba'])->middleware('role:super_admin')->name('impresoras.test');
+    Route::post('/impresoras/estadia/{estadia}', [\App\Http\Controllers\Admin\ImpresoraController::class, 'estadia'])->name('impresoras.estadia');
+    Route::post('/impresoras/abono/{abono}', [\App\Http\Controllers\Admin\ImpresoraController::class, 'abono'])->name('impresoras.abono');
+    Route::post('/impresoras/venta/{venta}', [\App\Http\Controllers\Admin\ImpresoraController::class, 'venta'])->name('impresoras.venta');
+    Route::get('/caja/ventas', [\App\Http\Controllers\Admin\VentaController::class, 'index'])->name('caja.ventas.index');
+    Route::get('/caja/ventas/{venta}', [\App\Http\Controllers\Admin\VentaController::class, 'show'])->name('caja.ventas.show');
+    Route::get('/caja/ventas/{venta}/editar', [\App\Http\Controllers\Admin\VentaController::class, 'edit'])->name('caja.ventas.edit');
+    Route::post('/caja/ventas/{venta}/corregir', [\App\Http\Controllers\Admin\VentaController::class, 'update'])->name('caja.ventas.update');
+    Route::post('/caja/abrir', [\App\Http\Controllers\Admin\CajaController::class, 'abrir'])->name('caja.abrir');
+    Route::post('/caja/movimientos', [\App\Http\Controllers\Admin\CajaController::class, 'movimiento'])->name('caja.movimiento');
+    Route::post('/caja/cerrar', [\App\Http\Controllers\Admin\CajaController::class, 'cerrar'])->name('caja.cerrar');
     Route::get('/estadias/{estadia}/ticket', [\App\Http\Controllers\Admin\EstadiaController::class, 'ticket'])->name('estadias.ticket');
+    Route::get('/estadias/escanear/qr', [\App\Http\Controllers\Admin\EstadiaController::class, 'escanear'])->name('estadias.escanear');
+    Route::get('/estadias/{estadia}/identificar', [\App\Http\Controllers\Admin\EstadiaController::class, 'identificar'])->middleware('signed:relative')->name('estadias.identificar');
     Route::post('/estadias/{estadia}/salida', [\App\Http\Controllers\Admin\EstadiaController::class, 'salida'])->name('estadias.salida');
     Route::post('/estadias/{estadia}/inicio-manual', [\App\Http\Controllers\Admin\EstadiaController::class, 'inicioManual'])->name('estadias.inicio-manual');
 });
 
-Route::middleware(['auth','role:admin,super_admin,operador'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth','role:junior,admin,super_admin,operador'])->prefix('admin')->name('admin.')->group(function () {
  Route::get('/placas', [\App\Http\Controllers\Admin\PlacaVisionController::class, 'index'])->name('placas.index');
  Route::post('/placas/camara', [\App\Http\Controllers\Admin\PlacaVisionController::class, 'camara'])->middleware('throttle:40,1')->name('placas.camara');
  Route::post('/placas/cliente', [\App\Http\Controllers\Admin\PlacaVisionController::class, 'cliente'])->middleware('throttle:40,1')->name('placas.cliente');

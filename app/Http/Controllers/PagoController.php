@@ -79,7 +79,7 @@ class PagoController extends Controller
 
     public function comprobante(Pago $pago)
     {
-        abort_unless(Auth::id() === $pago->user_id || Auth::user()->tieneRol('admin', 'super_admin', 'operador'), 403);
+        abort_unless(Auth::id() === $pago->user_id || Auth::user()->tieneRol('junior', 'admin', 'super_admin', 'operador'), 403);
         abort_unless($pago->comprobante && Storage::disk('local')->exists($pago->comprobante), 404);
 
         return Storage::disk('local')->response($pago->comprobante, null, ['Cache-Control' => 'private, no-store']);

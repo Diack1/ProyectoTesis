@@ -18,7 +18,7 @@
 @vite('resources/js/site-background.js')
 </head>
 
-@php($managementPage = request()->routeIs('admin.estadias.index', 'admin.reservas.index', 'admin.clientes-vehiculos.index', 'superadmin.dashboard', 'admin.reportes.index'))
+@php($managementPage = request()->routeIs('admin.estadias.index', 'admin.reservas.index', 'admin.clientes-vehiculos.index', 'superadmin.*', 'admin.reportes.*', 'admin.informes.*'))
 <body class="{{ $managementPage ? 'management-page' : '' }} atmosphere admin-refined {{ request()->routeIs('admin.dashboard') ? 'dashboard-page' : '' }}">
     <x-backgrounds.hero-background/>
 
@@ -47,7 +47,7 @@
                             {{ auth()->user()->name ?? 'Usuario' }}
                         </div>
                         <div class="admin-user-role">
-                            {{ auth()->user()->esSuperAdmin() ? 'Dueño / encargado general' : 'Recepción' }}
+                            {{ auth()->user()->esSuperAdmin() ? 'Administrador' : 'Junior' }}
                         </div>
                     </div>
                 </div>

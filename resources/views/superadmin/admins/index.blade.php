@@ -1,8 +1,8 @@
 @extends('layouts.admin')
 
-@section('title', 'Administradores - Parke’o')
-@section('page-title', 'Personal')
-@section('page-subtitle', 'Crea, revisa y desactiva cuentas administrativas del sistema')
+@section('title', 'Usuarios - Parke’o')
+@section('page-title', 'Usuarios')
+@section('page-subtitle', 'Administra cuentas de administrador y junior')
 
 @section('content')
 
@@ -26,12 +26,11 @@ $listaAdmins = $admins ?? $usuarios ?? collect();
     <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
         <div>
             <h2 class="section-title" style="margin-bottom:6px;">
-                Personal registrado
+                Usuarios registrados
             </h2>
 
             <p>
-                Desde este módulo el superadministrador puede crear cuentas administrativas
-                y controlar su acceso al sistema.
+                Crea cuentas, asigna roles y controla el acceso del personal.
             </p>
         </div>
 
@@ -70,7 +69,7 @@ $listaAdmins = $admins ?? $usuarios ?? collect();
 
                 <td data-label="Rol">
                     <span class="role-badge role-{{ $admin->role }}">
-                        {{ $admin->role === 'super_admin' ? 'Dueño / encargado general' : ($admin->role === 'admin' ? 'Administrador' : 'Operador') }}
+                        {{ $admin->role === 'super_admin' ? 'Administrador' : 'Junior' }}
                     </span>
                 </td>
 
@@ -88,9 +87,10 @@ $listaAdmins = $admins ?? $usuarios ?? collect();
 
                 <td data-label="Acciones">
                     <div class="table-actions">
-                        @if($admin->role === 'operador' || ($admin->role === 'admin' && auth()->user()->role === 'super_admin'))
+                        <a class="btn btn-secondary btn-sm" href="{{ route('superadmin.admins.edit',$admin) }}">Editar</a>
+                        @if($admin->id !== auth()->id())
                         <form action="{{ route('superadmin.admins.toggleActivo', $admin) }}" method="POST"
-                            onsubmit="return confirm('¿Seguro que deseas cambiar el estado de este administrador?');">
+                            onsubmit="return confirm('¿Seguro que deseas cambiar el estado de este usuario?');">
                             @csrf
                             @method('PATCH')
 

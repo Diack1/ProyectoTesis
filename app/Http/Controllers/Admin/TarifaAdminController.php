@@ -14,7 +14,7 @@ class TarifaAdminController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Tarifa::with('vehiculoTipo');
+        $query = Tarifa::with('vehiculoTipo')->whereIn('tipo_tarifa', ['por_hora', 'bloque_horas', 'mensual']);
 
         if ($request->filled('vehiculo_tipo_id')) {
             $query->where('vehiculo_tipo_id', $request->vehiculo_tipo_id);
@@ -79,7 +79,7 @@ class TarifaAdminController extends Controller
 
     public function update(Request $request, Tarifa $tarifa)
     {
-        $data = $this->validarTarifa($request);
+        $data = $this->validarTarifa($request, $tarifa);
 
         DB::transaction(function () use ($data, $tarifa) {
             if ($data['activo']) {
@@ -96,6 +96,10 @@ class TarifaAdminController extends Controller
 
     public function activar(Tarifa $tarifa)
     {
+        if ($tarifa->tipo_tarifa === 'bloque_horas' && !Tarifa::where('vehiculo_tipo_id',$tarifa->vehiculo_tipo_id)
+            ->where('tipo_tarifa','por_hora')->where('activo',true)->where('minutos_fraccion','>',0)->where('monto_por_fraccion','>',0)->exists()) {
+            throw ValidationException::withMessages(['tarifa'=>'Activa primero la tarifa por hora de este vehículo.']);
+        }
         DB::transaction(function () use ($tarifa) {
             $this->desactivarTarifasConflictivas([
                 'vehiculo_tipo_id' => $tarifa->vehiculo_tipo_id,
@@ -114,6 +118,10 @@ class TarifaAdminController extends Controller
 
     public function desactivar(Tarifa $tarifa)
     {
+        if ($tarifa->tipo_tarifa === 'por_hora' && Tarifa::where('vehiculo_tipo_id',$tarifa->vehiculo_tipo_id)
+            ->where('tipo_tarifa','bloque_horas')->where('activo',true)->exists()) {
+            throw ValidationException::withMessages(['tarifa'=>'Desactiva primero la tarifa por bloque de este vehículo.']);
+        }
         $tarifa->update([
             'activo' => false,
         ]);
@@ -123,72 +131,49 @@ class TarifaAdminController extends Controller
             ->with('success', 'Tarifa desactivada correctamente.');
     }
 
-    private function validarTarifa(Request $request): array
+    private function validarTarifa(Request $request, ?Tarifa $actual = null): array
     {
         $data = $request->validate([
-            'vehiculo_tipo_id' => 'required|exists:vehiculo_tipos,id',
-            'nombre' => 'required|string|max:120',
-            'tipo_tarifa' => [
-                'required',
-                Rule::in(['por_hora', 'fraccion', 'diaria', 'nocturna']),
-            ],
-            'monto_base' => 'nullable|numeric|min:0|max:9999',
-            'monto_por_hora' => 'nullable|numeric|min:0|max:9999',
-            'monto_por_fraccion' => 'nullable|numeric|min:0|max:9999',
-            'minutos_fraccion' => 'nullable|integer|min:1|max:1440',
-            'tiempo_minimo_minutos' => 'required|integer|min:1|max:1440',
-            'tolerancia_minutos' => 'required|integer|min:0|max:120',
-            'penalidad_por_fraccion' => 'nullable|numeric|min:0|max:9999',
-            'hora_inicio' => 'nullable|date_format:H:i',
-            'hora_fin' => 'nullable|date_format:H:i',
-            'prioridad' => 'required|integer|min:1|max:100',
+            'vehiculo_tipo_id' => 'required|integer|exists:vehiculo_tipos,id',
+            'tipo_tarifa' => ['required', Rule::in(['por_hora', 'bloque_horas', 'mensual'])],
+            'precio' => 'required|numeric|gt:0|max:9999|decimal:0,2',
+            'horas_bloque' => 'required_if:tipo_tarifa,bloque_horas|nullable|integer|min:2|max:720',
+            'minutos_fraccion' => 'required_if:tipo_tarifa,por_hora|nullable|integer|min:1|max:60',
+            'monto_por_fraccion' => 'required_if:tipo_tarifa,por_hora|nullable|numeric|gt:0|max:9999|decimal:0,2',
+            'tolerancia_minutos' => 'nullable|integer|min:0|max:120',
             'activo' => 'nullable|boolean',
         ]);
-
-        $data['monto_base'] = $data['monto_base'] ?? 0;
-        $data['monto_por_hora'] = $data['monto_por_hora'] ?? 0;
-        $data['monto_por_fraccion'] = $data['monto_por_fraccion'] ?? null;
-        $data['minutos_fraccion'] = $data['minutos_fraccion'] ?? null;
-        $data['penalidad_por_fraccion'] = $data['penalidad_por_fraccion'] ?? 0;
-        $data['hora_inicio'] = $data['hora_inicio'] ?? null;
-        $data['hora_fin'] = $data['hora_fin'] ?? null;
-        $data['activo'] = $request->boolean('activo');
-
-        if ($data['tipo_tarifa'] === 'por_hora' && $data['monto_por_hora'] <= 0) {
-            throw ValidationException::withMessages([
-                'monto_por_hora' => 'Para una tarifa por hora, el monto por hora debe ser mayor a 0.',
-            ]);
+        $tipo = VehiculoTipo::where('activo', true)->findOrFail($data['vehiculo_tipo_id']);
+        if (!$actual && Tarifa::where('vehiculo_tipo_id', $tipo->id)->where('tipo_tarifa', $data['tipo_tarifa'])
+            ->where(fn ($q)=>$q->where('activo',true)->orWhere('cobro_intervalos',true))->exists()) {
+            throw ValidationException::withMessages(['tipo_tarifa' => 'Ya existe esta tarifa para el vehículo. Edítala en la lista.']);
         }
-
-        if ($data['tipo_tarifa'] === 'fraccion') {
-            if (!$data['monto_por_fraccion'] || !$data['minutos_fraccion']) {
-                throw ValidationException::withMessages([
-                    'monto_por_fraccion' => 'Para tarifa por fracción, debes ingresar monto por fracción y minutos por fracción.',
-                ]);
-            }
+        if ($data['tipo_tarifa'] === 'bloque_horas' && !Tarifa::where('vehiculo_tipo_id', $tipo->id)
+            ->where('tipo_tarifa', 'por_hora')->where('activo', true)->where('minutos_fraccion','>',0)->where('monto_por_fraccion','>',0)->exists()) {
+            throw ValidationException::withMessages(['tipo_tarifa' => 'Configura y activa primero la tarifa por hora con sus intervalos adicionales.']);
         }
-
-        if ($data['tipo_tarifa'] === 'diaria' && $data['monto_base'] <= 0) {
-            throw ValidationException::withMessages([
-                'monto_base' => 'Para una tarifa diaria, el monto base debe ser mayor a 0.',
-            ]);
+        if ($actual?->tipo_tarifa === 'por_hora' && (!$request->boolean('activo') || $tipo->id !== $actual->vehiculo_tipo_id)
+            && Tarifa::where('vehiculo_tipo_id',$actual->vehiculo_tipo_id)->where('tipo_tarifa','bloque_horas')->where('activo',true)->exists()) {
+            throw ValidationException::withMessages(['activo'=>'Desactiva primero la tarifa por bloque de este vehículo.']);
         }
-
-        if ($data['tipo_tarifa'] === 'nocturna') {
-            if (!$data['hora_inicio'] || !$data['hora_fin']) {
-                throw ValidationException::withMessages([
-                    'hora_inicio' => 'Para tarifa nocturna, debes ingresar hora de inicio y hora de fin.',
-                ]);
-            }
-
-            if ($data['monto_base'] <= 0 && $data['monto_por_hora'] <= 0) {
-                throw ValidationException::withMessages([
-                    'monto_base' => 'La tarifa nocturna debe tener monto base o monto por hora.',
-                ]);
-            }
-        }
-
-        return $data;
+        $nombre = match ($data['tipo_tarifa']) {
+            'por_hora' => $tipo->nombre.' · 1 hora',
+            'bloque_horas' => $tipo->nombre.' · '.$data['horas_bloque'].' horas',
+            'mensual' => $tipo->nombre.' · mensual',
+        };
+        $hora = $data['tipo_tarifa'] === 'por_hora';
+        return [
+            'vehiculo_tipo_id' => $tipo->id, 'nombre' => $nombre, 'tipo_tarifa' => $data['tipo_tarifa'],
+            'monto_base' => $hora ? 0 : $data['precio'], 'monto_por_hora' => $hora ? $data['precio'] : 0,
+            'monto_por_fraccion' => $hora ? $data['monto_por_fraccion'] : null,
+            'minutos_fraccion' => $hora ? $data['minutos_fraccion'] : null,
+            'tiempo_minimo_minutos' => $data['tipo_tarifa'] === 'bloque_horas' ? $data['horas_bloque'] * 60 : 60,
+            'tolerancia_minutos' => $hora ? ($data['tolerancia_minutos'] ?? 0) : 0,
+            'penalidad_por_fraccion' => $hora ? $data['monto_por_fraccion'] : 0,
+            'hora_inicio' => null, 'hora_fin' => null, 'prioridad' => 1,
+            'activo' => $request->boolean('activo'),
+            'cobro_intervalos' => true,
+        ];
     }
 
     private function desactivarTarifasConflictivas(array $data, ?Tarifa $excepto = null): void

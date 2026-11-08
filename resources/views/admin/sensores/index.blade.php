@@ -19,7 +19,7 @@
 <div><dt>Lecturas consecutivas</dt><dd>{{ $sensor->cantidad_candidata }} / {{ $sensor->lecturas_confirmacion }}</dd></div>
 </dl>
 <p>Dirección de recepción: <code>{{ route('iot.lecturas',['sensor'=>$sensor->codigo_sensor]) }}</code></p>
-@if(auth()->user()->tieneRol('admin','super_admin'))
+@if(auth()->user()->esSuperAdmin())
 <details><summary>Calibrar y configurar</summary>
 <form method="post" action="{{ route('admin.sensores.update',$sensor) }}">@csrf @method('PUT')
 <div class="form-grid">

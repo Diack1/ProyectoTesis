@@ -17,7 +17,9 @@ class ConfiguracionPagoController extends Controller
     public function update(Request $request)
     {
         $data = $request->validate(['titular' => 'required|string|max:255', 'telefono' => 'required|string|max:30',
-            'minutos_pago' => 'required|integer|min:5|max:60', 'tolerancia_llegada' => 'sometimes|required|integer|min:10|max:15', 'qr_yape' => 'nullable|image|mimes:png,jpg,jpeg,webp|max:4096',
+            'razon_social' => 'nullable|string|max:255', 'ruc' => 'nullable|regex:/^[0-9]{11}$/', 'direccion_fiscal' => 'nullable|string|max:255',
+            'minutos_pago' => 'required|integer|min:5|max:60', 'tolerancia_llegada' => 'sometimes|required|integer|min:10|max:15',
+            'qr_yape' => 'nullable|image|mimes:png,jpg,jpeg,webp|max:4096',
             'qr_plin' => 'nullable|image|mimes:png,jpg,jpeg,webp|max:4096']);
         foreach (['qr_yape', 'qr_plin'] as $field) {
             unset($data[$field]);

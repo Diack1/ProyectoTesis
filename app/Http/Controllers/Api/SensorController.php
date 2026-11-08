@@ -14,7 +14,7 @@ class SensorController extends Controller
 {
     public function registrarOcupacion(Request $request)
     {
-        abort_unless($request->user()?->activo && $request->user()->tieneRol('admin', 'super_admin', 'operador'), 403);
+        abort_unless($request->user()?->activo && $request->user()->tieneRol('junior', 'admin', 'super_admin', 'operador'), 403);
         $request->validate([
             'codigo_sensor' => 'required|string|exists:sensores,codigo_sensor',
             'estado' => 'required|in:libre,ocupado',
@@ -81,7 +81,7 @@ class SensorController extends Controller
 
     public function estadoActual(Request $request)
     {
-        abort_unless($request->user()->activo && $request->user()->tieneRol('admin', 'super_admin', 'operador'), 403);
+        abort_unless($request->user()->activo && $request->user()->tieneRol('junior', 'admin', 'super_admin', 'operador'), 403);
         $espacios = Espacio::with('sensor')
             ->orderBy('codigo')
             ->get();

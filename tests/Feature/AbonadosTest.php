@@ -18,6 +18,7 @@ class AbonadosTest extends TestCase {
     protected function setUp(): void {
         parent::setUp(); $this->travelTo(now()->setDate(2026,10,27)->setTime(10,0));
         $this->staff=User::factory()->create(['role'=>'operador']);
+        \App\Models\CajaApertura::create(['nombre'=>'Caja 01','monto_inicial'=>0,'operador_id'=>$this->staff->id,'inicio_at'=>now(),'abierta_unica'=>1]);
         $this->tipo=VehiculoTipo::create(['codigo'=>'auto','nombre'=>'Auto','activo'=>true]);
         Tarifa::create(['vehiculo_tipo_id'=>$this->tipo->id,'nombre'=>'Hora','tipo_tarifa'=>'por_hora','monto_por_hora'=>5,'monto_por_fraccion'=>5,'minutos_fraccion'=>60,'tolerancia_minutos'=>5,'penalidad_por_fraccion'=>5,'activo'=>true]);
         $this->techo=$this->space('T01'); $this->patio=$this->space('T27');
@@ -29,7 +30,158 @@ class AbonadosTest extends TestCase {
         return app(AbonoService::class)->registrar(array_replace(['nombre'=>'Cliente mensual','placas'=>['ABO123'],'espacio_id'=>($s??$this->techo)->id,'inicio'=>'2026-10-01','metodo_pago'=>'efectivo','efectivo_recibido'=>270,'pago_verificado'=>1],$overrides),$this->staff);
     }
     private function entrar(Espacio $space,array $overrides=[]): Estadia {
-        return app(EstadiaService::class)->ingresar(array_replace(['espacio_id'=>$space->id,'vehiculo_tipo_id'=>$this->tipo->id,'placa'=>'TMP123','autoriza_movimiento'=>1,'llave_recibida'=>1,'ubicacion_llave'=>'Casillero 12'],$overrides),$this->staff);
+        $casillero=collect(range(12,1))->map(fn ($numero)=>'Casillero '.$numero)
+            ->first(fn ($nombre)=>!Estadia::activas()->where('ubicacion_llave',$nombre)->exists());
+        return app(EstadiaService::class)->ingresar(array_replace(['espacio_id'=>$space->id,'vehiculo_tipo_id'=>$this->tipo->id,
+            'tarifa_id'=>Tarifa::where('vehiculo_tipo_id',$this->tipo->id)->where('tipo_tarifa','por_hora')->value('id'),
+            'placa'=>'TMP123','autoriza_movimiento'=>1,'llave_recibida'=>1,'ubicacion_llave'=>$casillero],$overrides),$this->staff);
+    }
+    public function test_dni_finds_paid_subscriber_and_allows_repeated_entries_without_new_payment(): void {
+        $monthly=Tarifa::create(['vehiculo_tipo_id'=>$this->tipo->id,'nombre'=>'Auto · mensual',
+            'tipo_tarifa'=>'mensual','monto_base'=>270,'monto_por_hora'=>0,'activo'=>true]);
+        $abono=$this->mensualidad($this->techo,['dni'=>'12345678','placas'=>['ABO123','XYZ789'],'tarifa_id'=>$monthly->id]);
+        $this->actingAs($this->staff)->getJson(route('admin.abonados.buscar-dni',['dni'=>'12345678']))
+            ->assertOk()->assertJsonPath('vigente',true)->assertJsonPath('abono_id',$abono->id)
+            ->assertJsonPath('tarifa_mensual','Auto · mensual · S/ 270.00 / mes')
+            ->assertJsonPath('espacio_tipos.0',$this->tipo->id)
+            ->assertJsonPath('vehiculo_tipo_id',$this->tipo->id)->assertJsonCount(2,'placas');
+        $this->getJson(route('admin.abonados.buscar-dni',['dni'=>'87654321']))
+            ->assertOk()->assertJsonPath('vigente',false);
+        $entry=['dni'=>'12345678','placa'=>'ABO123','espacio_id'=>$this->techo->id,
+            'vehiculo_tipo_id'=>$this->tipo->id];
+        $this->post(route('admin.estadias.store'),array_replace($entry,['placa'=>'OTHER12']))->assertSessionHasErrors('placa');
+        $this->post(route('admin.estadias.store'),$entry)->assertSessionHasNoErrors();
+        $stay=Estadia::sole();
+        $this->assertSame($abono->id,$stay->abono_id);
+        $this->post(route('admin.estadias.store'),$entry)->assertSessionHasErrors();
+        $quote=\Illuminate\Support\Facades\Crypt::encryptString(json_encode(['id'=>$stay->id,
+            'inicio'=>$stay->inicio_cobro->toIso8601String(),'corte'=>now()->toIso8601String()]));
+        $this->post(route('admin.estadias.salida',$stay),['cotizacion'=>$quote])->assertSessionHasNoErrors();
+        $this->assertSame('0.00',$stay->fresh()->saldo_cobrado);
+        $this->post(route('admin.estadias.store'),array_replace($entry,['placa'=>'XYZ789']))->assertSessionHasNoErrors();
+        $this->assertSame($abono->id,Estadia::where('placa','XYZ789')->sole()->abono_id);
+        $this->assertSame(1,Pago::count());
+    }
+
+    public function test_subscriber_occupied_space_uses_existing_move_and_returns_to_entry(): void {
+        $abono=$this->mensualidad($this->techo,['dni'=>'12345678','placas'=>['ABO123']]);
+        $occupant=$this->entrar($this->techo,['placa'=>'TMP123']);
+        $lookup=$this->actingAs($this->staff)->getJson(route('admin.abonados.buscar-dni',['dni'=>'12345678']))
+            ->assertOk()->assertJsonPath('espacio_estado','ocupado');
+        $this->assertNotNull($lookup->json('mover_url'));
+        $this->post(route('admin.estadias.store'),['dni'=>'12345678','placa'=>'ABO123',
+            'espacio_id'=>$this->techo->id,'vehiculo_tipo_id'=>$this->tipo->id])->assertSessionHasErrors('espacio_id');
+        $this->get($lookup->json('mover_url'))->assertOk()->assertSee('Confirmar reubicación');
+        $this->post(route('admin.estadias.reubicar',$occupant),['origen_id'=>$this->techo->id,
+            'destino_id'=>$this->patio->id,'motivo'=>'Liberar espacio del abonado',
+            'movimiento_confirmado'=>1,'desde_mapa'=>1,'retorno_ingreso'=>1])
+            ->assertSessionHasNoErrors()->assertRedirect(route('admin.estadias.create',['reubicado'=>1]));
+        $this->assertSame($this->patio->id,$occupant->fresh()->espacio_id);
+        $this->getJson(route('admin.abonados.buscar-dni',['dni'=>'12345678']))
+            ->assertOk()->assertJsonPath('espacio_estado','libre')->assertJsonPath('mover_url',null);
+        $this->post(route('admin.estadias.store'),['dni'=>'12345678','placa'=>'ABO123',
+            'espacio_id'=>$this->techo->id,'vehiculo_tipo_id'=>$this->tipo->id])->assertSessionHasNoErrors();
+        $this->assertSame($abono->id,Estadia::where('placa','ABO123')->sole()->abono_id);
+    }
+    public function test_map_colors_follow_physical_occupancy_and_tariff_time(): void {
+        $abono=$this->mensualidad($this->techo);
+        $this->actingAs($this->staff)->get(route('admin.dashboard'))->assertOk()
+            ->assertSee('data-legend-state="abonado"',false);
+        $this->getJson(route('admin.mapa.estado'))->assertJsonPath('espacios.0.estado_visual','libre');
+
+        $guest=$this->entrar($this->techo);
+        $this->getJson(route('admin.mapa.estado'))->assertJsonPath('espacios.0.estado_visual','ocupado');
+        $this->travel(66)->minutes();
+        $this->getJson(route('admin.mapa.estado'))->assertJsonPath('espacios.0.estado_visual','excedido');
+
+        app(ReubicacionService::class)->mover($guest,['origen_id'=>$this->techo->id,
+            'destino_id'=>$this->patio->id,'motivo'=>'Llegada del abonado','movimiento_confirmado'=>1],$this->staff);
+        $this->getJson(route('admin.mapa.estado'))->assertJsonPath('espacios.0.estado_visual','libre')
+            ->assertJsonPath('espacios.1.estado_visual','excedido');
+
+        $subscriber=$this->entrar($this->techo,['placa'=>'ABO123','abono_id'=>$abono->id,'llave_recibida'=>0]);
+        $this->getJson(route('admin.mapa.estado'))->assertJsonPath('espacios.0.estado_visual','abonado');
+        $quote=Crypt::encryptString(json_encode(['id'=>$subscriber->id,
+            'inicio'=>$subscriber->inicio_cobro->toIso8601String(),'corte'=>now()->toIso8601String()]));
+        $this->post(route('admin.estadias.salida',$subscriber),['cotizacion'=>$quote])->assertSessionHasNoErrors();
+        $this->getJson(route('admin.mapa.estado'))->assertJsonPath('espacios.0.estado_visual','libre');
+    }
+    public function test_map_entry_form_has_the_same_subscriber_lookup_fields(): void {
+        $this->actingAs($this->staff)->get(route('admin.espacios.operar',$this->techo))
+            ->assertOk()->assertSee('DNI (opcional)')->assertSee('id="entry-dni"',false)
+            ->assertSee('id="abono_id"',false)->assertSee('id="entry-subscriber-plate"',false);
+    }
+
+    public function test_unknown_dni_and_forged_subscription_continue_as_normal_entry(): void {
+        $abono=$this->mensualidad($this->techo,['dni'=>'12345678']);
+        $rate=Tarifa::where('vehiculo_tipo_id',$this->tipo->id)->where('tipo_tarifa','por_hora')->firstOrFail();
+        $this->actingAs($this->staff)->post(route('admin.estadias.store'),[
+            'dni'=>'87654321','abono_id'=>$abono->id,'placa'=>'NORMAL1','espacio_id'=>$this->patio->id,
+            'vehiculo_tipo_id'=>$this->tipo->id,'tarifa_id'=>$rate->id])->assertSessionHasNoErrors();
+        $stay=Estadia::sole();
+        $this->assertNull($stay->abono_id);
+        $this->assertSame($rate->id,$stay->tarifa_id);
+    }
+    public function test_edit_updates_current_assignment_without_changing_paid_history(): void {
+        $original=Tarifa::create(['vehiculo_tipo_id'=>$this->tipo->id,'nombre'=>'Plan original',
+            'tipo_tarifa'=>'mensual','monto_base'=>270,'monto_por_hora'=>0,'activo'=>true]);
+        $nuevo=Tarifa::create(['vehiculo_tipo_id'=>$this->tipo->id,'nombre'=>'Plan nuevo',
+            'tipo_tarifa'=>'mensual','monto_base'=>270,'monto_por_hora'=>0,'activo'=>true]);
+        $masCaro=Tarifa::create(['vehiculo_tipo_id'=>$this->tipo->id,'nombre'=>'Plan mayor',
+            'tipo_tarifa'=>'mensual','monto_base'=>300,'monto_por_hora'=>0,'activo'=>true]);
+        $abono=$this->mensualidad($this->techo,['dni'=>'12345678','tarifa_id'=>$original->id]);
+        $pagos=Pago::count(); $importe=$abono->monto; $inicio=$abono->inicio; $fin=$abono->fin;
+        $this->actingAs($this->staff)->get(route('admin.abonados.edit',$abono->abonado_id))->assertOk()->assertSee('Plan mensual operativo');
+        $this->put(route('admin.abonados.update',$abono->abonado_id),[
+            'nombre'=>'Cliente mensual','dni'=>'12345678','placas'=>['ABO123'],
+            'espacio_id'=>$this->techo->id,'tarifa_id'=>$masCaro->id,
+            'motivo'=>'Solicita cambio de plan','cambio_confirmado'=>1])->assertSessionHasErrors('tarifa_id');
+        $this->put(route('admin.abonados.update',$abono->abonado_id),[
+            'nombre'=>'Cliente actualizado','telefono'=>'987654321','dni'=>'87654321',
+            'placas'=>['NUE123','NUE456'],'espacio_id'=>$this->patio->id,'tarifa_id'=>$nuevo->id,
+            'motivo'=>'Cambio solicitado por el cliente','cambio_confirmado'=>1])->assertSessionHasNoErrors();
+        $abono->refresh();
+        $this->assertSame($this->patio->id,$abono->espacio_id);
+        $this->assertSame($nuevo->id,$abono->tarifa_id);
+        $this->assertSame('T01',$abono->espacio_contratado_codigo);
+        $this->assertSame('Plan original',$abono->tarifa_contratada_nombre);
+        $this->assertSame($importe,$abono->monto);
+        $this->assertEquals($inicio,$abono->inicio);
+        $this->assertEquals($fin,$abono->fin);
+        $this->assertSame($pagos,Pago::count());
+        $this->assertSame(1,$abono->abonado->ediciones()->count());
+        $this->getJson(route('admin.abonados.buscar-dni',['dni'=>'87654321']))
+            ->assertJsonPath('espacio_id',$this->patio->id)->assertJsonPath('vehiculo_tipo_id',$this->tipo->id);
+        $this->get(route('admin.abonados.comprobante',$abono))->assertOk()->assertSee('Plan original');
+    }
+    public function test_key_locker_cannot_be_shared_and_is_freed_on_checkout(): void {
+        $abono=$this->mensualidad($this->techo);
+        $subscriber=$this->entrar($this->techo,['placa'=>'ABO123','abono_id'=>$abono->id]);
+        try {
+            $this->entrar($this->patio,['placa'=>'OTH123','ubicacion_llave'=>'Casillero 12']);
+            $this->fail('El casillero ocupado fue aceptado.');
+        } catch (ValidationException $e) {
+            $this->assertArrayHasKey('ubicacion_llave',$e->errors());
+        }
+        $quote=Crypt::encryptString(json_encode(['id'=>$subscriber->id,
+            'inicio'=>$subscriber->inicio_cobro->toIso8601String(),'corte'=>now()->toIso8601String()]));
+        $this->actingAs($this->staff)->post(route('admin.estadias.salida',$subscriber),['cotizacion'=>$quote])->assertSessionHasNoErrors();
+        $this->assertNull($subscriber->fresh()->casillero_activo);
+        $other=$this->entrar($this->patio,['placa'=>'OTH123','ubicacion_llave'=>'Casillero 12']);
+        $this->assertSame('Casillero 12',$other->casillero_activo);
+    }
+    public function test_locker_count_is_configurable_and_enforced_on_entry(): void {
+        $owner=User::factory()->create(['role'=>'super_admin']);
+        $this->actingAs($owner)->put(route('admin.espacios.casilleros.update'),[
+            'cantidad_casilleros'=>3])->assertSessionHasNoErrors();
+        $this->actingAs($this->staff)->get(route('admin.estadias.create'))
+            ->assertOk()->assertSee('Casillero 3')->assertDontSee('Casillero 4');
+        try {
+            $this->entrar($this->techo,['ubicacion_llave'=>'Casillero 4']);
+            $this->fail('Un casillero no configurado fue aceptado.');
+        } catch (ValidationException $e) {
+            $this->assertArrayHasKey('ubicacion_llave',$e->errors());
+        }
     }
     public function test_monthly_prices_history_payment_and_overlapping_assignment(): void {
         $a=$this->mensualidad(); $p=$this->mensualidad($this->patio);
@@ -46,15 +198,13 @@ class AbonadosTest extends TestCase {
         try { $this->mensualidad(null,['pago_verificado'=>0]); $this->fail(); } catch(ValidationException $e) {}
         $this->assertSame(0,Abono::count()); $this->assertSame(0,Abonado::count()); $this->assertSame(0,Pago::count());
     }
-    public function test_space_not_web_bookable_and_temporary_entry_requires_keys(): void {
+    public function test_subscriber_space_is_shared_while_absent_and_key_is_optional(): void {
         $a=$this->mensualidad();
-        $this->assertFalse(app(ReservaDisponibilidadService::class)->estadoParaTarjeta($this->techo->fresh())['puede_reservar']);
-        $this->actingAs(User::factory()->create())->post(route('reservas.store',$this->techo),['placa'=>'WEB123','vehiculo_tipo_id'=>$this->tipo->id,'duracion_minutos'=>60])->assertRedirect();
-        $this->assertSame(0,Reserva::count());
-        try { $this->entrar($this->techo,['llave_recibida'=>0]); $this->fail(); } catch(ValidationException $e) {}
-        $stay=$this->entrar($this->techo);
+        $this->assertTrue(app(ReservaDisponibilidadService::class)->estadoParaTarjeta($this->techo->fresh())['puede_reservar']);
+        $stay=$this->entrar($this->techo,['llave_recibida'=>0]);
         $this->assertNull($stay->abono_id);
-        $this->assertSame('Casillero 12',$stay->ubicacion_llave);
+        $this->assertNull($stay->ubicacion_llave);
+        $this->assertSame('ocupado',$this->techo->fresh()->estado_actual);
     }
     public function test_relocation_preserves_billing_and_makes_room_for_subscriber(): void {
         $a=$this->mensualidad(); $stay=$this->entrar($this->techo);
@@ -92,7 +242,7 @@ class AbonadosTest extends TestCase {
         $this->get(route('admin.abonados.index',['buscar'=>'ABO123']))->assertOk()->assertSee('Cliente mensual');
         $this->get(route('admin.abonados.show',$a->abonado_id))->assertOk()->assertSee('data:image/svg+xml;base64,',false);
         $this->get($url)->assertRedirect(); $this->get($url.'&x=1')->assertForbidden();
-        $this->get(route('admin.estadias.create'))->assertOk()->assertSee('Abono vigente');
+        $this->get(route('admin.estadias.create'))->assertOk()->assertSee('DNI (opcional)');
         $this->assertSame(0,Estadia::count());
         $stay=$this->entrar($this->techo);
         $this->get(route('admin.estadias.show',$stay))->assertOk()->assertSee('Confirmar reubicación');

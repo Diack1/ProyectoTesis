@@ -5,4 +5,5 @@ class Abonado extends Model {
     protected $guarded = ['id'];
     protected function casts(): array { return ['placas' => 'array']; }
     public function abonos() { return $this->hasMany(Abono::class)->orderByDesc('inicio'); }
+    public function ediciones() { return $this->hasMany(AbonadoEdicion::class)->latest(); }
 }

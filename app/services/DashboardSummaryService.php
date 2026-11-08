@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\{Estadia, Pago, Reembolso};
+use App\Models\{CajaMovimiento, Estadia, Pago, Reembolso};
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -16,18 +16,20 @@ class DashboardSummaryService
         $exits = $this->group(Estadia::whereNotNull('hora_salida'), 'hora_salida', $start, $end, $monthly);
         $reserved = $this->group(Estadia::whereNotNull('reserva_id'), 'hora_ingreso', $start, $end, $monthly);
         // Gross collections retain refunded payments; refunds are reported separately.
-        $paid = $this->group(Pago::whereIn('estado', ['aprobado', 'reembolsado']), 'pagado_at', $start, $end, $monthly, 'SUM(monto)');
+        $paid = $this->group(Pago::where(fn ($q) => $q->whereIn('estado', ['aprobado', 'reembolsado'])->orWhere('reportable_historico', true)), 'pagado_at', $start, $end, $monthly, 'SUM(monto)');
+        $adjustmentsIn = $this->group(CajaMovimiento::where('ajuste_venta', true)->where('tipo','ingreso'), 'created_at', $start, $end, $monthly, 'SUM(monto)');
+        $adjustmentsOut = $this->group(CajaMovimiento::where('ajuste_venta', true)->where('tipo','egreso'), 'created_at', $start, $end, $monthly, 'SUM(monto)');
         $refunds = $this->group(Reembolso::where('estado', 'aprobado'), 'procesado_at', $start, $end, $monthly, 'SUM(monto)');
         $rows = [];
         $count = $monthly ? $start->daysInMonth : 24;
         for ($i = 0; $i < $count; $i++) {
             $key = str_pad((string)($monthly ? $i+1 : $i), 2, '0', STR_PAD_LEFT);
             $rows[] = ['label' => $monthly ? $key : $key.':00', 'entries' => (int)($entries[$key] ?? 0),
-                'exits' => (int)($exits[$key] ?? 0), 'paid' => (float)($paid[$key] ?? 0), 'refunds' => (float)($refunds[$key] ?? 0)];
+                'exits' => (int)($exits[$key] ?? 0), 'paid' => (float)($paid[$key] ?? 0) + (float)($adjustmentsIn[$key] ?? 0) - (float)($adjustmentsOut[$key] ?? 0), 'refunds' => (float)($refunds[$key] ?? 0)];
         }
         return ['rows' => $rows, 'entries' => $entries->sum(), 'exits' => $exits->sum(),
-            'reserved' => $reserved->sum(), 'paid' => $paid->sum(), 'refunds' => $refunds->sum(),
-            'net' => $paid->sum() - $refunds->sum(), 'start' => $start,
+            'reserved' => $reserved->sum(), 'paid' => $paid->sum() + $adjustmentsIn->sum() - $adjustmentsOut->sum(), 'refunds' => $refunds->sum(),
+            'net' => $paid->sum() + $adjustmentsIn->sum() - $adjustmentsOut->sum() - $refunds->sum(), 'start' => $start,
             'pending' => Pago::where('estado','pendiente')->whereNotNull('enviado_at')->sum('monto'),
             'maxActivity' => max(1, $entries->max() ?? 0, $exits->max() ?? 0),
             'maxMoney' => max(1, $paid->max() ?? 0, $refunds->max() ?? 0)];

@@ -13,6 +13,7 @@ class CobroLlegadaService
     // Called only inside the entry transaction, with the reservation locked.
     public function registrar(Reserva $reserva, array $data, User $operador): void
     {
+        $caja = app(CajaService::class)->abierta(true);
         if (empty($data['pago_verificado'])) {
             throw ValidationException::withMessages(['pago_verificado' => 'Verifica que recibiste el pago antes de confirmar la entrada.']);
         }
@@ -27,11 +28,11 @@ class CobroLlegadaService
             }
         } else {
             $referencia = strtoupper(trim($data['referencia_pago'] ?? ''));
-            if (! preg_match('/\A[A-Z0-9-]{1,80}\z/', $referencia)) {
-                throw ValidationException::withMessages(['referencia_pago' => 'Registra la operación que verificaste en la cuenta del negocio.']);
+            if ($referencia !== '' && ! preg_match('/\A[A-Z0-9-]{1,80}\z/', $referencia)) {
+                throw ValidationException::withMessages(['referencia_pago' => 'La referencia de pago no es válida.']);
             }
-            $key = $metodo.':'.$referencia;
-            if (Pago::where('operacion_unica', $key)->exists()) {
+            $key = $referencia !== '' ? $metodo.':'.$referencia : null;
+            if ($key && Pago::where('operacion_unica', $key)->exists()) {
                 throw ValidationException::withMessages(['referencia_pago' => 'Esta operación ya se utilizó.']);
             }
         }
@@ -39,8 +40,8 @@ class CobroLlegadaService
             throw ValidationException::withMessages(['reserva_id' => 'Esta reserva tiene un pago en revisión. Resuélvelo antes de cobrar.']);
         }
         $pago = $reserva->pagos()->where('estado', 'pendiente')->whereNull('enviado_at')->first();
-        $values = ['metodo_pago' => $metodo, 'monto' => $reserva->monto_total, 'estado' => 'aprobado',
-            'referencia_pago' => $metodo === 'efectivo' ? null : $referencia, 'operacion_unica' => $key,
+        $values = ['caja_apertura_id' => $caja->id, 'metodo_pago' => $metodo, 'monto' => $reserva->monto_total, 'estado' => 'aprobado',
+            'referencia_pago' => $metodo === 'efectivo' || $referencia === '' ? null : $referencia, 'operacion_unica' => $key,
             'pagado_at' => now(), 'revisado_at' => now(), 'revisado_por' => $operador->id,
             'motivo_revision' => 'Cobro al llegar verificado por el encargado.'];
         if ($pago) {

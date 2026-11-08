@@ -2,7 +2,8 @@
 
 @section('title', 'Nueva tarifa - Parke’o')
 @section('page-title', 'Nueva tarifa')
-@section('page-subtitle', 'Registra una tarifa para auto, moto, horario, duración y condiciones de cobro')
+@section('page-subtitle', 'Selecciona vehículo y configura una de las tres tarifas disponibles.')
+@push('styles') @vite('resources/css/pages/abonados.css') @endpush
 
 @section('content')
 

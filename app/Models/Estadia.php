@@ -15,11 +15,13 @@ class Estadia extends Model
             'hora_ingreso' => 'datetime', 'inicio_cobro' => 'datetime', 'hora_salida' => 'datetime', 'liquidado_hasta' => 'datetime',
             'tarifa_snapshot' => 'array', 'monto_adelantado' => 'decimal:2', 'monto_total' => 'decimal:2', 'monto_exceso' => 'decimal:2',
             'saldo_cobrado' => 'decimal:2', 'efectivo_recibido' => 'decimal:2', 'vuelto' => 'decimal:2',
+            'descuento_porcentaje' => 'decimal:2', 'descuento_monto' => 'decimal:2',
         ];
     }
 
     public function abono() { return $this->belongsTo(Abono::class); }
     public function reubicaciones() { return $this->hasMany(Reubicacion::class); }
+    public function auditorias() { return $this->hasMany(EstadiaAuditoria::class); }
     public function espacio()
     {
         return $this->belongsTo(Espacio::class);
@@ -29,6 +31,8 @@ class Estadia extends Model
     {
         return $this->belongsTo(VehiculoTipo::class);
     }
+
+    public function tarifa() { return $this->belongsTo(Tarifa::class); }
 
     public function reserva()
     {
@@ -49,6 +53,9 @@ class Estadia extends Model
     {
         return $this->hasOne(Pago::class);
     }
+
+    public function pagosSalida() { return $this->hasMany(Pago::class); }
+    public function clienteCobro() { return $this->belongsTo(ClienteCobro::class); }
 
     public function scopeActivas($query)
     {

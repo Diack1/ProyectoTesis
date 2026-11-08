@@ -37,6 +37,8 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
+    Route::get('password/primer-ingreso', [\App\Http\Controllers\Auth\FirstPasswordController::class, 'show'])->name('password.first.show');
+    Route::post('password/primer-ingreso', [\App\Http\Controllers\Auth\FirstPasswordController::class, 'update'])->middleware('throttle:5,1')->name('password.first.update');
     Route::get('verify-email', [\App\Http\Controllers\Auth\CustomerVerificationController::class, 'show'])->name('verification.notice');
     Route::post('verify-email', [\App\Http\Controllers\Auth\CustomerVerificationController::class, 'verify'])->middleware('throttle:customer-verify')->name('verification.verify');
     Route::post('email/verification-notification', [\App\Http\Controllers\Auth\CustomerVerificationController::class, 'send'])->middleware('throttle:customer-code-send')->name('verification.send');

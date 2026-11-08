@@ -1,0 +1,12 @@
+.admin-refined.dashboard-page [data-parking] .parking-space[data-state=libre]{background:#123b32;color:#79e5ae;border-color:#299967}
+.admin-refined.dashboard-page [data-parking] .parking-space[data-state=ocupado]{background:#483019;color:#ffc180;border-color:#df852d}
+.admin-refined.dashboard-page [data-parking] .parking-space[data-state=abonado]{background:#4a3e17;color:#ffe681;border-color:#dfc23c}
+.admin-refined.dashboard-page [data-parking] .parking-space[data-state=excedido]{background:#4a2029;color:#ff9da9;border-color:#ed576b}
+.admin-refined.dashboard-page [data-parking] .parking-space[data-state=reservado]{background:#1b3557;color:#9ecbff;border-color:#5b9ef0}
+.admin-refined.dashboard-page [data-parking] .parking-legend [data-legend-state]{display:inline-flex;align-items:center;gap:6px}
+.admin-refined.dashboard-page [data-parking] .parking-legend [data-legend-state]::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--legend-color);box-shadow:0 0 0 1px #ffffff33}
+.admin-refined.dashboard-page [data-legend-state=libre]{--legend-color:#48cf8b}
+.admin-refined.dashboard-page [data-legend-state=ocupado]{--legend-color:#f2993e}
+.admin-refined.dashboard-page [data-legend-state=abonado]{--legend-color:#f1d448}
+.admin-refined.dashboard-page [data-legend-state=excedido]{--legend-color:#f0687c}
+.admin-refined.dashboard-page [data-legend-state=reservado]{--legend-color:#6faeff}

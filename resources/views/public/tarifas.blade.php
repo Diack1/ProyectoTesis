@@ -59,6 +59,13 @@
                         Cada {{ $tarifa->minutos_fraccion }} minutos
                     </p>
 
+                    @elseif($tarifa->tipo_tarifa === 'bloque_horas')
+                    <div class="tariff-price">S/ {{ number_format($tarifa->monto_base, 2) }} / {{ (int)($tarifa->tiempo_minimo_minutos / 60) }} horas</div>
+                    <p class="tariff-detail">El exceso usa los intervalos de la tarifa por hora.</p>
+
+                    @elseif($tarifa->tipo_tarifa === 'mensual')
+                    <div class="tariff-price">S/ {{ number_format($tarifa->monto_base, 2) }} / mes</div>
+
                     @elseif($tarifa->tipo_tarifa === 'diaria')
                     <div class="tariff-price">
                         S/ {{ number_format($tarifa->monto_base, 2) }} / día
@@ -77,20 +84,20 @@
                     </p>
                     @endif
 
-                    <p class="tariff-detail">
+                    @if($tarifa->tipo_tarifa !== 'mensual')<p class="tariff-detail">
                         <strong>Tiempo mínimo:</strong>
                         {{ $tarifa->tiempo_minimo_minutos }} minutos
                     </p>
 
                     <p class="tariff-detail">
                         <strong>Tolerancia de exceso:</strong>
-                        {{ $tarifa->tolerancia_minutos }} minutos
+                        {{ $tarifa->tipo_tarifa === 'bloque_horas' ? ($vehiculoTipo->tarifas->firstWhere('tipo_tarifa','por_hora')?->tolerancia_minutos ?? 0) : $tarifa->tolerancia_minutos }} minutos
                     </p>
 
                     <p class="tariff-detail">
                         <strong>Penalidad por exceso:</strong>
-                        S/ {{ number_format($tarifa->penalidad_por_fraccion, 2) }}
-                    </p>
+                        S/ {{ number_format($tarifa->tipo_tarifa === 'bloque_horas' ? ($vehiculoTipo->tarifas->firstWhere('tipo_tarifa','por_hora')?->monto_por_fraccion ?? 0) : $tarifa->penalidad_por_fraccion, 2) }}
+                    </p>@endif
                 </div>
                 @endforeach
             </div>

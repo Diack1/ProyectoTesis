@@ -23,6 +23,7 @@ class Tarifa extends Model
         'hora_fin',
         'activo',
         'prioridad',
+        'cobro_intervalos',
     ];
 
     protected function casts(): array
@@ -33,6 +34,7 @@ class Tarifa extends Model
             'monto_por_fraccion' => 'decimal:2',
             'penalidad_por_fraccion' => 'decimal:2',
             'activo' => 'boolean',
+            'cobro_intervalos' => 'boolean',
         ];
     }
 

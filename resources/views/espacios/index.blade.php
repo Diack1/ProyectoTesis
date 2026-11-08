@@ -37,6 +37,14 @@
     </div>
 </div>
 
+<div class="admin-page-card" style="margin:12px 0">
+    <form method="post" action="{{ route('admin.espacios.casilleros.update') }}" style="display:flex;align-items:end;gap:12px;flex-wrap:wrap">@csrf @method('PUT')
+        <div class="form-group" style="margin:0;max-width:220px"><label for="cantidad_casilleros">Casilleros para llaves</label><input id="cantidad_casilleros" type="number" name="cantidad_casilleros" min="1" max="200" required value="{{ old('cantidad_casilleros',$cantidadCasilleros) }}"></div>
+        <button class="btn btn-secondary">Guardar cantidad</button>
+    </form>
+    @error('cantidad_casilleros')<p class="alert alert-error">{{ $message }}</p>@enderror
+</div>
+
 <div class="table-wrapper">
     <table class="data-table">
         <thead>

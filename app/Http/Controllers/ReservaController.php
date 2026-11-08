@@ -271,7 +271,7 @@ class ReservaController extends Controller
                 'monto_penalidad' => 0,
 
                 'tolerancia_llegada_minutos' => 15,
-                'minutos_fraccion_snapshot' => $tarifa->minutos_fraccion ?: 60,
+                'minutos_fraccion_snapshot' => $calculo['minutos_fraccion'],
                 'estado' => 'pendiente_pago',
                 'expires_at' => now('America/Lima')->addMinutes(15),
                 'reserva_inmediata' => true, 'pago_al_llegar' => true,

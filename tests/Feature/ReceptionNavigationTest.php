@@ -15,7 +15,7 @@ class ReceptionNavigationTest extends TestCase
         foreach (['admin','operador'] as $role) {
             $this->actingAs(User::factory()->create(['role'=>$role]));
             $page = $this->get(route('admin.dashboard'))->assertOk();
-            $page->assertSee('Entradas y salidas')->assertSee('Registrar entrada')->assertSee('Ver reservas de hoy')
+            $page->assertSee('Entradas y salidas')->assertSee('Elige un espacio')->assertSee('Reservas de hoy')
                 ->assertDontSee('<summary>Configuración</summary>', false);
             foreach (['admin.espacios.index','admin.tarifas.index','admin.sensores.index','admin.pagos.configuracion','superadmin.dashboard','admin.reportes.index','admin.reportes.exportarCsv','sensores.estado'] as $route) {
                 $this->get(route($route))->assertForbidden();

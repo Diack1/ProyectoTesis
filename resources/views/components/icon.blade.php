@@ -21,6 +21,7 @@ $paths = [
 'print'=>'M6 9V2h12v7 M6 18H3V9h18v9h-3 M6 14h12v8H6z',
 'bell'=>'M18 8a6 6 0 0 0-12 0c0 7-3 8-3 8h18s-3-1-3-8 M10 20h4',
 'plus'=>'M12 4v16 M4 12h16',
+'edit'=>'M4 20h4l11-11-4-4L4 16v4z M13 7l4 4 M4 20h16',
 'menu'=>'M3 6h18 M3 12h18 M3 18h18',
 ];
 @endphp

@@ -1,0 +1,14 @@
+#entry-form [hidden],.space-form [hidden]{display:none!important}
+#entry-form{display:grid;gap:12px}
+#entry-form>.form-group{margin:0}
+.entry-subscriber-message,.entry-subscriber-rate{margin:0;padding:9px 12px;border:1px solid var(--color-border);border-radius:9px;background:var(--color-card);font-size:13px}
+.entry-subscriber-message.is-active{border-color:var(--color-primary)}
+.entry-subscriber-rate{color:var(--color-primary);font-weight:700}
+.entry-extras{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:end;gap:10px 16px;margin:3px 0}
+.entry-extras .form-group{margin:0;min-width:0}.entry-extras .form-group input{width:100%}
+.entry-extras [data-entry-key-location] select{width:100%;max-width:260px}
+.entry-key-check{display:flex;align-items:center;gap:8px;min-height:44px;font-weight:600;white-space:nowrap}
+.entry-key-check input{width:18px;height:18px;margin:0;flex:none}
+.entry-submit-actions{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+.entry-submit-actions .btn{min-height:44px}
+@media(max-width:650px){.entry-extras{grid-template-columns:1fr}.entry-submit-actions .btn{flex:1 1 180px;justify-content:center}}

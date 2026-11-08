@@ -1,0 +1,9 @@
+@php($qrTicket=base64_encode(app(\App\Services\TicketQrService::class)->svg($estadia)))
+<div class="entry-ticket-card">
+  <header><strong>{{ \App\Models\ConfiguracionPago::actual()->razon_social ?: (\App\Models\ConfiguracionPago::actual()->titular ?: 'Parke’o') }}</strong><small>{{ $estadia->hora_salida ? 'Ticket finalizado' : 'Ticket de entrada · Vehículo estacionado' }}</small></header>
+  <div class="entry-ticket-number">{{ $estadia->codigo_ticket }}</div>
+  <dl><div><dt>Placa</dt><dd>{{ $estadia->placa }}</dd></div><div><dt>Vehículo</dt><dd>{{ $estadia->vehiculoTipo?->nombre }}</dd></div><div><dt>Espacio</dt><dd>{{ $estadia->espacio?->codigo }}</dd></div><div><dt>Entrada</dt><dd>{{ $estadia->hora_ingreso->format('d/m/Y H:i') }}</dd></div><div><dt>Tarifa</dt><dd>{{ $estadia->tarifa_snapshot['nombre'] ?? 'Tarifa registrada' }}</dd></div>@if($estadia->hora_salida)<div><dt>Salida</dt><dd>{{ $estadia->hora_salida->format('d/m/Y H:i') }}</dd></div>@endif</dl>
+  <img class="entry-ticket-qr" src="data:image/svg+xml;base64,{{ $qrTicket }}" alt="Código QR del ticket {{ $estadia->codigo_ticket }}" width="150" height="150">
+  <small class="entry-ticket-hint">El QR identifica este ticket. No confirma un pago.</small>
+  <div class="entry-ticket-actions"><form method="post" action="{{ route('admin.impresoras.estadia',$estadia) }}" data-ticket-print>@csrf<button class="btn btn-secondary" type="submit"><x-icon name="print"/>Imprimir ticket</button></form><a class="btn btn-secondary" href="{{ route('admin.espacios.operar',['espacio'=>$estadia->espacio_id,'vista'=>'ticket','detalle'=>1] + ($estadia->hora_salida ? ['ticket'=>$estadia->id] : [])) }}"><x-icon name="ticket"/>Ver ticket</a>@unless($estadia->hora_salida)<a class="btn btn-primary" href="{{ route('admin.espacios.operar',['espacio'=>$estadia->espacio_id,'vista'=>'cobrar']) }}"><x-icon name="wallet"/>Cobrar</a>@endunless</div>
+</div>

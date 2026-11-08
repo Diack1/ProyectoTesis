@@ -1,16 +1,20 @@
 @extends('layouts.admin')
 @section('page-title','Abonados')
-@section('page-subtitle','Espacio fijo mensual: techo S/ 270 · patio S/ 240.')
+@section('page-subtitle','Clientes con espacio fijo y periodos pagados.')
+@push('styles') @vite('resources/css/pages/abonados.css') @endpush
 @section('content')
 @include('admin.estadias.messages')
-<div class="entry-grid"><section class="card"><h2>Clientes abonados</h2>
-<form method="get" class="search-form"><input name="buscar" aria-label="Buscar por nombre o placa" placeholder="Nombre o placa" value="{{ request('buscar') }}"><button class="btn btn-secondary">Buscar</button></form>
-@forelse($clientes as $cliente)<p><a href="{{ route('admin.abonados.show',$cliente) }}"><strong>{{ $cliente->nombre }}</strong> · {{ implode(', ',$cliente->placas) }}</a><br>{{ $cliente->abonos->first()?->espacio?->codigo }}</p>@empty<p>No hay abonados registrados.</p>@endforelse
-{{ $clientes->links() }}</section>
-<section class="card"><h2>Nuevo abonado y primera mensualidad</h2><form method="post" action="{{ route('admin.abonados.store') }}">@csrf
-<div class="form-group"><label for="nombre">Nombre del cliente</label><input id="nombre" name="nombre" maxlength="150" required value="{{ old('nombre') }}"></div>
-<div class="form-group"><label for="telefono">Teléfono</label><input id="telefono" name="telefono" maxlength="40" value="{{ old('telefono') }}"></div>
-<div class="form-group"><label for="placas_texto">Placas autorizadas (separadas por coma, máximo 5)</label><input id="placas_texto" name="placas_texto" required value="{{ old('placas_texto') }}"><small>Un solo vehículo puede ocupar el espacio a la vez.</small></div>
-@include('admin.abonados.periodo')
-<button class="btn btn-primary">Registrar pago y asignar espacio</button></form></section></div>
+<div class="subscriber-toolbar"><a class="btn btn-primary" href="{{ route('admin.abonados.create') }}">+ Agregar abonado</a></div>
+<section class="card subscriber-list">
+    <form method="get" class="subscriber-search"><label for="subscriber-query">Buscar abonados</label><div><input id="subscriber-query" name="buscar" placeholder="Nombre, DNI, teléfono o placa" value="{{ request('buscar') }}"><button class="btn btn-secondary">Buscar</button></div></form>
+    <nav class="subscriber-filters" aria-label="Filtrar abonados">@foreach(['todos'=>'Todos','al_dia'=>'Al día','proximos'=>'Próximos a vencer','vencidos'=>'Vencidos'] as $value=>$label)<a href="{{ route('admin.abonados.index',['estado'=>$value,'buscar'=>request('buscar')]) }}" class="{{ $estado===$value?'active':'' }}">{{ $label }}</a>@endforeach</nav>
+    <div class="table-wrapper"><table class="data-table subscriber-table"><thead><tr><th>Abonado</th><th>Placas</th><th>Espacio</th><th>Periodo</th><th>Estado</th><th></th></tr></thead><tbody>
+    @forelse($clientes as $cliente)
+    @php($periodo=$cliente->abonos->first())
+    @php($estadoActual=!$periodo || $periodo->fin->lte(now()) ? 'vencido' : ($periodo->fin->lte(now()->addDays(7)) ? 'proximo' : 'al_dia'))
+    <tr><td data-label="Abonado"><strong>{{ $cliente->nombre }}</strong><small>{{ $cliente->dni ? 'DNI '.$cliente->dni.' · ' : '' }}{{ $cliente->telefono }}</small></td><td data-label="Placas">{{ implode(', ',$cliente->placas) }}</td><td data-label="Espacio">{{ $periodo?->espacio?->codigo ?? '—' }}</td><td data-label="Periodo">{{ $periodo?->inicio?->format('d/m/Y') ?? '—' }} → {{ $periodo?->fin?->format('d/m/Y') ?? '—' }}</td><td data-label="Estado"><span class="subscriber-status {{ $estadoActual }}">{{ ['al_dia'=>'Al día','proximo'=>'Próximo a vencer','vencido'=>'Vencido'][$estadoActual] }}</span></td><td><a class="btn btn-secondary" href="{{ route('admin.abonados.show',$cliente) }}">Ver detalle</a> <a class="btn btn-secondary" href="{{ route('admin.abonados.edit',$cliente) }}">Editar</a></td></tr>
+    @empty<tr><td colspan="6">No hay abonados para este filtro.</td></tr>@endforelse
+    </tbody></table></div>
+    {{ $clientes->links() }}
+</section>
 @endsection

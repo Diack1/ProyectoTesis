@@ -123,7 +123,6 @@ class ReservaDisponibilidadService
     public function estadoParaTarjeta(Espacio $espacio, ?array $sensorExterno = null): array
     {
         $estado = $espacio->estado_actual;
-        if ($estado === 'libre' && ($espacio->tiene_abono_vigente ?? $espacio->abonoVigente()->exists())) { $estado = 'abonado'; }
         $configuracion = $this->verificarConfiguracionReserva($espacio);
         if ($espacio->modo_monitoreo === 'sensor' && $estado === 'libre'
             && (!$espacio->sensor?->integracion_iot || !$espacio->sensor->lectura_vigente)) {

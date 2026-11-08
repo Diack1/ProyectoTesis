@@ -1,0 +1,33 @@
+.space-workspace{display:block;min-width:0}
+.space-workspace>.card{margin:0;min-width:0}
+.space-context{position:sticky;top:18px;padding:18px!important}
+.space-back{display:inline-flex;align-items:center;min-height:38px;margin-bottom:20px;text-decoration:none;font-weight:650;color:var(--panel-ink)}
+.space-context h2{margin:0 0 8px;font-size:32px;letter-spacing:-.05em}
+.space-context .eyebrow{margin:0 0 6px}
+.space-state{display:flex;gap:8px;align-items:center;font-size:13px;margin:8px 0 16px;color:var(--panel-muted)}
+.space-state-dot{width:9px;height:9px;border-radius:50%;background:var(--panel-gold)}
+.space-state-dot[data-state=libre]{background:#52c78c}.space-state-dot[data-state=ocupado]{background:#e47886}.space-state-dot[data-state=reservado]{background:#e4b95b}
+.space-plate{font:700 22px ui-monospace,Consolas,monospace;margin:0 0 5px;letter-spacing:.04em}
+.space-context>small{display:block;overflow-wrap:anywhere;color:var(--panel-muted);margin-bottom:18px}
+.space-actions{display:grid;gap:5px;border-top:1px solid var(--panel-line);padding-top:15px;margin-top:15px}
+.space-actions a{display:flex;gap:10px;align-items:center;min-height:44px;padding:9px 12px;border-radius:9px;text-decoration:none;color:var(--panel-ink);font-size:13px;font-weight:650}
+.space-actions a:hover,.space-actions a.active{background:var(--panel-surface);box-shadow:inset 3px 0 var(--panel-gold)}
+.space-actions svg{width:18px;height:18px}
+.space-content{padding:22px!important;min-height:430px}
+.space-panel-heading{margin-bottom:20px}.space-panel-heading h2{margin:4px 0 8px;font-size:22px}.space-panel-heading p{margin:0;line-height:1.5;color:var(--panel-muted)}
+.space-button-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+.space-form{max-width:740px}.space-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.space-form .form-group{min-width:0;margin-bottom:14px}.space-form :is(input,select,textarea){width:100%;min-height:42px;box-sizing:border-box}.space-form textarea{min-height:86px}
+.space-form .checkbox-row{display:flex;align-items:center;gap:9px;max-width:100%;font-size:13px}.space-form .checkbox-row input[type=checkbox]{width:18px;height:18px;min-height:0;flex:0 0 18px}
+.space-form fieldset{border:1px solid var(--panel-line);border-radius:12px;margin:12px 0;padding:16px}.space-form fieldset label{display:block;margin:8px 0}.space-form fieldset :is(input[type=checkbox]){width:auto;min-height:0}
+.destination-lot{margin:18px 0 24px}.destination-lot .destination-space{background:var(--panel-surface);color:var(--panel-ink);border:2px solid #4b9f77;cursor:pointer}.destination-space input{position:absolute;opacity:0}.destination-lot .destination-space:has(input:checked){outline:3px solid var(--panel-gold);background:#163653}.destination-lot .destination-space:has(input:focus-visible){outline:3px solid var(--panel-gold)}.destination-lot .parking-space:disabled{opacity:.38;cursor:not-allowed}
+.space-timeline{list-style:none;margin:0;padding:0;display:grid;gap:10px}.space-timeline li{border:1px solid var(--panel-line);border-left:3px solid var(--panel-gold);border-radius:10px;padding:12px 14px;display:grid;gap:5px}.space-timeline time,.space-timeline small{font-size:12px;color:var(--panel-muted)}.space-timeline span{font-size:13px}
+@media(max-width:900px){.space-content{min-height:320px}}
+@media(max-width:600px){.space-form-grid{grid-template-columns:1fr}.space-content{padding:16px!important}}
+.admin-refined .admin-menu .space-back{margin:0 0 8px;border:1px solid var(--panel-line);background:var(--panel-bg);color:var(--panel-ink);justify-content:center}
+.sidebar-space-meta{display:grid;gap:5px;padding:12px;border:1px solid var(--panel-line);border-radius:10px;color:var(--panel-ink)}
+.sidebar-space-meta strong{font-size:24px;line-height:1.1}.sidebar-space-meta span:not(.eyebrow),.sidebar-space-meta small{font-size:12px;color:var(--panel-muted);overflow-wrap:anywhere}
+.admin-refined .admin-menu .space-actions{margin:10px 0 0;padding:10px 0 0;display:grid;border-top:1px solid var(--panel-line)}
+.admin-refined .admin-menu .space-actions a{min-height:44px;color:var(--panel-ink)}
+.admin-refined .admin-menu .space-actions a.active{background:var(--panel-bg);box-shadow:inset 3px 0 var(--panel-gold)}
+.admin-refined:has(.space-workspace) #aviso-pagos{display:none}
+.admin-refined:has(.space-workspace) .admin-content{padding-top:18px}

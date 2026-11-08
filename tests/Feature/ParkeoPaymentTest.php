@@ -190,15 +190,16 @@ class ParkeoPaymentTest extends TestCase
         $this->get(route('admin.pagos.index'))->assertRedirect(route('login'));
     }
 
-    public function test_owner_creates_reception_but_cannot_create_another_owner(): void
+    public function test_administrator_creates_junior_and_another_administrator(): void
     {
         $admin = User::factory()->create(['role' => 'super_admin']);
-        $data = ['name' => 'Operador', 'email' => 'operador@example.test', 'password' => 'password123', 'password_confirmation' => 'password123', 'role' => 'admin', 'activo' => 1];
+        $data = ['name' => 'Operador', 'email' => 'operador@example.test', 'password' => 'Secure-password-123!', 'password_confirmation' => 'Secure-password-123!', 'role' => 'junior', 'activo' => 1];
         $this->actingAs($admin)->post(route('superadmin.admins.store'), $data)->assertSessionHasNoErrors();
-        $this->assertDatabaseHas('users', ['email' => $data['email'], 'role' => 'admin']);
+        $this->assertDatabaseHas('users', ['email' => $data['email'], 'role' => 'junior']);
         $data['email'] = 'otro@example.test';
         $data['role'] = 'super_admin';
-        $this->post(route('superadmin.admins.store'), $data)->assertSessionHasErrors('role');
+        $this->post(route('superadmin.admins.store'), $data)->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('users', ['email' => $data['email'], 'role' => 'super_admin']);
     }
 
     public function test_configuration_upload_and_pages_render(): void

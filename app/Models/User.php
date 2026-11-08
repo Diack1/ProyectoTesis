@@ -24,6 +24,7 @@ class User extends Authenticatable
         'password',
         'role',
         'activo',
+        'must_change_password',
     ];
 
     /**
@@ -60,6 +61,7 @@ class User extends Authenticatable
             'email_change_expires_at' => 'datetime',
             'password' => 'hashed',
             'activo' => 'boolean',
+            'must_change_password' => 'boolean',
             'two_factor_secret' => 'encrypted',
             'two_factor_recovery_hashes' => 'array',
             'two_factor_confirmed_at' => 'datetime',
@@ -76,7 +78,7 @@ class User extends Authenticatable
     /* Comprueba si el usuario tiene el rol 'admin'. */
     public function esAdmin(): bool
     {
-        return $this->role === 'admin';
+        return $this->role === 'super_admin';
     }
 
     /* Comprueba si el usuario tiene el rol 'super_Admin'. */

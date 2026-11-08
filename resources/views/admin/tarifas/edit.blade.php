@@ -2,7 +2,8 @@
 
 @section('title', 'Editar tarifa - Parke’o')
 @section('page-title', 'Editar tarifa')
-@section('page-subtitle', 'Actualiza los datos de la tarifa y sus condiciones de aplicación')
+@section('page-subtitle', 'Actualiza el precio y las condiciones de esta tarifa.')
+@push('styles') @vite('resources/css/pages/abonados.css') @endpush
 
 @section('content')
 

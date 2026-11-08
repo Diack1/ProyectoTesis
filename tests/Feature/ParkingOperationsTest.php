@@ -35,6 +35,7 @@ class ParkingOperationsTest extends TestCase
         parent::setUp();
         $this->travelTo(now()->setTime(10, 0, 0));
         $this->operator = User::factory()->create(['role' => 'operador']);
+        \App\Models\CajaApertura::create(['nombre'=>'Caja 01','monto_inicial'=>0,'operador_id'=>$this->operator->id,'inicio_at'=>now(),'abierta_unica'=>1]);
         $this->type = VehiculoTipo::create(['nombre' => 'Automóvil', 'codigo' => 'auto', 'activo' => true]);
         $this->space = Espacio::create(['codigo' => 'E01', 'estado_actual' => 'libre', 'activo' => true, 'modo_monitoreo' => 'manual']);
         $this->space->vehiculoTipos()->attach($this->type);
@@ -43,7 +44,9 @@ class ParkingOperationsTest extends TestCase
 
     private function enter(?Reserva $r = null): Estadia
     {
-        return app(EstadiaService::class)->ingresar(['placa' => 'ABC123', 'espacio_id' => $this->space->id, 'vehiculo_tipo_id' => $this->type->id, 'reserva_id' => $r?->id], $this->operator);
+        return app(EstadiaService::class)->ingresar(['placa' => 'ABC123', 'espacio_id' => $this->space->id,
+            'vehiculo_tipo_id' => $this->type->id, 'tarifa_id' => Tarifa::where('vehiculo_tipo_id',$this->type->id)->where('tipo_tarifa','por_hora')->value('id'),
+            'reserva_id' => $r?->id], $this->operator);
     }
 
     private function quote(Estadia $e): string
@@ -76,7 +79,8 @@ class ParkingOperationsTest extends TestCase
 
     public function test_walkin_ticket_cash_change_and_single_exit(): void
     {
-        $this->actingAs($this->operator)->post(route('admin.estadias.store'), ['placa' => 'abc-123', 'espacio_id' => $this->space->id, 'vehiculo_tipo_id' => $this->type->id])->assertRedirect()->assertSessionHasNoErrors();
+        $this->actingAs($this->operator)->post(route('admin.estadias.store'), ['placa' => 'abc-123', 'espacio_id' => $this->space->id,
+            'vehiculo_tipo_id' => $this->type->id, 'tarifa_id' => Tarifa::where('vehiculo_tipo_id',$this->type->id)->where('tipo_tarifa','por_hora')->value('id')])->assertRedirect()->assertSessionHasNoErrors();
         $e = Estadia::firstOrFail();
         $this->assertSame('ABC123', $e->placa);
         $this->assertEquals($e->hora_ingreso, $e->inicio_cobro);
@@ -95,6 +99,61 @@ class ParkingOperationsTest extends TestCase
         $this->get(route('admin.estadias.show', $e))->assertOk()->assertSee('Salida registrada');
         $this->post(route('admin.estadias.salida', $e), ['cotizacion' => $quote, 'metodo_pago' => 'efectivo', 'efectivo_recibido' => 10, 'pago_verificado' => 1])->assertSessionHasErrors('salida');
         $this->assertSame(1, Pago::whereNotNull('estadia_id')->count());
+    }
+
+    public function test_combined_payment_records_one_stay_two_movements_and_cash_without_change(): void
+    {
+        $e = $this->enter();
+        $this->actingAs($this->operator)->post(route('admin.estadias.salida', $e), [
+            'cotizacion' => $this->quote($e), 'pago_verificado' => 1,
+            'pagos' => [
+                ['metodo_pago' => 'efectivo', 'monto' => 2, 'efectivo_recibido' => 2],
+                ['metodo_pago' => 'tarjeta', 'monto' => 3, 'referencia_pago' => 'CARD-123'],
+            ],
+        ])->assertSessionHasNoErrors();
+        $this->assertSame('5.00', $e->fresh()->saldo_cobrado);
+        $this->assertSame('2.00', $e->fresh()->efectivo_recibido);
+        $this->assertSame('0.00', $e->fresh()->vuelto);
+        $this->assertSame(2, $e->pagosSalida()->count());
+        $this->assertDatabaseHas('pagos', ['estadia_id' => $e->id, 'metodo_pago' => 'tarjeta', 'monto' => 3]);
+        $this->get(route('admin.caja.index'))->assertOk()->assertSee('Tarjeta');
+        $this->post(route('admin.caja.cerrar'), ['efectivo_contado' => 2])->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('caja_cierres', ['pagos_count' => 2, 'efectivo_esperado' => 2, 'diferencia' => 0]);
+        $this->post(route('admin.caja.cerrar'), ['efectivo_contado' => 0])->assertSessionHasErrors('caja');
+    }
+
+    public function test_cash_change_discount_and_pending_balance_are_validated_atomically(): void
+    {
+        $e = $this->enter();
+        $this->actingAs($this->operator);
+        $base = ['cotizacion' => $this->quote($e), 'pago_verificado' => 1];
+        $this->post(route('admin.estadias.salida', $e), $base + ['pagos' => [['metodo_pago' => 'efectivo', 'monto' => 2, 'efectivo_recibido' => 2]]])->assertSessionHasErrors('pagos');
+        $this->assertSame(0, $e->pagosSalida()->count());
+        $this->post(route('admin.estadias.salida', $e), $base + ['descuento_monto' => 6, 'motivo_descuento' => 'Promoción'])->assertSessionHasErrors('descuento_monto');
+        $this->post(route('admin.estadias.salida', $e), $base + ['descuento_monto' => 1])->assertSessionHasErrors('motivo_descuento');
+        $this->post(route('admin.estadias.salida', $e), $base + [
+            'descuento_monto' => 1, 'motivo_descuento' => 'Cliente frecuente',
+            'pagos' => [['metodo_pago' => 'efectivo', 'monto' => 4, 'efectivo_recibido' => 10]],
+        ])->assertSessionHasNoErrors();
+        $this->assertSame('4.00', $e->fresh()->saldo_cobrado);
+        $this->assertSame('6.00', $e->fresh()->vuelto);
+        $this->assertSame('4.00', $e->pagosSalida()->sole()->monto);
+    }
+
+    public function test_client_document_length_and_invoice_ruc_are_enforced(): void
+    {
+        $e = $this->enter();
+        $this->actingAs($this->operator)->postJson(route('admin.clientes-cobro.store'), [
+            'nombres' => 'Juan', 'apellidos' => 'Pérez', 'tipo_documento' => 'DNI', 'numero_documento' => '12345A78',
+        ])->assertUnprocessable()->assertJsonValidationErrors('numero_documento');
+        $client = $this->postJson(route('admin.clientes-cobro.store'), [
+            'nombres' => 'Juan', 'apellidos' => 'Pérez', 'tipo_documento' => 'DNI', 'numero_documento' => '12345678',
+        ])->assertOk()->json();
+        $this->post(route('admin.estadias.salida', $e), [
+            'cotizacion' => $this->quote($e), 'tipo_comprobante' => 'factura', 'cliente_cobro_id' => $client['id'],
+            'pago_verificado' => 1, 'metodo_pago' => 'efectivo', 'efectivo_recibido' => 5,
+        ])->assertSessionHasErrors('cliente_cobro_id');
+        $this->assertNull($e->fresh()->hora_salida);
     }
 
     public function test_cash_requires_verified_sufficient_payment_and_fresh_quote(): void

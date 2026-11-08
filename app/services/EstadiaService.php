@@ -43,9 +43,8 @@ class EstadiaService
                         throw ValidationException::withMessages(['abono_id'=>'El abono debe estar pagado, vigente y corresponder al espacio y placa.']);
                     }
                     $abono = $asignacion;
-                } elseif (\App\Models\Abono::where('espacio_id',$espacio->id)->where('fin','>',now())->exists() && (empty($data['autoriza_movimiento']) || empty($data['llave_recibida']) || empty($data['ubicacion_llave']))) {
-                    throw ValidationException::withMessages(['ubicacion_llave'=>'Este espacio pertenece a un abonado: registra autorización, llave recibida y su ubicación.']);
                 }
+                $casillero = app(CasilleroService::class)->validarIngreso($data);
                 if ($reserva) {
                     $cobrarLlegada = $reserva->pago_al_llegar && $reserva->estado === 'pendiente_pago';
                     if (($cobrarLlegada && (! $reserva->expires_at || now()->gt($reserva->expires_at) || $reserva->pagoAprobado()->exists()))
@@ -70,28 +69,36 @@ class EstadiaService
                 if ($sensor && (! $espacio->sensor || $espacio->sensor->estado !== 'activo')) {
                     throw ValidationException::withMessages(['espacio_id' => 'No hay un sensor activo configurado. Cambia el espacio a control manual para operar sin sensor.']);
                 }
+                $tarifaSeleccionada = null;
                 if ($reserva) {
                     $snapshot = ['nombre' => $reserva->tarifa_nombre, 'tipo_tarifa' => $reserva->tipo_tarifa,
                         'monto_por_hora' => $reserva->tarifa_hora, 'tolerancia_minutos' => $reserva->tolerancia_minutos,
                         'penalidad_por_fraccion' => $reserva->penalidad_por_fraccion, 'minutos_fraccion' => $reserva->minutos_fraccion_snapshot];
+                    $tarifaSeleccionada = $reserva->tarifa_id;
                 } else {
-                    try {
-                        $calculo = app(TarifaService::class)->calcularMonto($tipo, now(), 60);
-                    } catch (\RuntimeException $e) {
-                        throw ValidationException::withMessages(['vehiculo_tipo_id' => $e->getMessage()]);
+                    $tarifa = !empty($data['tarifa_id']) ? \App\Models\Tarifa::where('vehiculo_tipo_id', $tipo->id)
+                        ->where('activo', true)->whereIn('tipo_tarifa', ['por_hora', 'bloque_horas'])->find($data['tarifa_id']) : null;
+                    if (!$tarifa && !$abono) {
+                        throw ValidationException::withMessages(['tarifa_id' => 'Selecciona una tarifa activa compatible con el vehículo.']);
                     }
-                    $snapshot = $calculo['tarifa']->only(['nombre', 'tipo_tarifa', 'monto_por_hora', 'monto_base', 'monto_por_fraccion',
-                        'minutos_fraccion', 'tiempo_minimo_minutos', 'tolerancia_minutos', 'penalidad_por_fraccion', 'hora_inicio', 'hora_fin']);
+                    if (!$tarifa) {
+                        $tarifa = \App\Models\Tarifa::where('vehiculo_tipo_id', $tipo->id)->where('activo', true)
+                            ->where('tipo_tarifa', 'por_hora')->orderByDesc('prioridad')->first();
+                        if (!$tarifa) throw ValidationException::withMessages(['tarifa_id' => 'Configura una tarifa por hora para los excesos del abono.']);
+                    }
+                    $snapshot = app(TarifaService::class)->snapshotIngreso($tarifa);
+                    $tarifaSeleccionada = $tarifa->id;
                 }
                 if ($reserva && $cobrarLlegada) {
                     app(CobroLlegadaService::class)->registrar($reserva, $data, $operador);
                 }
                 $estadia = Estadia::create([
                     'abono_id'=>$abono?->id, 'autoriza_movimiento'=>!empty($data['autoriza_movimiento']),
-                    'llave_recibida'=>!empty($data['llave_recibida']), 'ubicacion_llave'=>$data['ubicacion_llave'] ?? null, 'salida_prevista'=>$data['salida_prevista'] ?? null,
+                    'llave_recibida'=>!empty($data['llave_recibida']), 'ubicacion_llave'=>$casillero,
+                    'casillero_activo'=>$casillero, 'salida_prevista'=>$data['salida_prevista'] ?? null,
                     'codigo_ticket' => 'PK-'.now()->format('ymd').'-'.Str::upper(Str::random(8)),
                     'placa' => $data['placa'], 'placa_activa' => $data['placa'], 'espacio_id' => $espacio->id, 'espacio_activo_id' => $espacio->id,
-                    'vehiculo_tipo_id' => $tipo->id, 'reserva_id' => $reserva?->id, 'operador_ingreso_id' => $operador->id,
+                    'vehiculo_tipo_id' => $tipo->id, 'tarifa_id' => $tarifaSeleccionada, 'reserva_id' => $reserva?->id, 'operador_ingreso_id' => $operador->id,
                     'hora_ingreso' => now(), 'inicio_cobro' => $sensor ? null : now(), 'fuente_inicio' => $sensor ? 'sensor' : 'manual',
                     'tarifa_snapshot' => $snapshot, 'minutos_contratados' => $reserva?->duracion_minutos ?? 0, 'monto_adelantado' => $reserva?->monto_total ?? 0,
                 ]);
@@ -103,6 +110,9 @@ class EstadiaService
                 return $estadia;
             });
         } catch (UniqueConstraintViolationException $e) {
+            if (str_contains($e->getMessage(), 'casillero_activo')) {
+                throw ValidationException::withMessages(['ubicacion_llave' => 'Ese casillero acaba de ocuparse. Actualiza el formulario y elige otro.']);
+            }
             throw ValidationException::withMessages(['placa' => 'La placa, el espacio o la reserva ya tienen un ingreso activo. Actualiza la página.']);
         }
     }
@@ -147,39 +157,23 @@ class EstadiaService
                     throw ValidationException::withMessages(['salida' => 'La cotización venció. Actualiza el cálculo antes de cobrar.']);
                 }
                 $liquidacion = app(LiquidacionService::class)->calcular($estadia, $corte);
-                $saldo = $liquidacion['saldo_centavos'];
-                $recibido = null;
-                $vuelto = null;
-                if ($saldo > 0) {
-                    if (empty($data['pago_verificado'])) {
-                        throw ValidationException::withMessages(['pago_verificado' => 'Confirma que recibiste el pago antes de registrar la salida.']);
-                    }
-                    if (! in_array($data['metodo_pago'] ?? null, ['efectivo', 'yape', 'plin'])) {
-                        throw ValidationException::withMessages(['metodo_pago' => 'Selecciona un medio de pago.']);
-                    }
-                    $key = null;
-                    if ($data['metodo_pago'] === 'efectivo') {
-                        $recibido = LiquidacionService::centavos($data['efectivo_recibido'] ?? 0);
-                        if ($recibido < $saldo) {
-                            throw ValidationException::withMessages(['efectivo_recibido' => 'El efectivo recibido es menor al saldo a cobrar.']);
-                        }
-                        $vuelto = $recibido - $saldo;
-                    } else {
-                        if (empty($data['referencia_pago'])) {
-                            throw ValidationException::withMessages(['referencia_pago' => 'Registra la operación verificada en el celular del negocio.']);
-                        }
-                        $key = $data['metodo_pago'].':'.strtoupper($data['referencia_pago']);
-                        if (Pago::where('operacion_unica', $key)->exists()) {
-                            throw ValidationException::withMessages(['referencia_pago' => 'Esta operación ya se utilizó.']);
-                        }
-                    }
-                    Pago::create(['estadia_id' => $estadia->id, 'user_id' => $reserva?->user_id, 'codigo_pago' => 'CAJA-'.Str::uuid(),
-                        'metodo_pago' => $data['metodo_pago'], 'monto' => $saldo / 100, 'estado' => 'aprobado', 'referencia_pago' => $data['referencia_pago'] ?? null,
-                        'operacion_unica' => $key, 'pagado_at' => now(), 'revisado_at' => now(), 'revisado_por' => $operador->id, 'motivo_revision' => 'Cobro presencial verificado en caja.']);
-                }
+                $base = $liquidacion['saldo_centavos'];
+                $cobro = app(CobroPresencialService::class);
+                $importe = $cobro->importe($base, $data);
+                $porcentaje = $importe['porcentaje'];
+                $fijo = $importe['fijo'];
+                $descuento = $importe['descuento'];
+                $saldo = $importe['total'];
+                $resultado = $cobro->registrar($data, $saldo, $operador,
+                    ['estadia_id' => $estadia->id, 'user_id' => $reserva?->user_id]);
+                $recibido = $resultado['recibido'];
+                $vuelto = $resultado['vuelto'];
                 $estadia->update(['hora_salida' => now(), 'liquidado_hasta' => $corte, 'operador_salida_id' => $operador->id,
-                    'placa_activa' => null, 'espacio_activo_id' => null, 'minutos_cobrados' => $liquidacion['minutos'],
-                    'monto_total' => $liquidacion['total_centavos'] / 100, 'monto_exceso' => $liquidacion['exceso_centavos'] / 100,
+                    'placa_activa' => null, 'espacio_activo_id' => null, 'casillero_activo' => null, 'minutos_cobrados' => $liquidacion['minutos'],
+                    'monto_total' => ($liquidacion['total_centavos'] - $descuento) / 100, 'monto_exceso' => $liquidacion['exceso_centavos'] / 100,
+                    'descuento_porcentaje' => $porcentaje / 100, 'descuento_monto' => $fijo / 100,
+                    'motivo_descuento' => $data['motivo_descuento'] ?? null, 'cliente_cobro_id' => $data['cliente_cobro_id'] ?? null,
+                    'tipo_comprobante' => $data['tipo_comprobante'] ?? 'boleta', 'tipo_impresion' => $data['tipo_impresion'] ?? 'detallado',
                     'saldo_cobrado' => $saldo / 100, 'efectivo_recibido' => $recibido === null ? null : $recibido / 100, 'vuelto' => $vuelto === null ? null : $vuelto / 100]);
                 if ($reserva) {
                     $reserva->update(['estado' => 'finalizada', 'monto_penalidad' => $liquidacion['exceso_centavos'] / 100]);
@@ -188,6 +182,8 @@ class EstadiaService
                     $espacio->update(['estado_actual' => 'libre']);
                     RegistroOcupacion::create(['espacio_id' => $espacio->id, 'estado_detectado' => 'libre', 'fecha_hora' => now(), 'origen' => 'salida_ticket']);
                 }
+
+                app(VentaService::class)->desdeOrigen('estadia', $estadia->id);
 
                 return $estadia;
             });

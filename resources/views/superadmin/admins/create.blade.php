@@ -2,7 +2,7 @@
 
 @section('title', 'Nuevo miembro del personal - Parke’o')
 @section('page-title', 'Nuevo miembro del personal')
-@section('page-subtitle', 'Registra una cuenta administrativa para el sistema')
+@section('page-subtitle', 'Registra una cuenta de administrador o junior')
 
 @section('content')
 
@@ -18,7 +18,7 @@
 @endif
 
 <div class="form-card">
-    <p>Usa el correo real del trabajador. Al iniciar sesión por primera vez deberá activarlo con un código enviado a ese correo. Después ingresará con su correo y contraseña.</p>
+    <p>Usa el correo real del trabajador. Podrá ingresar con la contraseña asignada por el administrador.</p>
     <form action="{{ route('superadmin.admins.store') }}" method="POST">
         @csrf
 
@@ -47,17 +47,17 @@
         <div class="form-grid">
             <div class="form-group">
                 <label for="password">Contraseña</label>
-                <input type="password" autocomplete="new-password" minlength="8"
+                <input type="password" autocomplete="new-password" minlength="12"
                     name="password"
                     id="password"
                     class="form-control"
-                    placeholder="Mínimo 8 caracteres"
+                    placeholder="12 caracteres, mayúsculas, números y símbolos"
                     required>
             </div>
 
             <div class="form-group">
                 <label for="password_confirmation">Confirmar contraseña</label>
-                <input type="password" autocomplete="new-password" minlength="8"
+                <input type="password" autocomplete="new-password" minlength="12"
                     name="password_confirmation"
                     id="password_confirmation"
                     class="form-control"
@@ -69,11 +69,12 @@
         <div class="form-group">
             <label for="role">Rol del usuario</label>
             <select name="role" id="role" class="form-control" required>
-                <option value="admin">Recepción</option>
+                <option value="junior" @selected(old('role')==='junior')>Junior</option>
+                <option value="super_admin" @selected(old('role')==='super_admin')>Administrador</option>
             </select>
 
             <small class="form-help">
-                Recepción gestiona entradas, salidas, reservas y pagos. Solo el dueño configura el negocio y administra las cuentas del personal.
+                Junior gestiona entradas, salidas y cobros. Administrador configura el negocio, consulta informes y administra usuarios.
             </small>
         </div>
 

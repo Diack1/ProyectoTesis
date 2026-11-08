@@ -31,32 +31,33 @@ class DashboardSummaryTest extends TestCase
 
     public function test_only_owner_can_request_monthly_dashboard(): void
     {
-        $this->actingAs(User::factory()->create(['role'=>'admin']))->get('/admin?periodo=mes')->assertOk()->assertSee('Resumen del día')->assertDontSee('Resumen mensual');
-        $this->actingAs(User::factory()->create(['role'=>'super_admin']))->get('/admin?periodo=mes')->assertOk()->assertSee('Resumen mensual');
-        $this->actingAs(User::factory()->create())->get('/admin?periodo=mes')->assertForbidden();
+        $this->actingAs(User::factory()->create(['role'=>'admin']))->get('/admin')->assertOk()->assertDontSee('id="summary-title"', false);
+        $this->get(route('admin.resumen.index',['periodo'=>'mes']))->assertOk()->assertSee('Resumen del día')->assertDontSee('Resumen mensual');
+        $this->actingAs(User::factory()->create(['role'=>'super_admin']))->get(route('admin.resumen.index',['periodo'=>'mes']))->assertOk()->assertSee('Resumen mensual');
+        $this->actingAs(User::factory()->create())->get(route('admin.resumen.index',['periodo'=>'mes']))->assertForbidden();
     }
 
     public function test_staff_cannot_manage_accounts_or_see_owner_financial_chart(): void
     {
         $this->actingAs(User::factory()->create(['role'=>'admin']));
-        $this->get('/admin')->assertOk()->assertSee('Entradas y salidas por hora')
-            ->assertDontSee('Cobros y reembolsos')->assertDontSee(route('superadmin.dashboard'));
+        $this->get(route('admin.resumen.index'))->assertOk()->assertSee('Cantidad de ventas por hora')
+            ->assertDontSee('name="desde"',false)->assertDontSee(route('superadmin.dashboard'));
         $this->get(route('superadmin.admins.create'))->assertForbidden();
         $this->post(route('superadmin.admins.store'), [])->assertForbidden();
     }
 
-    public function test_owner_can_create_staff_who_still_need_email_activation(): void
+    public function test_owner_can_create_staff_with_verified_email_and_initial_password_change(): void
     {
         $this->actingAs(User::factory()->create(['role'=>'super_admin']));
-        $this->get('/admin')->assertOk()->assertSee('Cobros y reembolsos')->assertSee(route('superadmin.dashboard'));
+        $this->get(route('admin.resumen.index'))->assertOk()->assertSee('Ventas con Yape')->assertSee(route('superadmin.dashboard'));
         $this->get(route('superadmin.admins.create'))->assertOk()->assertSee('correo real del trabajador');
         $this->post(route('superadmin.admins.store'), [
-            'name'=>'Recepción prueba','email'=>'staff@example.test','role'=>'admin','activo'=>'1',
+            'name'=>'Recepción prueba','email'=>'staff@example.test','role'=>'junior','activo'=>'1',
             'password'=>'Test-password-123','password_confirmation'=>'Test-password-123',
         ])->assertRedirect(route('superadmin.dashboard'));
         $staff = User::where('email','staff@example.test')->firstOrFail();
-        $this->assertSame('admin', $staff->role);
-        $this->assertNull($staff->email_verified_at);
+        $this->assertSame('junior', $staff->role);
+        $this->assertNotNull($staff->email_verified_at);
         $this->assertTrue(\Illuminate\Support\Facades\Hash::check('Test-password-123', $staff->password));
     }
 }
